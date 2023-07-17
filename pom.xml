@@ -68,6 +68,19 @@
 			</exclusions>
 		</dependency>
 
+		<!--Mapping-->
+		<dependency>
+			<groupId>org.modelmapper</groupId>
+			<artifactId>modelmapper</artifactId>
+			<version>2.3.5</version>
+		</dependency>
+		<!--Gestion csv-->
+		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>5.7.1</version>
+		</dependency>
+
 		<!--Lombok-->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -86,7 +99,7 @@
 			<artifactId>spring-kafka-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- === SpringDoc (swagger) === -->
+		<!--SpringDoc (swagger)-->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
