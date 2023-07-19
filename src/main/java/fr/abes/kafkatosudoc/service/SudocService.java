@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class TraitementService {
+public class SudocService {
 
 	@Value("${sudoc.serveur}")
 	private String serveurSudoc;
@@ -23,7 +23,7 @@ public class TraitementService {
 	@Getter
 	private ProcessCBS cbs;
 
-	public TraitementService() {
+	public SudocService() {
 	    cbs = new ProcessCBS();
     }
 
