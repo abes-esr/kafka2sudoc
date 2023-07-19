@@ -60,3 +60,4 @@ target/
 /.mvn/wrapper/maven-wrapper.jar
 /.mvn/wrapper/maven-wrapper.properties
 /.mvn/
+/src/main/resources/application-localhost.properties
