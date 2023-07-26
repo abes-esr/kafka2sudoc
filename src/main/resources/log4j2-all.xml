@@ -7,6 +7,7 @@
         <Property name="logFileName">${bundle:application:application.name}</Property>
         <Property name="errorFileName">${bundle:application:application.name}_error</Property>
         <Property name="debugFileName">${bundle:application:application.name}_debug</Property>
+        <Property name="kafkaServer">${env:SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS}</Property>
 
         <!-- Politique de gestion des fichiers -->
         <Property name="sizeTriggerPolicy">100 MB</Property>
@@ -121,7 +122,10 @@
     </Appenders>
 
     <Loggers>
-        <Root level="all">
+        <Logger name="fr.abes.kafkatosudoc" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Root level="info">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="DebugFile" />
             <AppenderRef ref="LogFile" />

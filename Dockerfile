@@ -33,7 +33,7 @@ RUN mvn --batch-mode \
 #CMD [ "catalina.sh", "run" ]
 FROM eclipse-temurin:17-jre as kafka2sudoc-api-image
 WORKDIR /app/
-COPY --from=build-image /build/target/*.jar /app/kbart2kafka-api.jar
+COPY --from=build-image /build/target/*.jar /app/kafka2sudoc-api.jar
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 ENTRYPOINT ["java","-jar","/app/kafka2sudoc-api.jar"]
