@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.abes.cbs.exception.CBSException;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
+import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.LigneKbartDto;
 import fr.abes.kafkatosudoc.dto.PackageKbartDtoKafka;
@@ -30,8 +31,8 @@ public class KbartListener {
     @Autowired
     private EmailService emailService;
 
-    @KafkaListener(topics = {"${topic.name.target.kbart}"}, groupId = "${topic.groupid.target.kbart}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartFromKafka(ConsumerRecord<String, String> lignesKbart){
+    @KafkaListener(topics = {"${topic.name.source.kbart}"}, groupId = "${topic.groupid.source.kbart}", containerFactory = "kafkaKbartListenerContainerFactory")
+    public void listenKbartFromKafka(ConsumerRecord<String, String> lignesKbart) throws CBSException {
         String filename = "";
         LigneKbartDto ligneKbartDto = new LigneKbartDto();
         try {
@@ -46,9 +47,9 @@ public class KbartListener {
             if (!ligneKbartDto.isBestPpnEmpty()) {
                 service.authenticate();
                 String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-                Biblio noticeBestPpn = service.getNoticeFromPpn(ligneKbartDto.getBestPpn());
-                if (!service.isNoticeBouquetInBestPpn(noticeBestPpn, ppnNoticeBouquet)) {
-                    service.addNoticeBouquetInBestPpn(noticeBestPpn, ppnNoticeBouquet);
+                NoticeConcrete noticeBestPpn = service.getNoticeFromPpn(ligneKbartDto.getBestPpn());
+                if (!service.isNoticeBouquetInBestPpn(noticeBestPpn.getNoticeBiblio(), ppnNoticeBouquet)) {
+                    service.addNoticeBouquetInBestPpn(noticeBestPpn.getNoticeBiblio(), ppnNoticeBouquet);
                     service.sauvegarderNotice(noticeBestPpn);
                     log.debug("Notice " + ligneKbartDto.getBestPpn() + " modifiée avec succès");
                 }
@@ -56,6 +57,8 @@ public class KbartListener {
         } catch (Exception e) {
             log.debug(e.getMessage(), e.getCause());
             emailService.sendErrorMail(filename, ligneKbartDto, e);
+        } finally {
+            service.disconnect();
         }
     }
 }

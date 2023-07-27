@@ -40,7 +40,11 @@ public class EmailServiceImpl implements EmailService {
             body.append(kbart.getBestPpn());
             body.append(" lors du traitement du fichier ");
             body.append(filename);
-            body.append("\n");
+            body.append("<br /><br />");
+            body.append("pour la ligne Kbart : ");
+            body.append("<br>");
+            body.append(kbart);
+            body.append("<br /><br />");
             body.append("Le message d'erreur est le suivant : ");
             body.append(e.getMessage());
 

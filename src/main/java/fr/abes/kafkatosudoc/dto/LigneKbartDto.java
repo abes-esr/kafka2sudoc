@@ -71,9 +71,32 @@ public class LigneKbartDto {
 
     @Override
     public String toString() {
-        return "publication title : " + this.publicationTitle + " / publication_type : " + this.publicationType +
-                (this.onlineIdentifier.isEmpty() ? "" : " / online_identifier : " + this.onlineIdentifier) +
-                (this.printIdentifier.isEmpty() ? "" : " / print_identifier : " + this.printIdentifier);
+        return this.publicationTitle + "\t"
+                + (this.onlineIdentifier.isEmpty() ? "" : this.onlineIdentifier) + "\t"
+                + (this.printIdentifier.isEmpty() ? "" :  this.printIdentifier) + "\t"
+                + (this.dateFirstIssueOnline.isEmpty() ? "" : this.dateFirstIssueOnline) + "\t"
+                + this.numFirstVolOnline + "\t"
+                + this.numFirstIssueOnline + "\t"
+                + (this.dateLastIssueOnline.isEmpty() ? "" : this.dateLastIssueOnline) + "\t"
+                + this.numLastVolOnline + "\t"
+                + this.numLastIssueOnline + "\t"
+                + (this.titleUrl.isEmpty() ? "" : this.titleUrl) + "\t"
+                + (this.firstAuthor.isEmpty() ? "" : this.firstAuthor) + "\t"
+                + (this.titleId.isEmpty() ? "" : this.titleId) + "\t"
+                + (this.embargoInfo.isEmpty() ? "" : this.embargoInfo) + "\t"
+                + (this.coverageDepth.isEmpty() ? "" : this.coverageDepth) + "\t"
+                + (this.notes.isEmpty() ? "" : this.notes) + "\t"
+                + (this.publisherName.isEmpty() ? "" : this.publisherName) + "\t"
+                + this.publicationType + "\t"
+                + (this.dateMonographPublishedPrint.isEmpty() ? "" : this.dateMonographPublishedPrint) + "\t"
+                + (this.dateMonographPublishedOnline.isEmpty() ? "" : this.dateMonographPublishedOnline) + "\t"
+                + this.monographVolume + "\t"
+                + (this.monographEdition.isEmpty() ? "" : this.monographEdition) + "\t"
+                + (this.firstEditor.isEmpty() ? "" : this.firstEditor) + "\t"
+                + (this.parentPublicationTitleId.isEmpty() ? "" : this.parentPublicationTitleId) + "\t"
+                + (this.precedingPublicationTitleId.isEmpty() ? "" : this.precedingPublicationTitleId) + "\t"
+                + (this.accessType.isEmpty() ? "" : this.accessType) + "\t"
+                + (this.bestPpn.isEmpty() ? "" : this.bestPpn);
     }
 
 }
