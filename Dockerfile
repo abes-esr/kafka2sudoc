@@ -14,8 +14,8 @@ ENV LC_ALL fr_FR.UTF-8
 # On lance la compilation Java
 # On débute par une mise en cache docker des dépendances Java
 # cf https://www.baeldung.com/ops/docker-cache-maven-dependencies
-COPY ./pom.xml /build/kafka2sudoc-api/pom.xml
-RUN mvn -f /build/kafka2sudoc-api/pom.xml verify --fail-never
+COPY ./pom.xml /build/kafka2sudoc/pom.xml
+RUN mvn -f /build/kafka2sudoc/pom.xml verify --fail-never
 # et la compilation du code Java
 COPY ./   /build/
 
@@ -31,9 +31,9 @@ RUN mvn --batch-mode \
 #FROM tomcat:9-jdk17 as api-image
 #COPY --from=build-image /build/web/target/*.war /usr/local/tomcat/webapps/ROOT.war
 #CMD [ "catalina.sh", "run" ]
-FROM eclipse-temurin:17-jre as kafka2sudoc-api-image
+FROM eclipse-temurin:17-jre as kafka2sudoc-image
 WORKDIR /app/
-COPY --from=build-image /build/target/*.jar /app/kafka2sudoc-api.jar
+COPY --from=build-image /build/target/*.jar /app/kafka2sudoc.jar
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-ENTRYPOINT ["java","-jar","/app/kafka2sudoc-api.jar"]
+ENTRYPOINT ["java","-jar","/app/kafka2sudoc.jar"]

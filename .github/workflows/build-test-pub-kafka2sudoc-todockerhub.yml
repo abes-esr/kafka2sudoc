@@ -42,7 +42,7 @@ jobs:
           for DOCKER_TAG in $DOCKER_TAGS
           do
             # publication de l'image pour l'API
-            docker build . --target kafka2sudoc-api-image -t ${DOCKER_TAG}-kafka2sudoc-api
-            docker push ${DOCKER_TAG}-kafka2sudoc-api
+            docker build . --target kafka2sudoc-image -t ${DOCKER_TAG}-kafka2sudoc
+            docker push ${DOCKER_TAG}-kafka2sudoc
           done
   
