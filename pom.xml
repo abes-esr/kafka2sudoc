@@ -14,8 +14,8 @@
     <name>kafka-to-sudoc</name>
     <description>lecture de topics bacon et écriture dans le sudoc</description>
     <properties>
-        <finalName>kafka2sudoc-api-${project.artifactId}-${project.version}</finalName>
-        <warName>kafka2sudoc-api</warName>
+        <finalName>kafka2sudoc-${project.artifactId}-${project.version}</finalName>
+        <warName>kafka2sudoc</warName>
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
