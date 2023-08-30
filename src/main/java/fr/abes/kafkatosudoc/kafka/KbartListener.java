@@ -9,6 +9,7 @@ import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.LigneKbartDto;
 import fr.abes.kafkatosudoc.dto.PackageKbartDtoKafka;
+import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.EmailService;
 import fr.abes.kafkatosudoc.service.SudocService;
 import fr.abes.kafkatosudoc.utils.CheckFiles;
@@ -27,6 +28,9 @@ public class KbartListener {
 
     @Autowired
     private SudocService service;
+
+    @Autowired
+    private BaconService baconService;
 
     @Autowired
     private EmailService emailService;
