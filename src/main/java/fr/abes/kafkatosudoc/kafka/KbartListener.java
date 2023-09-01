@@ -39,6 +39,12 @@ public class KbartListener {
     public void listenKbartFromKafka(ConsumerRecord<String, String> lignesKbart) throws CBSException {
         String filename = "";
         LigneKbartDto ligneKbartDto = new LigneKbartDto();
+
+        /**try {
+            String provider = CheckFiles.getProviderFromFilename(filename);
+            String packageName = CheckFiles.getPackageFromFilename(filename);
+        }**/
+
         try {
             for (Header header : lignesKbart.headers().toArray()) {
                 if(header.key().equals("FileName")){
@@ -52,6 +58,7 @@ public class KbartListener {
                 service.authenticate();
                 String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
                 NoticeConcrete noticeBestPpn = service.getNoticeFromPpn(ligneKbartDto.getBestPpn());
+                //Si pas de 469$0 avec le n de la notice bouquet dans la notice bestppn
                 if (!service.isNoticeBouquetInBestPpn(noticeBestPpn.getNoticeBiblio(), ppnNoticeBouquet)) {
                     service.addNoticeBouquetInBestPpn(noticeBestPpn.getNoticeBiblio(), ppnNoticeBouquet);
                     service.sauvegarderNotice(noticeBestPpn);

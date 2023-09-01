@@ -16,7 +16,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import javax.sql.DataSource;
 
 @Configuration
-@EnableJpaRepositories(entityManagerFactoryRef = "baconEntityManager", transactionManagerRef = "baconTransactionManager", basePackages = "fr.abes.logskbart.repository.bacon")
+@EnableJpaRepositories(entityManagerFactoryRef = "baconEntityManager", transactionManagerRef = "baconTransactionManager", basePackages = "fr.abes.kafkatosudoc.repository.bacon")
 @NoArgsConstructor
 @BaconDbConfiguration
 public class BaconDbConfig extends AbstractConfig {
@@ -41,7 +41,7 @@ public class BaconDbConfig extends AbstractConfig {
     public LocalContainerEntityManagerFactoryBean baconEntityManager() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(baconDataSource());
-        em.setPackagesToScan(new String[]{"fr.abes.logskbart.entity.bacon"});
+        em.setPackagesToScan(new String[]{"fr.abes.kafkatosudoc.entity.bacon"});
         configHibernate(em, platform, showsql, dialect, ddlAuto, generateDdl, initMode);
         return em;
     }
