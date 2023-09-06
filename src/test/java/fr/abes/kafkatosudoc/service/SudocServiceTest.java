@@ -47,4 +47,17 @@ class SudocServiceTest {
         Assertions.assertEquals("Provider : CAIRN / package : GLOBAL : Recherche de la notice bouquet échouée", result.getMessage());
     }
 
+    @Test
+    void isNoticeBouquetInBestPpnTestTrue() throws ZoneException {
+        Biblio notice = new Biblio();
+        notice.addZone("469", "0", "123456789");
+        Assertions.assertTrue(sudocService.isNoticeBouquetInBestPpn(notice, "123456789"));
+    }
+
+    @Test
+    void isNoticeBouquetInBestPpnTestFalse() throws ZoneException {
+        Biblio notice = new Biblio();
+        notice.addZone("469", "0", "987654321");
+        Assertions.assertFalse(sudocService.isNoticeBouquetInBestPpn(notice, "123456789"));
+    }
 }

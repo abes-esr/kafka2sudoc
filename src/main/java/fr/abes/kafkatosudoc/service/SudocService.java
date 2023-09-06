@@ -62,7 +62,7 @@ public class SudocService {
 		String query = "che ppn " + ppn;
 		log.debug("Recherche notice : " + query);
 		this.cbs.search(query);
-		NoticeConcrete notice = new NoticeConcrete();
+		NoticeConcrete notice;
 		if (this.cbs.getNbNotices() == 1) {
 			notice = cbs.editerNoticeConcrete("1");
 			this.cbs.back();
@@ -73,7 +73,7 @@ public class SudocService {
 	}
 
 	public boolean isNoticeBouquetInBestPpn(Biblio notice, String ppnNoticeBouquet) {
-		return !notice.findZoneWithPattern("469", "0", ppnNoticeBouquet).isEmpty();
+		return !notice.findZoneWithPattern("469", "$0", ppnNoticeBouquet).isEmpty();
 	}
 
 	public Biblio addNoticeBouquetInBestPpn(Biblio notice, String ppnNoticeBouquet) throws ZoneException {
