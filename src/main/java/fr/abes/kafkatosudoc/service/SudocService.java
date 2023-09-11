@@ -3,15 +3,9 @@ package fr.abes.kafkatosudoc.service;
 import fr.abes.cbs.exception.CBSException;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
-import fr.abes.cbs.notices.Exemplaire;
-import fr.abes.cbs.notices.FORMATS;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.process.ProcessCBS;
-import fr.abes.cbs.utilitaire.Constants;
-import fr.abes.cbs.utilitaire.Utilitaire;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.dom4j.DocumentException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -83,5 +77,10 @@ public class SudocService {
 
 	public void sauvegarderNotice(NoticeConcrete noticeBestPpn) throws CBSException {
 		this.cbs.modifierNoticeConcrete("1", noticeBestPpn);
+	}
+
+	public Biblio supprimeNoticeBouquetInBestPpn(Biblio notice, String ppnNoticeBouquet) {
+		notice.deleteZoneWithValue("469", "$0", ppnNoticeBouquet);
+		return notice;
 	}
 }
