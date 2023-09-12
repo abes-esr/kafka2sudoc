@@ -54,7 +54,7 @@ public class KbartListener {
         }
     }
 
-    @KafkaListener(topics = {"$topic.name.source.kbart.todelete"}, groupId = "lignesKbart", containerFactory = "kafkaKbartListenerContainerFactory")
+    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "lignesKbart", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartToDeleteFromKafka(ConsumerRecord<String, String> lignesKbart) throws CBSException {
         String filename = "";
         LigneKbartDto ligneKbartDto = new LigneKbartDto();
