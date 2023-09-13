@@ -2,6 +2,7 @@ package fr.abes.kafkatosudoc.entity.bacon;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -11,7 +12,7 @@ import java.util.Objects;
 @Embeddable
 @Getter
 @NoArgsConstructor
-public class ProviderPackageId implements Serializable {
+public class ProviderPackageId implements Serializable, Comparable<ProviderPackageId> {
     @Column(name = "PACKAGE")
     private String packageName;
     @Column(name = "DATE_P")
@@ -38,5 +39,10 @@ public class ProviderPackageId implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(getProviderIdtProvider(), getDateP(), getPackageName());
+    }
+
+    @Override
+    public int compareTo(ProviderPackageId o) {
+        return this.dateP.compareTo(o.dateP);
     }
 }

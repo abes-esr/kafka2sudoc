@@ -41,7 +41,7 @@ public class BaconDbConfig extends AbstractConfig {
     public LocalContainerEntityManagerFactoryBean baconEntityManager() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(baconDataSource());
-        em.setPackagesToScan(new String[]{"fr.abes.kafkatosudoc.entity.bacon"});
+        em.setPackagesToScan("fr.abes.kafkatosudoc.entity.bacon");
         configHibernate(em, platform, showsql, dialect, ddlAuto, generateDdl, initMode);
         return em;
     }

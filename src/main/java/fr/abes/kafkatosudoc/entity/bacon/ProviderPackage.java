@@ -13,7 +13,7 @@ import java.io.Serializable;
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProviderPackage implements Serializable {
+public class ProviderPackage implements Serializable, Comparable<ProviderPackage> {
     @EmbeddedId
     private ProviderPackageId providerPackageId;
 
@@ -27,5 +27,10 @@ public class ProviderPackage implements Serializable {
     public ProviderPackage(ProviderPackageId providerPackageId, char labelAbes) {
         this.providerPackageId = providerPackageId;
         this.labelAbes = labelAbes;
+    }
+
+    @Override
+    public int compareTo(ProviderPackage o) {
+        return this.providerPackageId.getDateP().compareTo(o.getProviderPackageId().getDateP());
     }
 }

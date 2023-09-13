@@ -1,8 +1,11 @@
 package fr.abes.kafkatosudoc.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import javax.annotation.Nullable;
 
 @Data
 @NoArgsConstructor
