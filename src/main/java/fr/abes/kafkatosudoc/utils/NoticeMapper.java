@@ -23,7 +23,6 @@ public class NoticeMapper {
             @SneakyThrows
             public NoticeConcrete convert(MappingContext<LigneKbartDto, NoticeConcrete> context) {
                 LigneKbartDto kbart = context.getSource();
-                char[] indicateurs = new char[2];
                 //création de la notice biblio
                 Biblio noticeBiblio = new Biblio();
                 //ajout zone type de document
@@ -36,13 +35,14 @@ public class NoticeMapper {
                 }
 
                 //DOI
-                indicateurs[0] = '7';
-                indicateurs[1] = '0';
-                noticeBiblio.addZone("017", "$a", Utils.extractDOI(kbart), indicateurs);
-                noticeBiblio.addSousZone("017", "$2", "DOI");
+                String doi =  Utils.extractDOI(kbart);
+                if (!doi.equals("")) {
+                    noticeBiblio.addZone("017", "$a", doi, new char[]{'7', '0'});
+                    noticeBiblio.addSousZone("017", "$2", "DOI");
+                }
                 //Date de publication
                 if (kbart.getDateMonographPublishedOnline() != null)
-                    noticeBiblio.addZone("100", "$a", kbart.getDateMonographPublishedOnline());
+                    noticeBiblio.addZone("100", "$a", kbart.getDateMonographPublishedOnline(), new char[]{'0', '#'});
 
                 //Langue de publication
                 noticeBiblio.addZone("101", "$a", "und");
@@ -59,42 +59,34 @@ public class NoticeMapper {
                 noticeBiblio.addZone("183", "$P", "01");
                 noticeBiblio.addSousZone("183", "$a", "ceb");
                 //Titre
-                indicateurs[0] = '1';
-                indicateurs[1] = '#';
-                noticeBiblio.addZone("200", "$a", "@" + kbart.getPublicationTitle(), indicateurs);
+
+                noticeBiblio.addZone("200", "$a", "@" + kbart.getPublicationTitle(), new char[]{'1', '#'});
                 //Mention de publication / diffusion
-                indicateurs[0] = '#';
-                indicateurs[1] = '0';
                 if (kbart.getPublisherName() != null)
-                    noticeBiblio.addZone("214", "$c", kbart.getPublisherName(), indicateurs);
+                    noticeBiblio.addZone("214", "$c", kbart.getPublisherName(), new char[]{'#', '0'});
                 else
                     noticeBiblio.addZone("214", "$c", "[Lieu de publication inconnu");
-                indicateurs[1] = '2';
-                noticeBiblio.addZone("214", "$a", "[Lieu de diffusion inconnu]", indicateurs);
+
+                noticeBiblio.addZone("214", "$a", "[Lieu de diffusion inconnu]", new char[]{'#', '2'});
                 noticeBiblio.addSousZone("214", "$d", kbart.getDateMonographPublishedOnline(), 1);
                 noticeBiblio.addZone("309", "$a", "Notice générée automatiquement à partir des métadonnées de BACON. SUPPRIMER LA PRESENTE NOTE 309 APRES MISE A JOUR");
+
                 //Note sur les conditions d'accès
-                indicateurs[0] = '0';
-                indicateurs[1] = '#';
                 if (kbart.getAccessType().equals("F"))
-                    noticeBiblio.addZone("371", "$a", "Ressource en accès libre");
+                    noticeBiblio.addZone("371", "$a", "Ressource en accès libre", new char[]{'0', '#'});
                 else
-                    noticeBiblio.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition");
+                    noticeBiblio.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", new char[]{'0', '#'});
 
                 //1er auteur
-                indicateurs[0] = '1';
-                indicateurs[1] = '#';
-                noticeBiblio.addZone("700", "$a", kbart.getFirstAuthor(), indicateurs);
+                noticeBiblio.addZone("700", "$a", kbart.getFirstAuthor(), new char[]{'1', '#'});
                 noticeBiblio.addSousZone("700", "$4", "070");
 
                 //editeur
-                noticeBiblio.addZone("701", "$a", kbart.getFirstEditor(), indicateurs);
+                noticeBiblio.addZone("701", "$a", kbart.getFirstEditor(), new char[]{'1', '#'});
                 noticeBiblio.addSousZone("701", "$6", "51");
 
                 //url d'accès
-                indicateurs[0] = '4';
-                indicateurs[1] = '#';
-                noticeBiblio.addZone("856", "$u", kbart.getTitleUrl(), indicateurs);
+                noticeBiblio.addZone("856", "$u", kbart.getTitleUrl(), new char[]{'4', '#'});
 
                 //création de l'exemplaire pour affichage dans le Sudoc public
                 Exemplaire exemp = new Exemplaire();

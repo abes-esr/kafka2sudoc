@@ -3,7 +3,9 @@ package fr.abes.kafkatosudoc.kafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.abes.cbs.exception.CBSException;
 import fr.abes.cbs.notices.NoticeConcrete;
+import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.LigneKbartDto;
+import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.EmailService;
 import fr.abes.kafkatosudoc.service.SudocService;
 import fr.abes.kafkatosudoc.utils.CheckFiles;
@@ -27,6 +29,9 @@ public class KbartListener {
 
     @Autowired
     private SudocService service;
+
+    @Autowired
+    private BaconService baconService;
 
     @Autowired
     private EmailService emailService;
@@ -107,11 +112,20 @@ public class KbartListener {
         String filename = "";
         try {
             filename = getFileNameFromHeader(lignesKbart.headers());
+
+            String provider = CheckFiles.getProviderFromFilename(filename);
+            String packageName = CheckFiles.getPackageFromFilename(filename);
             ligneKbartDto = mapper.readValue(lignesKbart.value(), LigneKbartDto.class);
             service.authenticate();
             NoticeConcrete notice = utilsMapper.map(ligneKbartDto, NoticeConcrete.class);
-            //TODO : ajout Provider display name en 214 $c 2è occurrence
-            //TODO : ajout PPN Notice bouquet 469 $0
+            //Ajout provider display name en 214 $c 2è occurrence
+            String providerDisplay = baconService.getProviderDisplayName(provider);
+            if (providerDisplay != null) {
+                notice.findZone("214", 1).addSubLabel("$c", providerDisplay);
+            }
+            //Ajout lien vers notice bouquet
+            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
+            notice.addZone("469", "$0", ppnNoticeBouquet);
             service.sauvegarderNotice(notice);
             log.debug("Ajout notice exNihilo effectué");
         }
