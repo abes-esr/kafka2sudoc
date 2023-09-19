@@ -29,4 +29,13 @@ public class Utils {
         }
         return "";
     }
+
+    /**
+     * Méthode permettant de supprimer les éventuels tirets présents dans un isbn
+     * @param isbn
+     * @return
+     */
+    public static String extractOnlineIdentifier(String isbn) {
+        return isbn.replace("-", "");
+    }
 }

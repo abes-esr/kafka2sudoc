@@ -121,11 +121,11 @@ public class KbartListener {
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
             if (providerDisplay != null) {
-                notice.findZone("214", 1).addSubLabel("$c", providerDisplay);
+                notice.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
             }
             //Ajout lien vers notice bouquet
             String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-            notice.addZone("469", "$0", ppnNoticeBouquet);
+            notice.getNoticeBiblio().addZone("469", "$0", ppnNoticeBouquet);
             service.sauvegarderNotice(notice);
             log.debug("Ajout notice exNihilo effectué");
         }

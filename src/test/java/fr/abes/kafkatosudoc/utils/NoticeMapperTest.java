@@ -65,6 +65,7 @@ public class NoticeMapperTest {
 
         //controle mention de publication
         Assertions.assertEquals("Test publisher", biblio.findZones("214").get(0).findSubLabel("$c"));
+        Assertions.assertEquals("[Lieu de publication inconnu]", biblio.findZones("214").get(0).findSubLabel("$a"));
         Assertions.assertEquals('#', biblio.findZones("214").get(0).getIndicateurs()[0]);
         Assertions.assertEquals('0', biblio.findZones("214").get(0).getIndicateurs()[1]);
         Assertions.assertEquals("[Lieu de diffusion inconnu]", biblio.findZones("214").get(1).findSubLabel("$a"));
@@ -111,7 +112,7 @@ public class NoticeMapperTest {
     void testMapperNoticeFromKbartCas2() {
         //type d'accès différent, et pas de DOI
         LigneKbartDto kbart = new LigneKbartDto();
-        kbart.setOnlineIdentifier("978-0-415-11262-8");
+        kbart.setOnlineIdentifier("0-415-11262-8");
         kbart.setDateMonographPublishedOnline("2023");
         kbart.setPublicationTitle("Test title");
         kbart.setPublisherName("Test publisher");
@@ -123,6 +124,9 @@ public class NoticeMapperTest {
         NoticeConcrete notice = mapper.map(kbart, NoticeConcrete.class);
         Biblio biblio = notice.getNoticeBiblio();
         Assertions.assertEquals(17, biblio.getListeZones().size());
+
+        //controle isbn
+        Assertions.assertEquals("0-415-11262-8", biblio.findZones("010").get(0).findSubLabel("$a"));
 
         //controle note sur les conditions d'accès
         Assertions.assertEquals("Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", biblio.findZones("371").get(0).findSubLabel("$a"));

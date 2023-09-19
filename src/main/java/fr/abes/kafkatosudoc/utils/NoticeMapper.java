@@ -8,10 +8,12 @@ import lombok.SneakyThrows;
 import org.modelmapper.Converter;
 import org.modelmapper.spi.MappingContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class NoticeMapper {
     private final UtilsMapper mapper;
 
@@ -28,7 +30,7 @@ public class NoticeMapper {
                 //ajout zone type de document
                 noticeBiblio.addZone("008", "$a", "Oax3");
                 //ajout ISBN
-                if ((kbart.getOnlineIdentifier().length() == 10)) {
+                if ((Utils.extractOnlineIdentifier(kbart.getOnlineIdentifier()).length() == 10)) {
                     noticeBiblio.addZone("010", "$a", kbart.getOnlineIdentifier());
                 } else {
                     noticeBiblio.addZone("010", "$A", kbart.getOnlineIdentifier());
@@ -62,10 +64,10 @@ public class NoticeMapper {
 
                 noticeBiblio.addZone("200", "$a", "@" + kbart.getPublicationTitle(), new char[]{'1', '#'});
                 //Mention de publication / diffusion
+                noticeBiblio.addZone("214", "$a", "[Lieu de publication inconnu]", new char[]{'#', '0'});
                 if (kbart.getPublisherName() != null)
-                    noticeBiblio.addZone("214", "$c", kbart.getPublisherName(), new char[]{'#', '0'});
-                else
-                    noticeBiblio.addZone("214", "$c", "[Lieu de publication inconnu");
+                    noticeBiblio.addSousZone("214", "$c", kbart.getPublisherName());
+
 
                 noticeBiblio.addZone("214", "$a", "[Lieu de diffusion inconnu]", new char[]{'#', '2'});
                 noticeBiblio.addSousZone("214", "$d", kbart.getDateMonographPublishedOnline(), 1);
