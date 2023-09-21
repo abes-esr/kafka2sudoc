@@ -47,7 +47,7 @@ public class NoticeMapper {
                     noticeBiblio.addZone("100", "$a", kbart.getDateMonographPublishedOnline(), new char[]{'0', '#'});
 
                 //Langue de publication
-                noticeBiblio.addZone("101", "$a", "und");
+                noticeBiblio.addZone("101", "$a", "und", new char[]{'#', '#'});
                 //Pays de publication
                 noticeBiblio.addZone("102", "$a", "XX");
 
@@ -80,12 +80,23 @@ public class NoticeMapper {
                     noticeBiblio.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", new char[]{'0', '#'});
 
                 //1er auteur
-                noticeBiblio.addZone("700", "$a", kbart.getFirstAuthor(), new char[]{'1', '#'});
-                noticeBiblio.addSousZone("700", "$4", "070");
+                if (!kbart.getFirstAuthor().isEmpty()) {
+                    noticeBiblio.addZone("700", "$a", kbart.getFirstAuthor(), new char[]{'#', '1'});
+                    noticeBiblio.addSousZone("700", "$4", "070");
+                }
 
                 //editeur
-                noticeBiblio.addZone("701", "$a", kbart.getFirstEditor(), new char[]{'1', '#'});
-                noticeBiblio.addSousZone("701", "$6", "51");
+                if (!kbart.getFirstEditor().isEmpty()) {
+                    if (kbart.getFirstAuthor().isEmpty()) {
+                        noticeBiblio.addZone("700", "$a", kbart.getFirstEditor(), new char[]{'#', '1'});
+                        noticeBiblio.addSousZone("700", "$4", "651");
+                    } else {
+                        noticeBiblio.addZone("701", "$a", kbart.getFirstEditor(), new char[]{'#', '1'});
+                        noticeBiblio.addSousZone("701", "$4", "651");
+                    }
+
+                }
+
 
                 //url d'accès
                 noticeBiblio.addZone("856", "$u", kbart.getTitleUrl(), new char[]{'4', '#'});

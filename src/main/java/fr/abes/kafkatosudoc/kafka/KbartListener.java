@@ -1,9 +1,10 @@
 package fr.abes.kafkatosudoc.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.abes.cbs.exception.CBSException;
+import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.NoticeConcrete;
-import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.LigneKbartDto;
 import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.EmailService;
@@ -56,7 +57,7 @@ public class KbartListener {
                 NoticeConcrete noticeBestPpn = service.getNoticeFromPpn(ligneKbartDto.getBestPpn());
                 if (!service.isNoticeBouquetInBestPpn(noticeBestPpn.getNoticeBiblio(), ppnNoticeBouquet)) {
                     service.addNoticeBouquetInBestPpn(noticeBestPpn.getNoticeBiblio(), ppnNoticeBouquet);
-                    service.sauvegarderNotice(noticeBestPpn);
+                    service.modifierNotice(noticeBestPpn);
                     log.debug("Ajout 469 : Notice " + ligneKbartDto.getBestPpn() + " modifiée avec succès");
                 }
             }
@@ -73,7 +74,7 @@ public class KbartListener {
      * @param lignesKbart
      * @throws CBSException
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "lignesKbart", containerFactory = "kafkaKbartListenerContainerFactory")
+    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "lignesKbartLocal", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartToDeleteFromKafka(ConsumerRecord<String, String> lignesKbart) throws CBSException {
         String filename = "";
         LigneKbartDto ligneKbartDto = new LigneKbartDto();
@@ -88,7 +89,7 @@ public class KbartListener {
                 NoticeConcrete noticeBestPpn = service.getNoticeFromPpn(ligneKbartDto.getBestPpn());
                 if (service.isNoticeBouquetInBestPpn(noticeBestPpn.getNoticeBiblio(), ppnNoticeBouquet)) {
                     service.supprimeNoticeBouquetInBestPpn(noticeBestPpn.getNoticeBiblio(), ppnNoticeBouquet);
-                    service.sauvegarderNotice(noticeBestPpn);
+                    service.modifierNotice(noticeBestPpn);
                     log.debug("Suppression 469 : Notice " + ligneKbartDto.getBestPpn() + " modifiée avec succès");
                 }
             }
@@ -106,7 +107,7 @@ public class KbartListener {
      * @param lignesKbart
      * @throws CBSException
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "lignesKbart", containerFactory = "kafkaKbartListenerContainerFactory")
+    @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "lignesKbartTest", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, String> lignesKbart) throws CBSException {
         LigneKbartDto ligneKbartDto = new LigneKbartDto();
         String filename = "";
@@ -126,10 +127,10 @@ public class KbartListener {
             //Ajout lien vers notice bouquet
             String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
             notice.getNoticeBiblio().addZone("469", "$0", ppnNoticeBouquet);
-            service.sauvegarderNotice(notice);
+            service.creerNotice(notice);
             log.debug("Ajout notice exNihilo effectué");
         }
-        catch (Exception e) {
+        catch (CBSException | ZoneException | JsonProcessingException e) {
                 log.debug(e.getMessage(), e.getCause());
                 emailService.sendErrorMail(filename, ligneKbartDto, e);
             }

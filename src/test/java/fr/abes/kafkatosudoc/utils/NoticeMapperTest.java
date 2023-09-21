@@ -84,14 +84,14 @@ public class NoticeMapperTest {
         //controle auteur
         Assertions.assertEquals("Test author", biblio.findZones("700").get(0).findSubLabel("$a"));
         Assertions.assertEquals("070", biblio.findZones("700").get(0).findSubLabel("$4"));
-        Assertions.assertEquals('1', biblio.findZones("700").get(0).getIndicateurs()[0]);
-        Assertions.assertEquals('#', biblio.findZones("700").get(0).getIndicateurs()[1]);
+        Assertions.assertEquals('#', biblio.findZones("700").get(0).getIndicateurs()[0]);
+        Assertions.assertEquals('1', biblio.findZones("700").get(0).getIndicateurs()[1]);
 
         //controle editor
         Assertions.assertEquals("Test editor", biblio.findZones("701").get(0).findSubLabel("$a"));
-        Assertions.assertEquals("51", biblio.findZones("701").get(0).findSubLabel("$6"));
-        Assertions.assertEquals('1', biblio.findZones("701").get(0).getIndicateurs()[0]);
-        Assertions.assertEquals('#', biblio.findZones("701").get(0).getIndicateurs()[1]);
+        Assertions.assertEquals("651", biblio.findZones("701").get(0).findSubLabel("$4"));
+        Assertions.assertEquals('#', biblio.findZones("701").get(0).getIndicateurs()[0]);
+        Assertions.assertEquals('1', biblio.findZones("701").get(0).getIndicateurs()[1]);
 
         //controle URL
         Assertions.assertEquals("https://www.test.com/10.1484/M.BM-EB.5.113206", biblio.findZones("856").get(0).findSubLabel("$u"));
@@ -132,6 +132,30 @@ public class NoticeMapperTest {
         Assertions.assertEquals("Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", biblio.findZones("371").get(0).findSubLabel("$a"));
         Assertions.assertEquals('0', biblio.findZones("371").get(0).getIndicateurs()[0]);
         Assertions.assertEquals('#', biblio.findZones("371").get(0).getIndicateurs()[1]);
+    }
+
+    @Test
+    @DisplayName("Test création notice from Kbart cas 2 : un éditeur / pas d'auteur")
+    void testMapperNoticeFromKbartCas3() {
+        //type d'accès différent, et pas de DOI
+        LigneKbartDto kbart = new LigneKbartDto();
+        kbart.setOnlineIdentifier("0-415-11262-8");
+        kbart.setDateMonographPublishedOnline("2023");
+        kbart.setPublicationTitle("Test title");
+        kbart.setPublisherName("Test publisher");
+        kbart.setAccessType("P");
+        kbart.setFirstAuthor("");
+        kbart.setFirstEditor("Test éditeur");
+        kbart.setTitleUrl("https://www.test.com/");
+
+        NoticeConcrete notice = mapper.map(kbart, NoticeConcrete.class);
+        Biblio biblio = notice.getNoticeBiblio();
+        Assertions.assertEquals(16, biblio.getListeZones().size());
+
+        //controle isbn
+        Assertions.assertEquals("Test éditeur", biblio.findZones("700").get(0).findSubLabel("$a"));
+        Assertions.assertEquals("651", biblio.findZones("700").get(0).findSubLabel("$4"));
+
     }
 
 }
