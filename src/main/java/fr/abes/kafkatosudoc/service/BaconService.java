@@ -26,7 +26,7 @@ public class BaconService {
         this.mapper = mapper;
     }
 
-    public Optional<List<ProviderPackage>> findLastVersionOfPackage(PackageKbartDto packageKbartDto){
+    public Optional<List<ProviderPackage>> findLastVersionOfPackage(PackageKbartDto packageKbartDto) {
         Optional<Provider> providerOpt = providerRepository.findByProvider(packageKbartDto.getProvider());
         if (providerOpt.isPresent()) {
             return providerPackageRepository.findAllByProviderPackageId_DatePAndProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(packageKbartDto.getDatePackage(), providerOpt.get().getIdtProvider(), packageKbartDto.getPackageName());
@@ -37,18 +37,26 @@ public class BaconService {
 
     /**
      * @param listProviderPackage toutes les lignes en base de donnée bacon avec un provider et un package identique
-     * @param datePackage la date figurant dans l'entête du fichier kbart
+     * @param datePackage         la date figurant dans l'entête du fichier kbart
      * @return vrai si il existe une version avec une date antérieure à celle du fichier que l'on est en train de traiter
      * La date spécifiée dans le fichier est censée etre toujours la date du jour (puisque celle de l'envoi)
      */
-    public boolean isAnteriorVersionExist(Optional<List<ProviderPackage>> listProviderPackage, Date datePackage){
+    public boolean isAnteriorVersionExist(Optional<List<ProviderPackage>> listProviderPackage, Date datePackage) {
         System.out.println("cdc");
         List<ProviderPackage> listProviderPackageLocal = listProviderPackage.orElse(new ArrayList<>());
-            Collections.sort(listProviderPackageLocal);
-            if(!listProviderPackageLocal.isEmpty()){
-                return listProviderPackageLocal.get(0).getProviderPackageId().getDateP().getTime() <= datePackage.getTime();
-            }else{
-                return false;
-            }
+        Collections.sort(listProviderPackageLocal);
+        if (!listProviderPackageLocal.isEmpty()) {
+            return listProviderPackageLocal.get(0).getProviderPackageId().getDateP().getTime() <= datePackage.getTime();
+        } else {
+            return false;
+        }
+    }
+
+    public String getProviderDisplayName(String provider) {
+        Optional<Provider> providerOpt = providerRepository.findByProvider(provider);
+        if (providerOpt.isPresent()) {
+            return providerOpt.get().getDisplayName();
+        }
+        return null;
     }
 }
