@@ -75,8 +75,12 @@ public class SudocService {
 		return notice;
 	}
 
-	public void sauvegarderNotice(NoticeConcrete noticeBestPpn) throws CBSException {
+	public void modifierNotice(NoticeConcrete noticeBestPpn) throws CBSException {
 		this.cbs.modifierNoticeConcrete("1", noticeBestPpn);
+	}
+
+	public void creerNotice(NoticeConcrete notice) throws CBSException {
+		this.cbs.enregistrerNew(notice.toString());
 	}
 
 	public Biblio supprimeNoticeBouquetInBestPpn(Biblio notice, String ppnNoticeBouquet) {

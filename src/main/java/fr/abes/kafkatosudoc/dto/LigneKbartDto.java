@@ -96,7 +96,7 @@ public class LigneKbartDto {
                 + (this.parentPublicationTitleId.isEmpty() ? "" : this.parentPublicationTitleId) + "\t"
                 + (this.precedingPublicationTitleId.isEmpty() ? "" : this.precedingPublicationTitleId) + "\t"
                 + (this.accessType.isEmpty() ? "" : this.accessType) + "\t"
-                + (this.bestPpn.isEmpty() ? "" : this.bestPpn);
+                + (this.bestPpn == null || this.bestPpn.isEmpty() ? "" : this.bestPpn);
     }
 
 }
