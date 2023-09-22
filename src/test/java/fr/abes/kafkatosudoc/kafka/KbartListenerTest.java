@@ -1,27 +1,14 @@
 package fr.abes.kafkatosudoc.kafka;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.abes.cbs.process.ProcessCBS;
-import fr.abes.kafkatosudoc.dto.PackageKbartDto;
-import fr.abes.kafkatosudoc.dto.PackageKbartDtoKafka;
-import fr.abes.kafkatosudoc.entity.bacon.Provider;
-import fr.abes.kafkatosudoc.entity.bacon.ProviderPackage;
-import fr.abes.kafkatosudoc.entity.bacon.ProviderPackageId;
-import fr.abes.kafkatosudoc.exception.IllegalDateException;
 import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.SudocService;
-import fr.abes.kafkatosudoc.utils.CheckFiles;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-
-import java.util.*;
 
 @SpringBootTest(classes = {ProcessCBS.class, BaconService.class, SudocService.class, ObjectMapper.class})
 class KbartListenerTest {
@@ -49,7 +36,9 @@ class KbartListenerTest {
     }
 
     //TODO reflechir sur l'integration de _FORCE en suffixe de fichier à cet endroit du traitement
-    @Test
+
+    //TODO : a revoir, méthode censée tester le listener, mais listener jamais appelé
+   /** @Test
     void listenPackageKbartFromKafka() throws IllegalDateException, JsonProcessingException {
         PackageKbartDto packageKbartDto = new PackageKbartDto();
 
@@ -68,10 +57,10 @@ class KbartListenerTest {
         listOfProviderPackageExpected.add(providerPackageExpected);
 
         //Mock : Interrogation de la BDD Bacon et retour d'une liste d'objets
-        Mockito.when(baconService.findLastVersionOfPackage(packageKbartDto)).thenReturn(Optional.of(listOfProviderPackageExpected));
+        Mockito.when(baconService.findLastVersionOfPackage(packageKbartDto)).thenReturn(Lists.newArrayList(listOfProviderPackageExpected));
 
         //On considère que la dernière version retournée par la base date du 01 07 2023
-        Optional<List<ProviderPackage>> providerListReturnedByDatabase = baconService.findLastVersionOfPackage(packageKbartDto);
+        List<ProviderPackage> providerListReturnedByDatabase = baconService.findLastVersionOfPackage(packageKbartDto);
         //On regarde si il y a une version antérieure, la c'est le cas il a trouvé pour cette date une version en base, mêm jour, meme mois, meme annee, doit renvoyer true voir BaconServiceTest
         Mockito.when(baconService.isAnteriorVersionExist(providerListReturnedByDatabase, packageKbartDto.getDatePackage())).thenReturn(true);
         //TODO créer dans la couche utils les méthodes de tris des ppns
@@ -83,6 +72,6 @@ class KbartListenerTest {
 
 
     }
-
+*/
 
 }

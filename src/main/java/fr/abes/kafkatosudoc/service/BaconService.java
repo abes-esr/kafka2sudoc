@@ -1,62 +1,56 @@
 package fr.abes.kafkatosudoc.service;
 
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
+import fr.abes.kafkatosudoc.entity.bacon.LigneKbart;
 import fr.abes.kafkatosudoc.entity.bacon.Provider;
 import fr.abes.kafkatosudoc.entity.bacon.ProviderPackage;
-import fr.abes.kafkatosudoc.entity.bacon.ProviderPackageId;
 import fr.abes.kafkatosudoc.repository.bacon.LigneKbartRepository;
 import fr.abes.kafkatosudoc.repository.bacon.ProviderPackageRepository;
 import fr.abes.kafkatosudoc.repository.bacon.ProviderRepository;
-import fr.abes.kafkatosudoc.utils.UtilsMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BaconService {
-    private ProviderPackageRepository providerPackageRepository;
-    private ProviderRepository providerRepository;
-    private LigneKbartRepository ligneKbartRepository;
-    private UtilsMapper mapper;
+    private final ProviderPackageRepository providerPackageRepository;
+    private final ProviderRepository providerRepository;
+    private final LigneKbartRepository ligneKbartRepository;
 
-    public BaconService(ProviderPackageRepository providerPackageRepository, ProviderRepository providerRepository, LigneKbartRepository ligneKbartRepository, UtilsMapper mapper) {
+
+    public BaconService(ProviderPackageRepository providerPackageRepository, ProviderRepository providerRepository, LigneKbartRepository ligneKbartRepository) {
         this.providerPackageRepository = providerPackageRepository;
         this.providerRepository = providerRepository;
         this.ligneKbartRepository = ligneKbartRepository;
-        this.mapper = mapper;
     }
 
-    public Optional<List<ProviderPackage>> findLastVersionOfPackage(PackageKbartDto packageKbartDto) {
+    public ProviderPackage findLastVersionOfPackage(PackageKbartDto packageKbartDto) {
         Optional<Provider> providerOpt = providerRepository.findByProvider(packageKbartDto.getProvider());
+        ProviderPackage providerPackage = null;
         if (providerOpt.isPresent()) {
-            return providerPackageRepository.findAllByProviderPackageId_DatePAndProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(packageKbartDto.getDatePackage(), providerOpt.get().getIdtProvider(), packageKbartDto.getPackageName());
-        } else {
-            return Optional.empty();
+            List<ProviderPackage> providerPackageList = providerPackageRepository.findAllByProviderPackageId_ProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(providerOpt.get().getIdtProvider(), packageKbartDto.getPackageName());
+            if (!providerPackageList.isEmpty()) {
+                Collections.sort(providerPackageList);
+                for (ProviderPackage providerPackage1 : providerPackageList) {
+                    if (providerPackage1.getProviderPackageId().getDateP().after(packageKbartDto.getDatePackage())) {
+                        break;
+                    }
+                    providerPackage = providerPackage1;
+                }
+                return providerPackage;
+            }
         }
+        return null;
     }
 
-    /**
-     * @param listProviderPackage toutes les lignes en base de donnée bacon avec un provider et un package identique
-     * @param datePackage         la date figurant dans l'entête du fichier kbart
-     * @return vrai si il existe une version avec une date antérieure à celle du fichier que l'on est en train de traiter
-     * La date spécifiée dans le fichier est censée etre toujours la date du jour (puisque celle de l'envoi)
-     */
-    public boolean isAnteriorVersionExist(Optional<List<ProviderPackage>> listProviderPackage, Date datePackage) {
-        System.out.println("cdc");
-        List<ProviderPackage> listProviderPackageLocal = listProviderPackage.orElse(new ArrayList<>());
-        Collections.sort(listProviderPackageLocal);
-        if (!listProviderPackageLocal.isEmpty()) {
-            return listProviderPackageLocal.get(0).getProviderPackageId().getDateP().getTime() <= datePackage.getTime();
-        } else {
-            return false;
-        }
+    public List<String> findAllPpnFromPackage(ProviderPackage providerPackage) {
+        return ligneKbartRepository.findAllByProviderPackage(providerPackage).stream().map(LigneKbart::getBestPpn).toList();
     }
 
     public String getProviderDisplayName(String provider) {
         Optional<Provider> providerOpt = providerRepository.findByProvider(provider);
-        if (providerOpt.isPresent()) {
-            return providerOpt.get().getDisplayName();
-        }
-        return null;
+        return providerOpt.map(Provider::getDisplayName).orElse(null);
     }
 }
