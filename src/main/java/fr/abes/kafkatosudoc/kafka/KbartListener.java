@@ -74,7 +74,7 @@ public class KbartListener {
      * @param lignesKbart
      * @throws CBSException
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "lignesKbartLocal", containerFactory = "kafkaKbartListenerContainerFactory")
+    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "${topic.groupid.source.kbart}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartToDeleteFromKafka(ConsumerRecord<String, String> lignesKbart) throws CBSException {
         String filename = "";
         LigneKbartDto ligneKbartDto = new LigneKbartDto();
@@ -107,7 +107,7 @@ public class KbartListener {
      * @param lignesKbart
      * @throws CBSException
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "lignesKbartTest", containerFactory = "kafkaKbartListenerContainerFactory")
+    @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.kbart}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, String> lignesKbart) throws CBSException {
         LigneKbartDto ligneKbartDto = new LigneKbartDto();
         String filename = "";
