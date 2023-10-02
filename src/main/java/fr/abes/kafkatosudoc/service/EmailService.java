@@ -1,7 +1,7 @@
 package fr.abes.kafkatosudoc.service;
 
-import fr.abes.kafkatosudoc.dto.LigneKbartDto;
+import fr.abes.kafkatosudoc.dto.connect.LigneKbartConnect;
 
 public interface EmailService {
-    void sendErrorMail(String filename, LigneKbartDto dataLines, Exception e);
+    void sendErrorMail(String filename, LigneKbartConnect dataLines, Exception e);
 }

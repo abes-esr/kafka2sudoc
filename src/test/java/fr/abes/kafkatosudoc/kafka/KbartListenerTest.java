@@ -6,14 +6,11 @@ import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.SudocService;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 @SpringBootTest(classes = {ProcessCBS.class, BaconService.class, SudocService.class, ObjectMapper.class})
 class KbartListenerTest {
-    @Autowired
-    private ObjectMapper mapper;
     @MockBean
     ProcessCBS processCBS;
     @MockBean

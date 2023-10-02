@@ -1,11 +1,8 @@
 package fr.abes.kafkatosudoc.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.annotation.Nullable;
 
 @Data
 @NoArgsConstructor
@@ -60,7 +57,7 @@ public class LigneKbartDto {
     private String precedingPublicationTitleId;
     @JsonProperty(value = "access_type")
     private String accessType;
-    @JsonProperty(value = "bestPpn")
+    @JsonProperty(value = "best_ppn")
     private String bestPpn;
 
     @Override

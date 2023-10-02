@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 @BaconDbConfiguration
 public interface ProviderPackageRepository extends JpaRepository<ProviderPackage, ProviderPackageId> {
-    List<ProviderPackage> findAllByProviderPackageId_ProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(Integer idProvider, String packageName);
+    List<ProviderPackage> findAllByProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(Integer idProvider, String packageName);
 
 }

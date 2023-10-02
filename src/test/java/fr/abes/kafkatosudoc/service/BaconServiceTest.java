@@ -56,7 +56,7 @@ class BaconServiceTest {
     void testFindLastVersionOfPackage1() {
         Provider provider = new Provider("testProvider");
         Mockito.when(providerRepository.findByProvider("provider")).thenReturn(Optional.of(provider));
-        Mockito.when(providerPackageRepository.findAllByProviderPackageId_ProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(Mockito.any(), Mockito.any()))
+        Mockito.when(providerPackageRepository.findAllByProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(Mockito.any(), Mockito.any()))
                 .thenReturn(providerPackageList);
 
         ProviderPackage providerPackage = baconService.findLastVersionOfPackage(packageKbartDto);
@@ -75,7 +75,7 @@ class BaconServiceTest {
     void testFindLastVersionOfPackage3() {
         Provider provider = new Provider("testProvider");
         Mockito.when(providerRepository.findByProvider(Mockito.anyString())).thenReturn(Optional.of(provider));
-        Mockito.when(providerPackageRepository.findAllByProviderPackageId_ProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(Mockito.any(), Mockito.any()))
+        Mockito.when(providerPackageRepository.findAllByProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(Mockito.any(), Mockito.any()))
                 .thenReturn(Lists.newArrayList());
         Assertions.assertNull(baconService.findLastVersionOfPackage(packageKbartDto));
     }

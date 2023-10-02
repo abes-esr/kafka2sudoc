@@ -3,7 +3,7 @@ package fr.abes.kafkatosudoc.utils;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.Exemplaire;
 import fr.abes.cbs.notices.NoticeConcrete;
-import fr.abes.kafkatosudoc.dto.LigneKbartDto;
+import fr.abes.kafkatosudoc.dto.connect.LigneKbartConnect;
 import lombok.SneakyThrows;
 import org.modelmapper.Converter;
 import org.modelmapper.spi.MappingContext;
@@ -21,19 +21,19 @@ public class NoticeMapper {
 
     @Bean
     public void converterKbartToNoticeConcrete() {
-        Converter<LigneKbartDto, NoticeConcrete> myConverter = new Converter<LigneKbartDto, NoticeConcrete>() {
+        Converter<LigneKbartConnect, NoticeConcrete> myConverter = new Converter<LigneKbartConnect, NoticeConcrete>() {
             @SneakyThrows
-            public NoticeConcrete convert(MappingContext<LigneKbartDto, NoticeConcrete> context) {
-                LigneKbartDto kbart = context.getSource();
+            public NoticeConcrete convert(MappingContext<LigneKbartConnect, NoticeConcrete> context) {
+                LigneKbartConnect kbart = context.getSource();
                 //création de la notice biblio
                 Biblio noticeBiblio = new Biblio();
                 //ajout zone type de document
                 noticeBiblio.addZone("008", "$a", "Oax3");
                 //ajout ISBN
-                if ((Utils.extractOnlineIdentifier(kbart.getOnlineIdentifier()).length() == 10)) {
-                    noticeBiblio.addZone("010", "$a", kbart.getOnlineIdentifier());
+                if ((Utils.extractOnlineIdentifier(kbart.getONLINEIDENTIFIER().toString()).length() == 10)) {
+                    noticeBiblio.addZone("010", "$a", kbart.getONLINEIDENTIFIER().toString());
                 } else {
-                    noticeBiblio.addZone("010", "$A", kbart.getOnlineIdentifier());
+                    noticeBiblio.addZone("010", "$A", kbart.getONLINEIDENTIFIER().toString());
                 }
 
                 //DOI
@@ -43,8 +43,8 @@ public class NoticeMapper {
                     noticeBiblio.addSousZone("017", "$2", "DOI");
                 }
                 //Date de publication
-                if (kbart.getDateMonographPublishedOnline() != null)
-                    noticeBiblio.addZone("100", "$a", kbart.getDateMonographPublishedOnline(), new char[]{'0', '#'});
+                if (kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null)
+                    noticeBiblio.addZone("100", "$a", kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString(), new char[]{'0', '#'});
 
                 //Langue de publication
                 noticeBiblio.addZone("101", "$a", "und", new char[]{'#', '#'});
@@ -62,36 +62,36 @@ public class NoticeMapper {
                 noticeBiblio.addSousZone("183", "$a", "ceb");
                 //Titre
 
-                noticeBiblio.addZone("200", "$a", "@" + kbart.getPublicationTitle(), new char[]{'1', '#'});
+                noticeBiblio.addZone("200", "$a", "@" + kbart.getPUBLICATIONTITLE(), new char[]{'1', '#'});
                 //Mention de publication / diffusion
                 noticeBiblio.addZone("214", "$a", "[Lieu de publication inconnu]", new char[]{'#', '0'});
-                if (kbart.getPublisherName() != null)
-                    noticeBiblio.addSousZone("214", "$c", kbart.getPublisherName());
+                if (kbart.getPUBLICATIONTITLE() != null)
+                    noticeBiblio.addSousZone("214", "$c", kbart.getPUBLICATIONTITLE().toString());
 
 
                 noticeBiblio.addZone("214", "$a", "[Lieu de diffusion inconnu]", new char[]{'#', '2'});
-                noticeBiblio.addSousZone("214", "$d", kbart.getDateMonographPublishedOnline(), 1);
+                noticeBiblio.addSousZone("214", "$d", kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString(), 1);
                 noticeBiblio.addZone("309", "$a", "Notice générée automatiquement à partir des métadonnées de BACON. SUPPRIMER LA PRESENTE NOTE 309 APRES MISE A JOUR");
 
                 //Note sur les conditions d'accès
-                if (kbart.getAccessType().equals("F"))
+                if (kbart.getACCESSTYPE().equals("F"))
                     noticeBiblio.addZone("371", "$a", "Ressource en accès libre", new char[]{'0', '#'});
                 else
                     noticeBiblio.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", new char[]{'0', '#'});
 
                 //1er auteur
-                if (!kbart.getFirstAuthor().isEmpty()) {
-                    noticeBiblio.addZone("700", "$a", kbart.getFirstAuthor(), new char[]{'#', '1'});
+                if (!kbart.getFIRSTAUTHOR().isEmpty()) {
+                    noticeBiblio.addZone("700", "$a", kbart.getFIRSTAUTHOR().toString(), new char[]{'#', '1'});
                     noticeBiblio.addSousZone("700", "$4", "070");
                 }
 
                 //editeur
-                if (!kbart.getFirstEditor().isEmpty()) {
-                    if (kbart.getFirstAuthor().isEmpty()) {
-                        noticeBiblio.addZone("700", "$a", kbart.getFirstEditor(), new char[]{'#', '1'});
+                if (!kbart.getFIRSTEDITOR().isEmpty()) {
+                    if (kbart.getFIRSTEDITOR().isEmpty()) {
+                        noticeBiblio.addZone("700", "$a", kbart.getFIRSTEDITOR().toString(), new char[]{'#', '1'});
                         noticeBiblio.addSousZone("700", "$4", "651");
                     } else {
-                        noticeBiblio.addZone("701", "$a", kbart.getFirstEditor(), new char[]{'#', '1'});
+                        noticeBiblio.addZone("701", "$a", kbart.getFIRSTEDITOR().toString(), new char[]{'#', '1'});
                         noticeBiblio.addSousZone("701", "$4", "651");
                     }
 
@@ -99,7 +99,7 @@ public class NoticeMapper {
 
 
                 //url d'accès
-                noticeBiblio.addZone("856", "$u", kbart.getTitleUrl(), new char[]{'4', '#'});
+                noticeBiblio.addZone("856", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
 
                 //création de l'exemplaire pour affichage dans le Sudoc public
                 Exemplaire exemp = new Exemplaire();

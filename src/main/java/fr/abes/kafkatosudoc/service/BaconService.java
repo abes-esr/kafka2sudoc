@@ -30,7 +30,7 @@ public class BaconService {
         Optional<Provider> providerOpt = providerRepository.findByProvider(packageKbartDto.getProvider());
         ProviderPackage providerPackage = null;
         if (providerOpt.isPresent()) {
-            List<ProviderPackage> providerPackageList = providerPackageRepository.findAllByProviderPackageId_ProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(providerOpt.get().getIdtProvider(), packageKbartDto.getPackageName());
+            List<ProviderPackage> providerPackageList = providerPackageRepository.findAllByProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(providerOpt.get().getIdtProvider(), packageKbartDto.getPackageName());
             if (!providerPackageList.isEmpty()) {
                 Collections.sort(providerPackageList);
                 for (ProviderPackage providerPackage1 : providerPackageList) {

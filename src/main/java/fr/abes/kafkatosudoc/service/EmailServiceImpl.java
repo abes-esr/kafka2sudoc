@@ -2,14 +2,10 @@ package fr.abes.kafkatosudoc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.abes.kafkatosudoc.dto.LigneKbartDto;
+import fr.abes.kafkatosudoc.dto.connect.LigneKbartConnect;
 import fr.abes.kafkatosudoc.dto.mail.MailDto;
-import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,10 +15,8 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 @Slf4j
 @Service
@@ -35,9 +29,9 @@ public class EmailServiceImpl implements EmailService {
     protected String url;
 
     @Override
-    public void sendErrorMail(String filename, LigneKbartDto kbart, Exception e) {
+    public void sendErrorMail(String filename, LigneKbartConnect kbart, Exception e) {
             StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la modification de la notice ");
-            body.append(kbart.getBestPpn());
+            body.append(kbart.getBESTPPN());
             body.append(" lors du traitement du fichier ");
             body.append(filename);
             body.append("<br /><br />");
@@ -49,7 +43,7 @@ public class EmailServiceImpl implements EmailService {
             body.append(e.getMessage());
 
             //  Création du mail
-            String requestJson = mailToJSON(this.recipient, "[CONVERGENCE] Erreur lors de la modification de la notice " + kbart.getBestPpn(), body.toString());
+            String requestJson = mailToJSON(this.recipient, "[CONVERGENCE] Erreur lors de la modification de la notice " + kbart.getBESTPPN(), body.toString());
             //  Envoi du message par mail
             sendMail(requestJson);
             log.info("L'email a été correctement envoyé.");
