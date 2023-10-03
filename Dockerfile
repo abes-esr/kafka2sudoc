@@ -11,15 +11,19 @@ RUN mvn -f /build/kafka2sudoc/pom.xml verify --fail-never
 COPY ./   /build/
 
 RUN mvn --batch-mode \
-        -Dmaven.test.skip=false \
+        -Dmaven.test.skip=true \
         -Duser.timezone=Europe/Paris \
         -Duser.language=fr \
-        package spring-boot:repackage
+        package -Passembly
 
 
 FROM ossyupiik/java:21.0.8 as kafka2sudoc-image
-WORKDIR /app/
-COPY --from=build-image /build/target/*.jar /app/kafka2sudoc.jar
+WORKDIR /
+COPY --from=build-image /build/target/kafka2sudoc-distribution.tar.gz /
+RUN tar xvfz kafka2sudoc-distribution.tar.gz
+RUN rm -f /kafka2sudoc-distribution.tar.gz
+
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-CMD ["java","-jar","/app/kafka2sudoc.jar"]
+
+CMD ["java", "-cp", "/kafka2sudoc/lib/*", "fr.abes.kafkatosudoc.KafkaToSudocApplication"]
