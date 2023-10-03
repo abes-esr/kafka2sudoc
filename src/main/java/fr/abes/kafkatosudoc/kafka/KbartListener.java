@@ -45,7 +45,7 @@ public class KbartListener {
      *
      * @param lignesKbart : ligne trouvée dans kafka
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.kbart}", containerFactory = "kafkaKbartListenerContainerFactory")
+    @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
         String filename = "";
         try {
@@ -125,7 +125,7 @@ public class KbartListener {
      * @param lignesKbart enregistrement dans kafka
      * @throws CBSException : erreur CBS
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "${topic.groupid.source.kbart}", containerFactory = "kafkaKbartListenerContainerFactory")
+    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "${topic.groupid.source.delete}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartToDeleteFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws CBSException {
         String filename = "";
         try {
@@ -154,7 +154,7 @@ public class KbartListener {
      * @param lignesKbart : enregistrement dans Kafka
      * @throws CBSException : erreur CBS
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.kbart}Local", containerFactory = "kafkaKbartListenerContainerFactory")
+    @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws CBSException {
         String filename = "";
         try {
