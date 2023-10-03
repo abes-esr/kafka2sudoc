@@ -1,9 +1,9 @@
 package fr.abes.kafkatosudoc.utils;
 
+import fr.abes.LigneKbartConnect;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.Exemplaire;
 import fr.abes.cbs.notices.NoticeConcrete;
-import fr.abes.kafkatosudoc.dto.connect.LigneKbartConnect;
 import lombok.SneakyThrows;
 import org.modelmapper.Converter;
 import org.modelmapper.spi.MappingContext;
@@ -44,7 +44,7 @@ public class NoticeMapper {
                 }
                 //Date de publication
                 if (kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null)
-                    noticeBiblio.addZone("100", "$a", kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString(), new char[]{'0', '#'});
+                    noticeBiblio.addZone("100", "$a", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), new char[]{'0', '#'});
 
                 //Langue de publication
                 noticeBiblio.addZone("101", "$a", "und", new char[]{'#', '#'});
@@ -66,11 +66,11 @@ public class NoticeMapper {
                 //Mention de publication / diffusion
                 noticeBiblio.addZone("214", "$a", "[Lieu de publication inconnu]", new char[]{'#', '0'});
                 if (kbart.getPUBLICATIONTITLE() != null)
-                    noticeBiblio.addSousZone("214", "$c", kbart.getPUBLICATIONTITLE().toString());
+                    noticeBiblio.addSousZone("214", "$c", kbart.getPUBLISHERNAME().toString());
 
 
                 noticeBiblio.addZone("214", "$a", "[Lieu de diffusion inconnu]", new char[]{'#', '2'});
-                noticeBiblio.addSousZone("214", "$d", kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString(), 1);
+                noticeBiblio.addSousZone("214", "$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), 1);
                 noticeBiblio.addZone("309", "$a", "Notice générée automatiquement à partir des métadonnées de BACON. SUPPRIMER LA PRESENTE NOTE 309 APRES MISE A JOUR");
 
                 //Note sur les conditions d'accès
@@ -87,7 +87,7 @@ public class NoticeMapper {
 
                 //editeur
                 if (!kbart.getFIRSTEDITOR().isEmpty()) {
-                    if (kbart.getFIRSTEDITOR().isEmpty()) {
+                    if (kbart.getFIRSTAUTHOR().isEmpty()) {
                         noticeBiblio.addZone("700", "$a", kbart.getFIRSTEDITOR().toString(), new char[]{'#', '1'});
                         noticeBiblio.addSousZone("700", "$4", "651");
                     } else {

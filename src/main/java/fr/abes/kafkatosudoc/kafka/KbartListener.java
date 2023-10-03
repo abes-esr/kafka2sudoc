@@ -1,10 +1,10 @@
 package fr.abes.kafkatosudoc.kafka;
 
+import fr.abes.LigneKbartConnect;
 import fr.abes.cbs.exception.CBSException;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
-import fr.abes.kafkatosudoc.dto.connect.LigneKbartConnect;
 import fr.abes.kafkatosudoc.entity.bacon.ProviderPackage;
 import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.EmailService;
@@ -53,12 +53,17 @@ public class KbartListener {
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
             PackageKbartDto packageKbartDto = new PackageKbartDto(packageName, Calendar.getInstance().getTime(), provider);
-            if (lignesKbart.value().equals("OK")) {
-                traiterPackageDansSudoc(listeNotices, packageKbartDto);
-            } else {
-                if (!lignesKbart.value().getBESTPPN().isEmpty()) {
-                    //on alimente la liste des notices d'un package qui sera traitée intégralement
+
+            if (!lignesKbart.value().getBESTPPN().isEmpty()) {
+                //on alimente la liste des notices d'un package qui sera traitée intégralement
+                listeNotices.add(lignesKbart.value().getBESTPPN().toString());
+            }
+            for (Header header : lignesKbart.headers().toArray()) {
+                if (header.key().equals("OK") && header.value().equals("true")) {
                     listeNotices.add(lignesKbart.value().getBESTPPN().toString());
+                    traiterPackageDansSudoc(listeNotices, packageKbartDto);
+                    listeNotices.clear();
+                    break;
                 }
             }
         } catch (Exception e) {
@@ -154,53 +159,18 @@ public class KbartListener {
         String filename = "";
         try {
             filename = getFileNameFromHeader(lignesKbart.headers());
-
             String provider = CheckFiles.getProviderFromFilename(filename);
-            String packageName = CheckFiles.getPackageFromFilename(filename);
             service.authenticate();
-            LigneKbartConnect ligne = LigneKbartConnect.newBuilder()
-                    .setPUBLICATIONTITLE(lignesKbart.value().getPUBLICATIONTITLE())
-                    .setPRINTIDENTIFIER(lignesKbart.value().getPRINTIDENTIFIER())
-                    .setONLINEIDENTIFIER(lignesKbart.value().getONLINEIDENTIFIER())
-                    .setDATEFIRSTISSUEONLINE(lignesKbart.value().getDATEFIRSTISSUEONLINE())
-                    .setNUMFIRSTVOLONLINE(lignesKbart.value().getNUMFIRSTVOLONLINE())
-                    .setNUMFIRSTISSUEONLINE(lignesKbart.value().getNUMFIRSTISSUEONLINE())
-                    .setDATELASTISSUEONLINE(lignesKbart.value().getDATELASTISSUEONLINE())
-                    .setNUMLASTVOLONLINE(lignesKbart.value().getNUMLASTVOLONLINE())
-                    .setDATELASTISSUEONLINE(lignesKbart.value().getDATELASTISSUEONLINE())
-                    .setTITLEURL(lignesKbart.value().getTITLEURL())
-                    .setFIRSTAUTHOR(lignesKbart.value().getFIRSTAUTHOR())
-                    .setTITLEID(lignesKbart.value().getTITLEID())
-                    .setEMBARGOINFO(lignesKbart.value().getEMBARGOINFO())
-                    .setNOTES(lignesKbart.value().getNOTES())
-                    .setPUBLISHERNAME(lignesKbart.value().getPUBLISHERNAME())
-                    .setPUBLICATIONTYPE(lignesKbart.value().getPUBLICATIONTYPE())
-                    .setDATEMONOGRAPHPUBLISHEDPRINT(lignesKbart.value().getDATEMONOGRAPHPUBLISHEDPRINT())
-                    .setDATEMONOGRAPHPUBLISHEDPRINT(lignesKbart.value().getDATEMONOGRAPHPUBLISHEDPRINT())
-                    .setMONOGRAPHVOLUME(lignesKbart.value().getMONOGRAPHVOLUME())
-                    .setMONOGRAPHEDITION(lignesKbart.value().getMONOGRAPHEDITION())
-                    .setFIRSTEDITOR(lignesKbart.value().getFIRSTEDITOR())
-                    .setPARENTPUBLICATIONTITLEID(lignesKbart.value().getPARENTPUBLICATIONTITLEID())
-                    .setPRECEDINGPUBLICATIONTITLEID(lignesKbart.value().getPRECEDINGPUBLICATIONTITLEID())
-                    .setACCESSTYPE(lignesKbart.value().getACCESSTYPE())
-                    .setPROVIDERPACKAGEPACKAGE(lignesKbart.value().getPROVIDERPACKAGEPACKAGE())
-                    .setPROVIDERPACKAGEDATEP(lignesKbart.value().getPROVIDERPACKAGEDATEP())
-                    .setPROVIDERPACKAGEIDTPROVIDER(lignesKbart.value().getPROVIDERPACKAGEIDTPROVIDER())
-                    .setBESTPPN(lignesKbart.value().getBESTPPN())
-                    .build();
-            NoticeConcrete notice = mapper.map(ligne, NoticeConcrete.class);
+            NoticeConcrete notice = mapper.map(lignesKbart.value(), NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
             if (providerDisplay != null) {
                 notice.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
             }
-            //Ajout lien vers notice bouquet
-            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-            notice.getNoticeBiblio().addZone("469", "$0", ppnNoticeBouquet);
             service.creerNotice(notice);
             log.debug("Ajout notice exNihilo effectué");
         } catch (CBSException | ZoneException e) {
-            log.debug(e.getMessage(), e.getCause());
+            log.debug(e.getMessage());
             emailService.sendErrorMail(filename, lignesKbart.value(), e);
         } finally {
             service.disconnect();
@@ -212,6 +182,7 @@ public class KbartListener {
         for (Header header : headers.toArray()) {
             if (header.key().equals("filename")) {
                 filename = new String(header.value());
+                break;
             }
         }
         return filename;

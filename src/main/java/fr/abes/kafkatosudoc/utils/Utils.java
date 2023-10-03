@@ -1,6 +1,8 @@
 package fr.abes.kafkatosudoc.utils;
 
-import fr.abes.kafkatosudoc.dto.connect.LigneKbartConnect;
+
+
+import fr.abes.LigneKbartConnect;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,5 +39,12 @@ public class Utils {
      */
     public static String extractOnlineIdentifier(String isbn) {
         return isbn.replace("-", "");
+    }
+
+    public static String getYearFromDate(String date) {
+        if (date == null || date.isEmpty())
+            return "";
+        return date.substring(0,4);
+
     }
 }

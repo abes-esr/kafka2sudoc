@@ -1,10 +1,9 @@
 package fr.abes.kafkatosudoc.utils;
 
+import fr.abes.LigneKbartConnect;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.Exemplaire;
 import fr.abes.cbs.notices.NoticeConcrete;
-import fr.abes.kafkatosudoc.dto.LigneKbartDto;
-import fr.abes.kafkatosudoc.dto.connect.LigneKbartConnect;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,15 +18,15 @@ public class NoticeMapperTest {
     @Test
     @DisplayName("Test création notice from Kbart cas 1")
     void testMapperNoticeFromKbartCas1() {
-        LigneKbartDto kbart = new LigneKbartDto();
-        kbart.setOnlineIdentifier("978-0-415-11262-8");
-        kbart.setDateMonographPublishedOnline("2023");
-        kbart.setPublicationTitle("Test title");
-        kbart.setPublisherName("Test publisher");
-        kbart.setAccessType("F");
-        kbart.setFirstAuthor("Test author");
-        kbart.setFirstEditor("Test editor");
-        kbart.setTitleUrl("https://www.test.com/10.1484/M.BM-EB.5.113206");
+        LigneKbartConnect kbart = new LigneKbartConnect();
+        kbart.setONLINEIDENTIFIER("978-0-415-11262-8");
+        kbart.setDATEMONOGRAPHPUBLISHEDONLIN("2023-01-01");
+        kbart.setPUBLICATIONTITLE("Test title");
+        kbart.setPUBLISHERNAME("Test publisher");
+        kbart.setACCESSTYPE("F");
+        kbart.setFIRSTAUTHOR("Test author");
+        kbart.setFIRSTEDITOR("Test editor");
+        kbart.setTITLEURL("https://www.test.com/10.1484/M.BM-EB.5.113206");
 
         NoticeConcrete notice = mapper.map(kbart, NoticeConcrete.class);
         Biblio biblio = notice.getNoticeBiblio();
@@ -112,15 +111,15 @@ public class NoticeMapperTest {
     @DisplayName("Test création notice from Kbart cas 2")
     void testMapperNoticeFromKbartCas2() {
         //type d'accès différent, et pas de DOI
-        LigneKbartDto kbart = new LigneKbartDto();
-        kbart.setOnlineIdentifier("0-415-11262-8");
-        kbart.setDateMonographPublishedOnline("2023");
-        kbart.setPublicationTitle("Test title");
-        kbart.setPublisherName("Test publisher");
-        kbart.setAccessType("P");
-        kbart.setFirstAuthor("Test author");
-        kbart.setFirstEditor("Test editor");
-        kbart.setTitleUrl("https://www.test.com/");
+        LigneKbartConnect kbart = new LigneKbartConnect();
+        kbart.setONLINEIDENTIFIER("0-415-11262-8");
+        kbart.setDATEMONOGRAPHPUBLISHEDONLIN("2023-01-01");
+        kbart.setPUBLICATIONTITLE("Test title");
+        kbart.setPUBLISHERNAME("Test publisher");
+        kbart.setACCESSTYPE("P");
+        kbart.setFIRSTAUTHOR("Test author");
+        kbart.setFIRSTEDITOR("Test editor");
+        kbart.setTITLEURL("https://www.test.com/");
 
         NoticeConcrete notice = mapper.map(kbart, NoticeConcrete.class);
         Biblio biblio = notice.getNoticeBiblio();
@@ -141,7 +140,7 @@ public class NoticeMapperTest {
         //type d'accès différent, et pas de DOI
         LigneKbartConnect kbart = new LigneKbartConnect();
         kbart.setONLINEIDENTIFIER("0-415-11262-8");
-        kbart.setDATEMONOGRAPHPUBLISHEDONLIN("2023");
+        kbart.setDATEMONOGRAPHPUBLISHEDONLIN("2023-01-01");
         kbart.setPUBLICATIONTITLE("Test title");
         kbart.setPUBLISHERNAME("Test publisher");
         kbart.setACCESSTYPE("P");

@@ -2,7 +2,7 @@ package fr.abes.kafkatosudoc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.abes.kafkatosudoc.dto.connect.LigneKbartConnect;
+import fr.abes.LigneKbartConnect;
 import fr.abes.kafkatosudoc.dto.mail.MailDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpPost;
