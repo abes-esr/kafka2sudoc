@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -59,7 +61,7 @@ public class KbartListener {
                 listeNotices.add(lignesKbart.value().getBESTPPN().toString());
             }
             for (Header header : lignesKbart.headers().toArray()) {
-                if (header.key().equals("OK") && header.value().equals("true")) {
+                if (header.key().equals("OK") && new String(header.value()).equals("true")) {
                     listeNotices.add(lignesKbart.value().getBESTPPN().toString());
                     traiterPackageDansSudoc(listeNotices, packageKbartDto);
                     listeNotices.clear();
@@ -73,8 +75,8 @@ public class KbartListener {
     }
 
     private void traiterPackageDansSudoc(List<String> listeNotices, PackageKbartDto packageKbartDto) throws CBSException, ZoneException {
-        List<NoticeConcrete> noticeWithNewBestPpn = new ArrayList<>();
-        List<NoticeConcrete> noticeWithDeletedBestPpn = new ArrayList<>();
+        List<String> newBestPpn = new ArrayList<>();
+        List<String> deletedBestPpn = new ArrayList<>();
 
         ProviderPackage lastProvider = baconService.findLastVersionOfPackage(packageKbartDto);
 
@@ -85,38 +87,38 @@ public class KbartListener {
             List<String> ppnLastVersion = baconService.findAllPpnFromPackage(lastProvider);
             for (String ppn : ppnLastVersion) {
                 if (!listeNotices.contains(ppn))
-                    noticeWithDeletedBestPpn.add(service.getNoticeFromPpn(ppn));
+                    deletedBestPpn.add(ppn);
             }
             for (String ppn : listeNotices) {
                 if (!ppnLastVersion.contains(ppn))
-                    noticeWithNewBestPpn.add(service.getNoticeFromPpn(ppn));
+                    newBestPpn.add(ppn);
             }
 
         } else {
             //pas de version antérieure, tous les bestPpn sont nouveaux
             for (String ppn : listeNotices) {
-                noticeWithNewBestPpn.add(service.getNoticeFromPpn(ppn));
+                newBestPpn.add(ppn);
             }
         }
 
-        for (NoticeConcrete notice : noticeWithNewBestPpn) {
+        for (String ppn : newBestPpn) {
+            NoticeConcrete notice = service.getNoticeFromPpn(ppn);
             if (!service.isNoticeBouquetInBestPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
                 service.addNoticeBouquetInBestPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
                 service.modifierNotice(notice);
-                log.debug("Ajout 469 : Notice " + notice.getNoticeBiblio().findZone("001", 0).getValeur() + " modifiée avec succès");
+                log.debug("Ajout 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
             }
         }
 
-        for (NoticeConcrete notice : noticeWithDeletedBestPpn) {
+        for (String ppn : deletedBestPpn) {
+            NoticeConcrete notice = service.getNoticeFromPpn(ppn);
             if (service.isNoticeBouquetInBestPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
                 service.supprimeNoticeBouquetInBestPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
                 service.modifierNotice(notice);
-                log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZone("001", 0).getValeur() + " modifiée avec succès");
+                log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
             }
         }
         service.disconnect();
-
-
     }
 
     /**
