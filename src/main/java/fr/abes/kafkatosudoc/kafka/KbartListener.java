@@ -20,10 +20,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -54,7 +52,8 @@ public class KbartListener {
             filename = getFileNameFromHeader(lignesKbart.headers());
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
-            PackageKbartDto packageKbartDto = new PackageKbartDto(packageName, Calendar.getInstance().getTime(), provider);
+            Date dateFromFile = CheckFiles.extractDate(filename);
+            PackageKbartDto packageKbartDto = new PackageKbartDto(packageName, dateFromFile, provider);
 
             if (!lignesKbart.value().getBESTPPN().isEmpty()) {
                 //on alimente la liste des notices d'un package qui sera traitée intégralement
@@ -62,7 +61,6 @@ public class KbartListener {
             }
             for (Header header : lignesKbart.headers().toArray()) {
                 if (header.key().equals("OK") && new String(header.value()).equals("true")) {
-                    listeNotices.add(lignesKbart.value().getBESTPPN().toString());
                     traiterPackageDansSudoc(listeNotices, packageKbartDto);
                     listeNotices.clear();
                     break;

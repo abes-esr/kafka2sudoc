@@ -33,6 +33,8 @@ public class BaconService {
             List<ProviderPackage> providerPackageList = providerPackageRepository.findAllByProviderPackageId_ProviderIdtProviderAndProviderPackageId_PackageName(providerOpt.get().getIdtProvider(), packageKbartDto.getPackageName());
             if (!providerPackageList.isEmpty()) {
                 Collections.sort(providerPackageList);
+                //suppression du premier élément de la liste correspondant au package courant inséré dans la base au moment du calcul du best ppn
+                providerPackageList.remove(providerPackageList.size() - 1);
                 for (ProviderPackage providerPackage1 : providerPackageList) {
                     if (providerPackage1.getProviderPackageId().getDateP().after(packageKbartDto.getDatePackage())) {
                         break;
