@@ -57,7 +57,7 @@ public class LigneKbartDto {
     private String precedingPublicationTitleId;
     @JsonProperty(value = "access_type")
     private String accessType;
-    @JsonProperty(value = "bestPpn")
+    @JsonProperty(value = "best_ppn")
     private String bestPpn;
 
     @Override

@@ -1,26 +1,28 @@
 package fr.abes.kafkatosudoc.utils;
 
-import fr.abes.kafkatosudoc.dto.LigneKbartDto;
+
+
+import fr.abes.LigneKbartConnect;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Utils {
-    public static String extractDOI(LigneKbartDto kbart) {
+    public static String extractDOI(LigneKbartConnect kbart) {
         String doiPattern = "10.\\d{0,15}.\\d{0,15}.+";
 
-        if (kbart.getTitleUrl() != null && !kbart.getTitleUrl().isEmpty()){
+        if (kbart.getTITLEURL() != null && !kbart.getTITLEURL().isEmpty()){
             Pattern pattern = Pattern.compile(doiPattern);
-            Matcher matcher = pattern.matcher(kbart.getTitleUrl());
+            Matcher matcher = pattern.matcher(kbart.getTITLEURL());
             if (matcher.find()) {
                 return matcher.group(0);
             } else {
                 return "";
             }
         }
-        if (kbart.getTitleId() != null && !kbart.getTitleId().isEmpty()){
+        if (kbart.getTITLEID() != null && !kbart.getTITLEID().isEmpty()){
             Pattern pattern = Pattern.compile(doiPattern);
-            Matcher matcher = pattern.matcher(kbart.getTitleId());
+            Matcher matcher = pattern.matcher(kbart.getTITLEID());
             if (matcher.find()) {
                 return matcher.group(0);
             } else {
@@ -37,5 +39,12 @@ public class Utils {
      */
     public static String extractOnlineIdentifier(String isbn) {
         return isbn.replace("-", "");
+    }
+
+    public static String getYearFromDate(String date) {
+        if (date == null || date.isEmpty())
+            return "";
+        return date.substring(0,4);
+
     }
 }
