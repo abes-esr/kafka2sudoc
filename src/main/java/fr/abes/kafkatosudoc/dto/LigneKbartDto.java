@@ -57,7 +57,7 @@ public class LigneKbartDto {
     private String precedingPublicationTitleId;
     @JsonProperty(value = "access_type")
     private String accessType;
-    @JsonProperty(value = "bestPpn")
+    @JsonProperty(value = "best_ppn")
     private String bestPpn;
 
     @Override
@@ -96,7 +96,7 @@ public class LigneKbartDto {
                 + (this.parentPublicationTitleId.isEmpty() ? "" : this.parentPublicationTitleId) + "\t"
                 + (this.precedingPublicationTitleId.isEmpty() ? "" : this.precedingPublicationTitleId) + "\t"
                 + (this.accessType.isEmpty() ? "" : this.accessType) + "\t"
-                + (this.bestPpn.isEmpty() ? "" : this.bestPpn);
+                + (this.bestPpn == null || this.bestPpn.isEmpty() ? "" : this.bestPpn);
     }
 
 }
