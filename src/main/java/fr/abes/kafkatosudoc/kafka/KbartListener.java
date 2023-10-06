@@ -1,11 +1,13 @@
 package fr.abes.kafkatosudoc.kafka;
 
 import fr.abes.LigneKbartConnect;
+import fr.abes.LigneKbartImprime;
 import fr.abes.cbs.exception.CBSException;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.NoticeConcrete;
+import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
-import fr.abes.kafkatosudoc.entity.bacon.ProviderPackage;
+import fr.abes.kafkatosudoc.entity.ProviderPackage;
 import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.EmailService;
 import fr.abes.kafkatosudoc.service.SudocService;
@@ -68,7 +70,7 @@ public class KbartListener {
             }
         } catch (Exception e) {
             log.debug(e.getMessage(), e.getCause());
-            emailService.sendErrorMail(filename, lignesKbart.value(), e);
+            emailService.sendErrorMailConnect(filename, lignesKbart.value(), e);
         }
     }
 
@@ -144,7 +146,7 @@ public class KbartListener {
             }
         } catch (Exception e) {
             log.debug(e.getMessage(), e.getCause());
-            emailService.sendErrorMail(filename, lignesKbart.value(), e);
+            emailService.sendErrorMailConnect(filename, lignesKbart.value(), e);
         } finally {
             service.disconnect();
         }
@@ -171,7 +173,32 @@ public class KbartListener {
             log.debug("Ajout notice exNihilo effectué");
         } catch (CBSException | ZoneException e) {
             log.debug(e.getMessage());
-            emailService.sendErrorMail(filename, lignesKbart.value(), e);
+            emailService.sendErrorMailConnect(filename, lignesKbart.value(), e);
+        } finally {
+            service.disconnect();
+        }
+    }
+
+    /**
+     * Listener Kafka pour la création de notices électronique à partir du kbart et de la notice imprimée
+     * @param lignesKbart : ligne kbart + ppn de la notice imprimée
+     * @throws CBSException : erreur liée au cbs
+     */
+    @KafkaListener(topics = {"${topic.name.source.kbart.imprime}"}, groupId = "${topic.groupid.source.imprime}", containerFactory = "kafkaKbartListenerContainerFactory")
+    public void listenKbartFromKafkaImprime(ConsumerRecord<String, LigneKbartImprime> lignesKbart) throws CBSException {
+        String filename = getFileNameFromHeader(lignesKbart.headers());
+        String provider = CheckFiles.getProviderFromFilename(filename);
+        try {
+            service.authenticate();
+            KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
+            kbartAndImprimeDto.setKbart(mapper.map(lignesKbart.value(), LigneKbartImprime.class));
+            kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(lignesKbart.value().getPpn().toString()));
+            NoticeConcrete noticeElec = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+            service.creerNotice(noticeElec);
+            log.debug("Création notice à partir de l'imprimée terminée");
+        } catch (CBSException | ZoneException e) {
+            log.debug(e.getMessage());
+            emailService.sendErrorMailImprime(filename, lignesKbart.value(), e);
         } finally {
             service.disconnect();
         }
