@@ -9,19 +9,17 @@ import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.SchemaStore;
 import org.apache.avro.specific.SpecificData;
+import org.apache.avro.util.Utf8;
 
 @org.apache.avro.specific.AvroGenerated
 public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = -4309910992179539973L;
+  private static final long serialVersionUID = -6335859415476582684L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"LigneKbartImprime\",\"namespace\":\"fr.abes\",\"fields\":[{\"name\":\"ppn\",\"type\":\"string\"},{\"name\":\"publicationTitle\",\"type\":[\"null\",\"string\"]},{\"name\":\"printIdentifier\",\"type\":[\"null\",\"string\"]},{\"name\":\"onlineIdentifier\",\"type\":[\"null\",\"string\"]},{\"name\":\"dateFirstIssueOnline\",\"type\":[\"null\",\"string\"]},{\"name\":\"numFirstVolOnline\",\"type\":[\"null\",\"int\"]},{\"name\":\"numFirstIssueOnline\",\"type\":[\"null\",\"int\"]},{\"name\":\"dateLastIssueOnline\",\"type\":[\"null\",\"string\"]},{\"name\":\"numLastVolOnline\",\"type\":[\"null\",\"int\"]},{\"name\":\"numLastIssueOnline\",\"type\":[\"null\",\"int\"]},{\"name\":\"titleUrl\",\"type\":[\"null\",\"string\"]},{\"name\":\"firstAuthor\",\"type\":[\"null\",\"string\"]},{\"name\":\"titleId\",\"type\":[\"null\",\"string\"]},{\"name\":\"embargoInfo\",\"type\":[\"null\",\"string\"]},{\"name\":\"coverageDepth\",\"type\":[\"null\",\"string\"]},{\"name\":\"notes\",\"type\":[\"null\",\"string\"]},{\"name\":\"publisherName\",\"type\":[\"null\",\"string\"]},{\"name\":\"publicationType\",\"type\":[\"null\",\"string\"]},{\"name\":\"dateMonographPublishedPrint\",\"type\":[\"null\",\"string\"]},{\"name\":\"dateMonographPublishedOnline\",\"type\":[\"null\",\"string\"]},{\"name\":\"monographVolume\",\"type\":[\"null\",\"int\"]},{\"name\":\"monographEdition\",\"type\":[\"null\",\"string\"]},{\"name\":\"firstEditor\",\"type\":[\"null\",\"string\"]},{\"name\":\"parentPublicationTitleId\",\"type\":[\"null\",\"string\"]},{\"name\":\"precedingPublicationTitleId\",\"type\":[\"null\",\"string\"]},{\"name\":\"accessType\",\"type\":[\"null\",\"string\"]},{\"name\":\"providerPackagePackage\",\"type\":\"string\"},{\"name\":\"providerPackageDateP\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"providerPackageIdtProvider\",\"type\":\"int\"}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"LigneKbartImprime\",\"namespace\":\"fr.abes\",\"fields\":[{\"name\":\"ppn\",\"type\":\"string\"},{\"name\":\"publicationTitle\",\"type\":[\"null\",\"string\"]},{\"name\":\"printIdentifier\",\"type\":[\"null\",\"string\"]},{\"name\":\"onlineIdentifier\",\"type\":[\"null\",\"string\"]},{\"name\":\"dateFirstIssueOnline\",\"type\":[\"null\",\"string\"]},{\"name\":\"numFirstVolOnline\",\"type\":[\"null\",\"int\"]},{\"name\":\"numFirstIssueOnline\",\"type\":[\"null\",\"int\"]},{\"name\":\"dateLastIssueOnline\",\"type\":[\"null\",\"string\"]},{\"name\":\"numLastVolOnline\",\"type\":[\"null\",\"int\"]},{\"name\":\"numLastIssueOnline\",\"type\":[\"null\",\"int\"]},{\"name\":\"titleUrl\",\"type\":[\"null\",\"string\"]},{\"name\":\"firstAuthor\",\"type\":[\"null\",\"string\"]},{\"name\":\"titleId\",\"type\":[\"null\",\"string\"]},{\"name\":\"embargoInfo\",\"type\":[\"null\",\"string\"]},{\"name\":\"coverageDepth\",\"type\":[\"null\",\"string\"]},{\"name\":\"notes\",\"type\":[\"null\",\"string\"]},{\"name\":\"publisherName\",\"type\":[\"null\",\"string\"]},{\"name\":\"publicationType\",\"type\":[\"null\",\"string\"]},{\"name\":\"dateMonographPublishedPrint\",\"type\":[\"null\",\"string\"]},{\"name\":\"dateMonographPublishedOnline\",\"type\":[\"null\",\"string\"]},{\"name\":\"monographVolume\",\"type\":[\"null\",\"int\"]},{\"name\":\"monographEdition\",\"type\":[\"null\",\"string\"]},{\"name\":\"firstEditor\",\"type\":[\"null\",\"string\"]},{\"name\":\"parentPublicationTitleId\",\"type\":[\"null\",\"string\"]},{\"name\":\"precedingPublicationTitleId\",\"type\":[\"null\",\"string\"]},{\"name\":\"accessType\",\"type\":[\"null\",\"string\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
-  static {
-    MODEL$.addLogicalTypeConversion(new org.apache.avro.data.TimeConversions.DateConversion());
-  }
 
   private static final BinaryMessageEncoder<LigneKbartImprime> ENCODER =
       new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
@@ -100,9 +98,6 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
   private CharSequence parentPublicationTitleId;
   private CharSequence precedingPublicationTitleId;
   private CharSequence accessType;
-  private CharSequence providerPackagePackage;
-  private java.time.LocalDate providerPackageDateP;
-  private int providerPackageIdtProvider;
 
   /**
    * Default constructor.  Note that this does not initialize fields
@@ -139,11 +134,8 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
    * @param parentPublicationTitleId The new value for parentPublicationTitleId
    * @param precedingPublicationTitleId The new value for precedingPublicationTitleId
    * @param accessType The new value for accessType
-   * @param providerPackagePackage The new value for providerPackagePackage
-   * @param providerPackageDateP The new value for providerPackageDateP
-   * @param providerPackageIdtProvider The new value for providerPackageIdtProvider
    */
-  public LigneKbartImprime(CharSequence ppn, CharSequence publicationTitle, CharSequence printIdentifier, CharSequence onlineIdentifier, CharSequence dateFirstIssueOnline, Integer numFirstVolOnline, Integer numFirstIssueOnline, CharSequence dateLastIssueOnline, Integer numLastVolOnline, Integer numLastIssueOnline, CharSequence titleUrl, CharSequence firstAuthor, CharSequence titleId, CharSequence embargoInfo, CharSequence coverageDepth, CharSequence notes, CharSequence publisherName, CharSequence publicationType, CharSequence dateMonographPublishedPrint, CharSequence dateMonographPublishedOnline, Integer monographVolume, CharSequence monographEdition, CharSequence firstEditor, CharSequence parentPublicationTitleId, CharSequence precedingPublicationTitleId, CharSequence accessType, CharSequence providerPackagePackage, java.time.LocalDate providerPackageDateP, Integer providerPackageIdtProvider) {
+  public LigneKbartImprime(CharSequence ppn, CharSequence publicationTitle, CharSequence printIdentifier, CharSequence onlineIdentifier, CharSequence dateFirstIssueOnline, Integer numFirstVolOnline, Integer numFirstIssueOnline, CharSequence dateLastIssueOnline, Integer numLastVolOnline, Integer numLastIssueOnline, CharSequence titleUrl, CharSequence firstAuthor, CharSequence titleId, CharSequence embargoInfo, CharSequence coverageDepth, CharSequence notes, CharSequence publisherName, CharSequence publicationType, CharSequence dateMonographPublishedPrint, CharSequence dateMonographPublishedOnline, Integer monographVolume, CharSequence monographEdition, CharSequence firstEditor, CharSequence parentPublicationTitleId, CharSequence precedingPublicationTitleId, CharSequence accessType) {
     this.ppn = ppn;
     this.publicationTitle = publicationTitle;
     this.printIdentifier = printIdentifier;
@@ -170,9 +162,6 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
     this.parentPublicationTitleId = parentPublicationTitleId;
     this.precedingPublicationTitleId = precedingPublicationTitleId;
     this.accessType = accessType;
-    this.providerPackagePackage = providerPackagePackage;
-    this.providerPackageDateP = providerPackageDateP;
-    this.providerPackageIdtProvider = providerPackageIdtProvider;
   }
 
   @Override
@@ -211,50 +200,8 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
     case 23: return parentPublicationTitleId;
     case 24: return precedingPublicationTitleId;
     case 25: return accessType;
-    case 26: return providerPackagePackage;
-    case 27: return providerPackageDateP;
-    case 28: return providerPackageIdtProvider;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
-  }
-
-  private static final org.apache.avro.Conversion<?>[] conversions =
-      new org.apache.avro.Conversion<?>[] {
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      new org.apache.avro.data.TimeConversions.DateConversion(),
-      null,
-      null
-  };
-
-  @Override
-  public org.apache.avro.Conversion<?> getConversion(int field) {
-    return conversions[field];
   }
 
   // Used by DatumReader.  Applications should not call.
@@ -288,9 +235,6 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
     case 23: parentPublicationTitleId = (CharSequence)value$; break;
     case 24: precedingPublicationTitleId = (CharSequence)value$; break;
     case 25: accessType = (CharSequence)value$; break;
-    case 26: providerPackagePackage = (CharSequence)value$; break;
-    case 27: providerPackageDateP = (java.time.LocalDate)value$; break;
-    case 28: providerPackageIdtProvider = (Integer)value$; break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -738,57 +682,6 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
   }
 
   /**
-   * Gets the value of the 'providerPackagePackage' field.
-   * @return The value of the 'providerPackagePackage' field.
-   */
-  public CharSequence getProviderPackagePackage() {
-    return providerPackagePackage;
-  }
-
-
-  /**
-   * Sets the value of the 'providerPackagePackage' field.
-   * @param value the value to set.
-   */
-  public void setProviderPackagePackage(CharSequence value) {
-    this.providerPackagePackage = value;
-  }
-
-  /**
-   * Gets the value of the 'providerPackageDateP' field.
-   * @return The value of the 'providerPackageDateP' field.
-   */
-  public java.time.LocalDate getProviderPackageDateP() {
-    return providerPackageDateP;
-  }
-
-
-  /**
-   * Sets the value of the 'providerPackageDateP' field.
-   * @param value the value to set.
-   */
-  public void setProviderPackageDateP(java.time.LocalDate value) {
-    this.providerPackageDateP = value;
-  }
-
-  /**
-   * Gets the value of the 'providerPackageIdtProvider' field.
-   * @return The value of the 'providerPackageIdtProvider' field.
-   */
-  public int getProviderPackageIdtProvider() {
-    return providerPackageIdtProvider;
-  }
-
-
-  /**
-   * Sets the value of the 'providerPackageIdtProvider' field.
-   * @param value the value to set.
-   */
-  public void setProviderPackageIdtProvider(int value) {
-    this.providerPackageIdtProvider = value;
-  }
-
-  /**
    * Creates a new LigneKbartImprime RecordBuilder.
    * @return A new LigneKbartImprime RecordBuilder
    */
@@ -855,9 +748,6 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
     private CharSequence parentPublicationTitleId;
     private CharSequence precedingPublicationTitleId;
     private CharSequence accessType;
-    private CharSequence providerPackagePackage;
-    private java.time.LocalDate providerPackageDateP;
-    private int providerPackageIdtProvider;
 
     /** Creates a new Builder */
     private Builder() {
@@ -974,18 +864,6 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
         this.accessType = data().deepCopy(fields()[25].schema(), other.accessType);
         fieldSetFlags()[25] = other.fieldSetFlags()[25];
       }
-      if (isValidValue(fields()[26], other.providerPackagePackage)) {
-        this.providerPackagePackage = data().deepCopy(fields()[26].schema(), other.providerPackagePackage);
-        fieldSetFlags()[26] = other.fieldSetFlags()[26];
-      }
-      if (isValidValue(fields()[27], other.providerPackageDateP)) {
-        this.providerPackageDateP = data().deepCopy(fields()[27].schema(), other.providerPackageDateP);
-        fieldSetFlags()[27] = other.fieldSetFlags()[27];
-      }
-      if (isValidValue(fields()[28], other.providerPackageIdtProvider)) {
-        this.providerPackageIdtProvider = data().deepCopy(fields()[28].schema(), other.providerPackageIdtProvider);
-        fieldSetFlags()[28] = other.fieldSetFlags()[28];
-      }
     }
 
     /**
@@ -1097,18 +975,6 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
       if (isValidValue(fields()[25], other.accessType)) {
         this.accessType = data().deepCopy(fields()[25].schema(), other.accessType);
         fieldSetFlags()[25] = true;
-      }
-      if (isValidValue(fields()[26], other.providerPackagePackage)) {
-        this.providerPackagePackage = data().deepCopy(fields()[26].schema(), other.providerPackagePackage);
-        fieldSetFlags()[26] = true;
-      }
-      if (isValidValue(fields()[27], other.providerPackageDateP)) {
-        this.providerPackageDateP = data().deepCopy(fields()[27].schema(), other.providerPackageDateP);
-        fieldSetFlags()[27] = true;
-      }
-      if (isValidValue(fields()[28], other.providerPackageIdtProvider)) {
-        this.providerPackageIdtProvider = data().deepCopy(fields()[28].schema(), other.providerPackageIdtProvider);
-        fieldSetFlags()[28] = true;
       }
     }
 
@@ -2152,124 +2018,6 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
       return this;
     }
 
-    /**
-      * Gets the value of the 'providerPackagePackage' field.
-      * @return The value.
-      */
-    public CharSequence getProviderPackagePackage() {
-      return providerPackagePackage;
-    }
-
-
-    /**
-      * Sets the value of the 'providerPackagePackage' field.
-      * @param value The value of 'providerPackagePackage'.
-      * @return This builder.
-      */
-    public Builder setProviderPackagePackage(CharSequence value) {
-      validate(fields()[26], value);
-      this.providerPackagePackage = value;
-      fieldSetFlags()[26] = true;
-      return this;
-    }
-
-    /**
-      * Checks whether the 'providerPackagePackage' field has been set.
-      * @return True if the 'providerPackagePackage' field has been set, false otherwise.
-      */
-    public boolean hasProviderPackagePackage() {
-      return fieldSetFlags()[26];
-    }
-
-
-    /**
-      * Clears the value of the 'providerPackagePackage' field.
-      * @return This builder.
-      */
-    public Builder clearProviderPackagePackage() {
-      providerPackagePackage = null;
-      fieldSetFlags()[26] = false;
-      return this;
-    }
-
-    /**
-      * Gets the value of the 'providerPackageDateP' field.
-      * @return The value.
-      */
-    public java.time.LocalDate getProviderPackageDateP() {
-      return providerPackageDateP;
-    }
-
-
-    /**
-      * Sets the value of the 'providerPackageDateP' field.
-      * @param value The value of 'providerPackageDateP'.
-      * @return This builder.
-      */
-    public Builder setProviderPackageDateP(java.time.LocalDate value) {
-      validate(fields()[27], value);
-      this.providerPackageDateP = value;
-      fieldSetFlags()[27] = true;
-      return this;
-    }
-
-    /**
-      * Checks whether the 'providerPackageDateP' field has been set.
-      * @return True if the 'providerPackageDateP' field has been set, false otherwise.
-      */
-    public boolean hasProviderPackageDateP() {
-      return fieldSetFlags()[27];
-    }
-
-
-    /**
-      * Clears the value of the 'providerPackageDateP' field.
-      * @return This builder.
-      */
-    public Builder clearProviderPackageDateP() {
-      fieldSetFlags()[27] = false;
-      return this;
-    }
-
-    /**
-      * Gets the value of the 'providerPackageIdtProvider' field.
-      * @return The value.
-      */
-    public int getProviderPackageIdtProvider() {
-      return providerPackageIdtProvider;
-    }
-
-
-    /**
-      * Sets the value of the 'providerPackageIdtProvider' field.
-      * @param value The value of 'providerPackageIdtProvider'.
-      * @return This builder.
-      */
-    public Builder setProviderPackageIdtProvider(int value) {
-      validate(fields()[28], value);
-      this.providerPackageIdtProvider = value;
-      fieldSetFlags()[28] = true;
-      return this;
-    }
-
-    /**
-      * Checks whether the 'providerPackageIdtProvider' field has been set.
-      * @return True if the 'providerPackageIdtProvider' field has been set, false otherwise.
-      */
-    public boolean hasProviderPackageIdtProvider() {
-      return fieldSetFlags()[28];
-    }
-
-
-    /**
-      * Clears the value of the 'providerPackageIdtProvider' field.
-      * @return This builder.
-      */
-    public Builder clearProviderPackageIdtProvider() {
-      fieldSetFlags()[28] = false;
-      return this;
-    }
-
     @Override
     @SuppressWarnings("unchecked")
     public LigneKbartImprime build() {
@@ -2301,9 +2049,6 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
         record.parentPublicationTitleId = fieldSetFlags()[23] ? this.parentPublicationTitleId : (CharSequence) defaultValue(fields()[23]);
         record.precedingPublicationTitleId = fieldSetFlags()[24] ? this.precedingPublicationTitleId : (CharSequence) defaultValue(fields()[24]);
         record.accessType = fieldSetFlags()[25] ? this.accessType : (CharSequence) defaultValue(fields()[25]);
-        record.providerPackagePackage = fieldSetFlags()[26] ? this.providerPackagePackage : (CharSequence) defaultValue(fields()[26]);
-        record.providerPackageDateP = fieldSetFlags()[27] ? this.providerPackageDateP : (java.time.LocalDate) defaultValue(fields()[27]);
-        record.providerPackageIdtProvider = fieldSetFlags()[28] ? this.providerPackageIdtProvider : (Integer) defaultValue(fields()[28]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;
@@ -2331,6 +2076,635 @@ public class LigneKbartImprime extends org.apache.avro.specific.SpecificRecordBa
     READER$.read(this, SpecificData.getDecoder(in));
   }
 
+  @Override protected boolean hasCustomCoders() { return true; }
+
+  @Override public void customEncode(org.apache.avro.io.Encoder out)
+    throws java.io.IOException
+  {
+    out.writeString(this.ppn);
+
+    if (this.publicationTitle == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.publicationTitle);
+    }
+
+    if (this.printIdentifier == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.printIdentifier);
+    }
+
+    if (this.onlineIdentifier == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.onlineIdentifier);
+    }
+
+    if (this.dateFirstIssueOnline == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.dateFirstIssueOnline);
+    }
+
+    if (this.numFirstVolOnline == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeInt(this.numFirstVolOnline);
+    }
+
+    if (this.numFirstIssueOnline == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeInt(this.numFirstIssueOnline);
+    }
+
+    if (this.dateLastIssueOnline == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.dateLastIssueOnline);
+    }
+
+    if (this.numLastVolOnline == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeInt(this.numLastVolOnline);
+    }
+
+    if (this.numLastIssueOnline == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeInt(this.numLastIssueOnline);
+    }
+
+    if (this.titleUrl == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.titleUrl);
+    }
+
+    if (this.firstAuthor == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.firstAuthor);
+    }
+
+    if (this.titleId == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.titleId);
+    }
+
+    if (this.embargoInfo == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.embargoInfo);
+    }
+
+    if (this.coverageDepth == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.coverageDepth);
+    }
+
+    if (this.notes == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.notes);
+    }
+
+    if (this.publisherName == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.publisherName);
+    }
+
+    if (this.publicationType == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.publicationType);
+    }
+
+    if (this.dateMonographPublishedPrint == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.dateMonographPublishedPrint);
+    }
+
+    if (this.dateMonographPublishedOnline == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.dateMonographPublishedOnline);
+    }
+
+    if (this.monographVolume == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeInt(this.monographVolume);
+    }
+
+    if (this.monographEdition == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.monographEdition);
+    }
+
+    if (this.firstEditor == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.firstEditor);
+    }
+
+    if (this.parentPublicationTitleId == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.parentPublicationTitleId);
+    }
+
+    if (this.precedingPublicationTitleId == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.precedingPublicationTitleId);
+    }
+
+    if (this.accessType == null) {
+      out.writeIndex(0);
+      out.writeNull();
+    } else {
+      out.writeIndex(1);
+      out.writeString(this.accessType);
+    }
+
+  }
+
+  @Override public void customDecode(org.apache.avro.io.ResolvingDecoder in)
+    throws java.io.IOException
+  {
+    org.apache.avro.Schema.Field[] fieldOrder = in.readFieldOrderIfDiff();
+    if (fieldOrder == null) {
+      this.ppn = in.readString(this.ppn instanceof Utf8 ? (Utf8)this.ppn : null);
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.publicationTitle = null;
+      } else {
+        this.publicationTitle = in.readString(this.publicationTitle instanceof Utf8 ? (Utf8)this.publicationTitle : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.printIdentifier = null;
+      } else {
+        this.printIdentifier = in.readString(this.printIdentifier instanceof Utf8 ? (Utf8)this.printIdentifier : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.onlineIdentifier = null;
+      } else {
+        this.onlineIdentifier = in.readString(this.onlineIdentifier instanceof Utf8 ? (Utf8)this.onlineIdentifier : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.dateFirstIssueOnline = null;
+      } else {
+        this.dateFirstIssueOnline = in.readString(this.dateFirstIssueOnline instanceof Utf8 ? (Utf8)this.dateFirstIssueOnline : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.numFirstVolOnline = null;
+      } else {
+        this.numFirstVolOnline = in.readInt();
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.numFirstIssueOnline = null;
+      } else {
+        this.numFirstIssueOnline = in.readInt();
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.dateLastIssueOnline = null;
+      } else {
+        this.dateLastIssueOnline = in.readString(this.dateLastIssueOnline instanceof Utf8 ? (Utf8)this.dateLastIssueOnline : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.numLastVolOnline = null;
+      } else {
+        this.numLastVolOnline = in.readInt();
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.numLastIssueOnline = null;
+      } else {
+        this.numLastIssueOnline = in.readInt();
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.titleUrl = null;
+      } else {
+        this.titleUrl = in.readString(this.titleUrl instanceof Utf8 ? (Utf8)this.titleUrl : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.firstAuthor = null;
+      } else {
+        this.firstAuthor = in.readString(this.firstAuthor instanceof Utf8 ? (Utf8)this.firstAuthor : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.titleId = null;
+      } else {
+        this.titleId = in.readString(this.titleId instanceof Utf8 ? (Utf8)this.titleId : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.embargoInfo = null;
+      } else {
+        this.embargoInfo = in.readString(this.embargoInfo instanceof Utf8 ? (Utf8)this.embargoInfo : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.coverageDepth = null;
+      } else {
+        this.coverageDepth = in.readString(this.coverageDepth instanceof Utf8 ? (Utf8)this.coverageDepth : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.notes = null;
+      } else {
+        this.notes = in.readString(this.notes instanceof Utf8 ? (Utf8)this.notes : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.publisherName = null;
+      } else {
+        this.publisherName = in.readString(this.publisherName instanceof Utf8 ? (Utf8)this.publisherName : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.publicationType = null;
+      } else {
+        this.publicationType = in.readString(this.publicationType instanceof Utf8 ? (Utf8)this.publicationType : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.dateMonographPublishedPrint = null;
+      } else {
+        this.dateMonographPublishedPrint = in.readString(this.dateMonographPublishedPrint instanceof Utf8 ? (Utf8)this.dateMonographPublishedPrint : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.dateMonographPublishedOnline = null;
+      } else {
+        this.dateMonographPublishedOnline = in.readString(this.dateMonographPublishedOnline instanceof Utf8 ? (Utf8)this.dateMonographPublishedOnline : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.monographVolume = null;
+      } else {
+        this.monographVolume = in.readInt();
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.monographEdition = null;
+      } else {
+        this.monographEdition = in.readString(this.monographEdition instanceof Utf8 ? (Utf8)this.monographEdition : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.firstEditor = null;
+      } else {
+        this.firstEditor = in.readString(this.firstEditor instanceof Utf8 ? (Utf8)this.firstEditor : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.parentPublicationTitleId = null;
+      } else {
+        this.parentPublicationTitleId = in.readString(this.parentPublicationTitleId instanceof Utf8 ? (Utf8)this.parentPublicationTitleId : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.precedingPublicationTitleId = null;
+      } else {
+        this.precedingPublicationTitleId = in.readString(this.precedingPublicationTitleId instanceof Utf8 ? (Utf8)this.precedingPublicationTitleId : null);
+      }
+
+      if (in.readIndex() != 1) {
+        in.readNull();
+        this.accessType = null;
+      } else {
+        this.accessType = in.readString(this.accessType instanceof Utf8 ? (Utf8)this.accessType : null);
+      }
+
+    } else {
+      for (int i = 0; i < 26; i++) {
+        switch (fieldOrder[i].pos()) {
+        case 0:
+          this.ppn = in.readString(this.ppn instanceof Utf8 ? (Utf8)this.ppn : null);
+          break;
+
+        case 1:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.publicationTitle = null;
+          } else {
+            this.publicationTitle = in.readString(this.publicationTitle instanceof Utf8 ? (Utf8)this.publicationTitle : null);
+          }
+          break;
+
+        case 2:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.printIdentifier = null;
+          } else {
+            this.printIdentifier = in.readString(this.printIdentifier instanceof Utf8 ? (Utf8)this.printIdentifier : null);
+          }
+          break;
+
+        case 3:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.onlineIdentifier = null;
+          } else {
+            this.onlineIdentifier = in.readString(this.onlineIdentifier instanceof Utf8 ? (Utf8)this.onlineIdentifier : null);
+          }
+          break;
+
+        case 4:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.dateFirstIssueOnline = null;
+          } else {
+            this.dateFirstIssueOnline = in.readString(this.dateFirstIssueOnline instanceof Utf8 ? (Utf8)this.dateFirstIssueOnline : null);
+          }
+          break;
+
+        case 5:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.numFirstVolOnline = null;
+          } else {
+            this.numFirstVolOnline = in.readInt();
+          }
+          break;
+
+        case 6:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.numFirstIssueOnline = null;
+          } else {
+            this.numFirstIssueOnline = in.readInt();
+          }
+          break;
+
+        case 7:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.dateLastIssueOnline = null;
+          } else {
+            this.dateLastIssueOnline = in.readString(this.dateLastIssueOnline instanceof Utf8 ? (Utf8)this.dateLastIssueOnline : null);
+          }
+          break;
+
+        case 8:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.numLastVolOnline = null;
+          } else {
+            this.numLastVolOnline = in.readInt();
+          }
+          break;
+
+        case 9:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.numLastIssueOnline = null;
+          } else {
+            this.numLastIssueOnline = in.readInt();
+          }
+          break;
+
+        case 10:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.titleUrl = null;
+          } else {
+            this.titleUrl = in.readString(this.titleUrl instanceof Utf8 ? (Utf8)this.titleUrl : null);
+          }
+          break;
+
+        case 11:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.firstAuthor = null;
+          } else {
+            this.firstAuthor = in.readString(this.firstAuthor instanceof Utf8 ? (Utf8)this.firstAuthor : null);
+          }
+          break;
+
+        case 12:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.titleId = null;
+          } else {
+            this.titleId = in.readString(this.titleId instanceof Utf8 ? (Utf8)this.titleId : null);
+          }
+          break;
+
+        case 13:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.embargoInfo = null;
+          } else {
+            this.embargoInfo = in.readString(this.embargoInfo instanceof Utf8 ? (Utf8)this.embargoInfo : null);
+          }
+          break;
+
+        case 14:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.coverageDepth = null;
+          } else {
+            this.coverageDepth = in.readString(this.coverageDepth instanceof Utf8 ? (Utf8)this.coverageDepth : null);
+          }
+          break;
+
+        case 15:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.notes = null;
+          } else {
+            this.notes = in.readString(this.notes instanceof Utf8 ? (Utf8)this.notes : null);
+          }
+          break;
+
+        case 16:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.publisherName = null;
+          } else {
+            this.publisherName = in.readString(this.publisherName instanceof Utf8 ? (Utf8)this.publisherName : null);
+          }
+          break;
+
+        case 17:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.publicationType = null;
+          } else {
+            this.publicationType = in.readString(this.publicationType instanceof Utf8 ? (Utf8)this.publicationType : null);
+          }
+          break;
+
+        case 18:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.dateMonographPublishedPrint = null;
+          } else {
+            this.dateMonographPublishedPrint = in.readString(this.dateMonographPublishedPrint instanceof Utf8 ? (Utf8)this.dateMonographPublishedPrint : null);
+          }
+          break;
+
+        case 19:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.dateMonographPublishedOnline = null;
+          } else {
+            this.dateMonographPublishedOnline = in.readString(this.dateMonographPublishedOnline instanceof Utf8 ? (Utf8)this.dateMonographPublishedOnline : null);
+          }
+          break;
+
+        case 20:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.monographVolume = null;
+          } else {
+            this.monographVolume = in.readInt();
+          }
+          break;
+
+        case 21:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.monographEdition = null;
+          } else {
+            this.monographEdition = in.readString(this.monographEdition instanceof Utf8 ? (Utf8)this.monographEdition : null);
+          }
+          break;
+
+        case 22:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.firstEditor = null;
+          } else {
+            this.firstEditor = in.readString(this.firstEditor instanceof Utf8 ? (Utf8)this.firstEditor : null);
+          }
+          break;
+
+        case 23:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.parentPublicationTitleId = null;
+          } else {
+            this.parentPublicationTitleId = in.readString(this.parentPublicationTitleId instanceof Utf8 ? (Utf8)this.parentPublicationTitleId : null);
+          }
+          break;
+
+        case 24:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.precedingPublicationTitleId = null;
+          } else {
+            this.precedingPublicationTitleId = in.readString(this.precedingPublicationTitleId instanceof Utf8 ? (Utf8)this.precedingPublicationTitleId : null);
+          }
+          break;
+
+        case 25:
+          if (in.readIndex() != 1) {
+            in.readNull();
+            this.accessType = null;
+          } else {
+            this.accessType = in.readString(this.accessType instanceof Utf8 ? (Utf8)this.accessType : null);
+          }
+          break;
+
+        default:
+          throw new java.io.IOException("Corrupt ResolvingDecoder.");
+        }
+      }
+    }
+  }
 }
 
 

@@ -188,12 +188,20 @@ public class KbartListener {
     public void listenKbartFromKafkaImprime(ConsumerRecord<String, LigneKbartImprime> lignesKbart) throws CBSException {
         String filename = getFileNameFromHeader(lignesKbart.headers());
         String provider = CheckFiles.getProviderFromFilename(filename);
+        String packageName = CheckFiles.getPackageFromFilename(filename);
         try {
             service.authenticate();
             KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
             kbartAndImprimeDto.setKbart(mapper.map(lignesKbart.value(), LigneKbartImprime.class));
             kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(lignesKbart.value().getPpn().toString()));
             NoticeConcrete noticeElec = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+            //Ajout provider display name en 214 $c 2è occurrence
+            String providerDisplay = baconService.getProviderDisplayName(provider);
+            if (providerDisplay != null) {
+                noticeElec.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
+            }
+            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
+            service.addNoticeBouquetInBestPpn(noticeElec.getNoticeBiblio(), ppnNoticeBouquet);
             service.creerNotice(noticeElec);
             log.debug("Création notice à partir de l'imprimée terminée");
         } catch (CBSException | ZoneException e) {
