@@ -3,26 +3,35 @@ package fr.abes.kafkatosudoc.utils;
 
 
 import fr.abes.LigneKbartConnect;
+import fr.abes.LigneKbartImprime;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Utils {
-    public static String extractDOI(LigneKbartConnect kbart) {
+    public static String extractDoiFromConnect(LigneKbartConnect kbart) {
+        return extractDOI(kbart.getTITLEURL(), kbart.getTITLEID());
+    }
+
+    public static String extractDoiFromImprime(LigneKbartImprime kbart) {
+        return extractDOI(kbart.getTitleUrl(), kbart.getTitleId());
+    }
+
+    private static String extractDOI(CharSequence titleUrl, CharSequence titleId) {
         String doiPattern = "10.\\d{0,15}.\\d{0,15}.+";
 
-        if (kbart.getTITLEURL() != null && !kbart.getTITLEURL().isEmpty()){
+        if (titleUrl != null && !titleUrl.isEmpty()){
             Pattern pattern = Pattern.compile(doiPattern);
-            Matcher matcher = pattern.matcher(kbart.getTITLEURL());
+            Matcher matcher = pattern.matcher(titleUrl);
             if (matcher.find()) {
                 return matcher.group(0);
             } else {
                 return "";
             }
         }
-        if (kbart.getTITLEID() != null && !kbart.getTITLEID().isEmpty()){
+        if (titleId != null && !titleId.isEmpty()){
             Pattern pattern = Pattern.compile(doiPattern);
-            Matcher matcher = pattern.matcher(kbart.getTITLEID());
+            Matcher matcher = pattern.matcher(titleId);
             if (matcher.find()) {
                 return matcher.group(0);
             } else {

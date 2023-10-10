@@ -1,12 +1,12 @@
 package fr.abes.kafkatosudoc.service;
 
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
-import fr.abes.kafkatosudoc.entity.bacon.Provider;
-import fr.abes.kafkatosudoc.entity.bacon.ProviderPackage;
-import fr.abes.kafkatosudoc.entity.bacon.ProviderPackageId;
-import fr.abes.kafkatosudoc.repository.bacon.LigneKbartRepository;
-import fr.abes.kafkatosudoc.repository.bacon.ProviderPackageRepository;
-import fr.abes.kafkatosudoc.repository.bacon.ProviderRepository;
+import fr.abes.kafkatosudoc.entity.Provider;
+import fr.abes.kafkatosudoc.entity.ProviderPackage;
+import fr.abes.kafkatosudoc.entity.ProviderPackageId;
+import fr.abes.kafkatosudoc.repository.LigneKbartRepository;
+import fr.abes.kafkatosudoc.repository.ProviderPackageRepository;
+import fr.abes.kafkatosudoc.repository.ProviderRepository;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
