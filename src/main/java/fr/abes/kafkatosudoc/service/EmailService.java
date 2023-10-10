@@ -35,15 +35,7 @@ public class EmailService {
     public void sendErrorMailConnect(String filename, LigneKbartConnect kbart, Exception e) {
         StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la modification de la notice ");
         body.append(kbart.getBESTPPN());
-        body.append(" lors du traitement du fichier ");
-        body.append(filename);
-        body.append("<br /><br />");
-        body.append("pour la ligne Kbart : ");
-        body.append("<br>");
-        body.append(kbart);
-        body.append("<br /><br />");
-        body.append("Le message d'erreur est le suivant : ");
-        body.append(e.getMessage());
+        buildBody(filename, kbart, e, body);
 
         //  Création du mail
         String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la modification de la notice " + kbart.getBESTPPN(), body.toString());
@@ -51,9 +43,20 @@ public class EmailService {
         sendMail(requestJson);
         log.info("L'email a été correctement envoyé.");
     }
+
     public void sendErrorMailImprime(String filename, LigneKbartImprime kbart, Exception e) {
         StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la création de la notice électronique à partir de l'imprimé n°");
         body.append(kbart.getPpn());
+        buildBody(filename, kbart, e, body);
+
+        //  Création du mail
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la création de la notice électronique à partir de l'imprimé " + kbart.getPpn(), body.toString());
+        //  Envoi du message par mail
+        sendMail(requestJson);
+        log.info("L'email a été correctement envoyé.");
+    }
+
+    private static void buildBody(String filename, org.apache.avro.specific.SpecificRecord kbart, Exception e, StringBuilder body) {
         body.append(" lors du traitement du fichier ");
         body.append(filename);
         body.append("<br /><br />");
@@ -63,12 +66,6 @@ public class EmailService {
         body.append("<br /><br />");
         body.append("Le message d'erreur est le suivant : ");
         body.append(e.getMessage());
-
-        //  Création du mail
-        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la création de la notice électronique à partir de l'imprimé " + kbart.getPpn(), body.toString());
-        //  Envoi du message par mail
-        sendMail(requestJson);
-        log.info("L'email a été correctement envoyé.");
     }
 
     protected void sendMail(String requestJson) {
