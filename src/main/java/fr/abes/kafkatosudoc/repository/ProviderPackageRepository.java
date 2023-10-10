@@ -1,8 +1,8 @@
-package fr.abes.kafkatosudoc.repository.bacon;
+package fr.abes.kafkatosudoc.repository;
 
 import fr.abes.kafkatosudoc.configuration.BaconDbConfiguration;
-import fr.abes.kafkatosudoc.entity.bacon.ProviderPackage;
-import fr.abes.kafkatosudoc.entity.bacon.ProviderPackageId;
+import fr.abes.kafkatosudoc.entity.ProviderPackage;
+import fr.abes.kafkatosudoc.entity.ProviderPackageId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

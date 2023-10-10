@@ -3,6 +3,7 @@ package fr.abes.kafkatosudoc.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.abes.LigneKbartConnect;
+import fr.abes.LigneKbartImprime;
 import fr.abes.kafkatosudoc.dto.mail.MailDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpPost;
@@ -31,27 +32,44 @@ public class EmailService {
     @Value("${spring.profiles.active}")
     private String env;
 
-    public void sendErrorMail(String filename, LigneKbartConnect kbart, Exception e) {
-            StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la modification de la notice ");
-            body.append(kbart.getBESTPPN());
-            body.append(" lors du traitement du fichier ");
-            body.append(filename);
-            body.append("<br /><br />");
-            body.append("pour la ligne Kbart : ");
-            body.append("<br>");
-            body.append(kbart);
-            body.append("<br /><br />");
-            body.append("Le message d'erreur est le suivant : ");
-            body.append(e.getMessage());
+    public void sendErrorMailConnect(String filename, LigneKbartConnect kbart, Exception e) {
+        StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la modification de la notice ");
+        body.append(kbart.getBESTPPN());
+        body.append(" lors du traitement du fichier ");
+        body.append(filename);
+        body.append("<br /><br />");
+        body.append("pour la ligne Kbart : ");
+        body.append("<br>");
+        body.append(kbart);
+        body.append("<br /><br />");
+        body.append("Le message d'erreur est le suivant : ");
+        body.append(e.getMessage());
 
-            //  Création du mail
-            String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la modification de la notice " + kbart.getBESTPPN(), body.toString());
-            //  Envoi du message par mail
-            sendMail(requestJson);
-            log.info("L'email a été correctement envoyé à " + this.recipient);
+        //  Création du mail
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la modification de la notice " + kbart.getBESTPPN(), body.toString());
+        //  Envoi du message par mail
+        sendMail(requestJson);
+        log.info("L'email a été correctement envoyé.");
     }
+    public void sendErrorMailImprime(String filename, LigneKbartImprime kbart, Exception e) {
+        StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la création de la notice électronique à partir de l'imprimé n°");
+        body.append(kbart.getPpn());
+        body.append(" lors du traitement du fichier ");
+        body.append(filename);
+        body.append("<br /><br />");
+        body.append("pour la ligne Kbart : ");
+        body.append("<br>");
+        body.append(kbart);
+        body.append("<br /><br />");
+        body.append("Le message d'erreur est le suivant : ");
+        body.append(e.getMessage());
 
-
+        //  Création du mail
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la création de la notice électronique à partir de l'imprimé " + kbart.getPpn(), body.toString());
+        //  Envoi du message par mail
+        sendMail(requestJson);
+        log.info("L'email a été correctement envoyé.");
+    }
 
     protected void sendMail(String requestJson) {
         RestTemplate restTemplate = new RestTemplate(); //appel ws qui envoie le mail

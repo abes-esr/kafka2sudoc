@@ -1,12 +1,12 @@
 package fr.abes.kafkatosudoc.service;
 
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
-import fr.abes.kafkatosudoc.entity.bacon.LigneKbart;
-import fr.abes.kafkatosudoc.entity.bacon.Provider;
-import fr.abes.kafkatosudoc.entity.bacon.ProviderPackage;
-import fr.abes.kafkatosudoc.repository.bacon.LigneKbartRepository;
-import fr.abes.kafkatosudoc.repository.bacon.ProviderPackageRepository;
-import fr.abes.kafkatosudoc.repository.bacon.ProviderRepository;
+import fr.abes.kafkatosudoc.entity.LigneKbart;
+import fr.abes.kafkatosudoc.entity.Provider;
+import fr.abes.kafkatosudoc.entity.ProviderPackage;
+import fr.abes.kafkatosudoc.repository.LigneKbartRepository;
+import fr.abes.kafkatosudoc.repository.ProviderPackageRepository;
+import fr.abes.kafkatosudoc.repository.ProviderRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
