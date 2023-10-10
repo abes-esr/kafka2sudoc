@@ -59,7 +59,7 @@
         <dependency>
             <groupId>fr.abes.api-communes</groupId>
             <artifactId>AccesCbs</artifactId>
-            <version>2.5.29</version>
+            <version>2.5.30</version>
         </dependency>
         <!--Spring Core, log from core exclusion-->
         <dependency>

@@ -1,4 +1,4 @@
-package fr.abes.kafkatosudoc.entity.bacon;
+package fr.abes.kafkatosudoc.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
