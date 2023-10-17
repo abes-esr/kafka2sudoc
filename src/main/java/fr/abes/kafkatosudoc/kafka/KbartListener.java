@@ -57,7 +57,7 @@ public class KbartListener {
             Date dateFromFile = CheckFiles.extractDate(filename);
             PackageKbartDto packageKbartDto = new PackageKbartDto(packageName, dateFromFile, provider);
 
-            if (!lignesKbart.value().getBESTPPN().isEmpty()) {
+            if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
                 //on alimente la liste des notices d'un package qui sera traitée intégralement
                 listeNotices.add(lignesKbart.value().getBESTPPN().toString());
             }
