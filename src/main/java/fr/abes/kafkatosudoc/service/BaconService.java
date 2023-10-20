@@ -9,9 +9,7 @@ import fr.abes.kafkatosudoc.repository.ProviderPackageRepository;
 import fr.abes.kafkatosudoc.repository.ProviderRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class BaconService {
@@ -47,8 +45,8 @@ public class BaconService {
         return null;
     }
 
-    public List<String> findAllPpnFromPackage(ProviderPackage providerPackage) {
-        return ligneKbartRepository.findAllByProviderPackage(providerPackage).stream().map(LigneKbart::getBestPpn).toList();
+    public Set<LigneKbart> findAllPpnFromPackage(ProviderPackage providerPackage) {
+        return new HashSet<>(ligneKbartRepository.findAllByProviderPackage(providerPackage).stream().filter(ligneKbart -> ligneKbart.getBestPpn() != null).toList());
     }
 
     public String getProviderDisplayName(String provider) {
