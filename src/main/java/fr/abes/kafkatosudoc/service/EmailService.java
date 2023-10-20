@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
+import fr.abes.cbs.exception.CBSException;
+import fr.abes.kafkatosudoc.dto.PackageKbartDto;
 import fr.abes.kafkatosudoc.dto.mail.MailDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpPost;
@@ -39,6 +41,18 @@ public class EmailService {
 
         //  Création du mail
         String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la modification de la notice " + kbart.getBESTPPN(), body.toString());
+        //  Envoi du message par mail
+        sendMail(requestJson);
+        log.info("L'email a été correctement envoyé.");
+    }
+
+    public void sendErrorMailAuthentification(String filename, PackageKbartDto packageKbartDto, CBSException e) {
+        String body = "Une erreur s'est produite lors de l'authentification sur le CBS" + "Provider : " + packageKbartDto.getProvider() +
+                "Package : " + packageKbartDto.getPackageName() +
+                "Date : " + packageKbartDto.getDatePackage();
+
+        //  Création du mail
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
         //  Envoi du message par mail
         sendMail(requestJson);
         log.info("L'email a été correctement envoyé.");
@@ -110,4 +124,6 @@ public class EmailService {
         }
         return json;
     }
+
+
 }
