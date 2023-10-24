@@ -4,7 +4,6 @@ import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
-import fr.abes.cbs.notices.Exemplaire;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import org.assertj.core.util.Lists;
@@ -101,14 +100,6 @@ public class NoticeMapperTest {
         Assertions.assertEquals("https://www.test.com/10.1484/M.BM-EB.5.113206", biblio.findZones("859").get(0).findSubLabel("$u"));
         Assertions.assertEquals('4', biblio.findZones("859").get(0).getIndicateurs()[0]);
         Assertions.assertEquals('#', biblio.findZones("859").get(0).getIndicateurs()[1]);
-
-        Exemplaire exemplaire = notice.getExemplaires().get(0);
-        Assertions.assertEquals(3, exemplaire.getListeZones().size());
-        Assertions.assertEquals("x", exemplaire.findZones("e01").get(0).findSubLabel("$b"));
-        Assertions.assertEquals("341725297", exemplaire.findZones("930").get(0).findSubLabel("$b"));
-        Assertions.assertEquals("g", exemplaire.findZones("930").get(0).findSubLabel("$j"));
-        Assertions.assertEquals("Exemplaire créé automatiquement par l'ABES", exemplaire.findZones("991").get(0).findSubLabel("$a"));
-
     }
 
     @Test
@@ -414,6 +405,22 @@ public class NoticeMapperTest {
         Biblio biblio = noticeResult.getNoticeBiblio();
         Assertions.assertEquals(13, biblio.getListeZones().size());
         Assertions.assertNull(biblio.findZone("859", 0));
+    }
+
+    @Test
+    @DisplayName("Test création notice from Kbart & notice imprimée cas 11 : gestion zone 7XX ")
+    void testMapperNoticeFromKbartAndImprimeCas13() throws ZoneException {
+        KbartAndImprimeDto kbartAndImprimeDto = getKbartAndImprimeDto();
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addZone("700", "$a", "test700", new char[]{'#', '#'});
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addZone("710", "$a", "test710", new char[]{'#', '#'});
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addZone("702", "$a", "test702", new char[]{'#', '#'});
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addZone("716", "$a", "test716", new char[]{'#', '#'});
+
+        NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+        Biblio biblio = noticeResult.getNoticeBiblio();
+        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals("test700", biblio.findZone("700", 0).findSubLabel("$a"));
+        Assertions.assertEquals("test710", biblio.findZone("710", 0).findSubLabel("$a"));
     }
 
     private static KbartAndImprimeDto getKbartAndImprimeDto() throws ZoneException {

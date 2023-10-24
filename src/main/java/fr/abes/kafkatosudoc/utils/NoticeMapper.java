@@ -2,8 +2,10 @@ package fr.abes.kafkatosudoc.utils;
 
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
-import fr.abes.cbs.exception.ZoneException;
-import fr.abes.cbs.notices.*;
+import fr.abes.cbs.notices.Biblio;
+import fr.abes.cbs.notices.NoticeConcrete;
+import fr.abes.cbs.notices.TYPE_NOTICE;
+import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import lombok.SneakyThrows;
 import org.modelmapper.Converter;
@@ -11,7 +13,6 @@ import org.modelmapper.spi.MappingContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -101,7 +102,7 @@ public class NoticeMapper {
 
                 //url d'accès
                 noticeBiblio.addZone("859", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
-                NoticeConcrete notice = new NoticeConcrete(noticeBiblio, null, generateExemplaire());
+                NoticeConcrete notice = new NoticeConcrete(noticeBiblio, null, null);
                 return notice;
             }
         };
@@ -200,7 +201,7 @@ public class NoticeMapper {
                     }
                     noticeElec.addZone(zone214Elec);
                 }
-
+                //TODO : demander des précisions sur la gestion de la 210, est ce que le traitement de la 210 doit venir en plus de celui sur la 214 ou à la place ?
                 Zone zone328 = noticeImprimee.getNoticeBiblio().findZone("328", 0);
                 if (zone328 != null) {
                     noticeElec.addZone(zone328);
@@ -243,28 +244,19 @@ public class NoticeMapper {
                 List<Zone> zones600 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
                 zones600.forEach(noticeElec::addZone);
 
-                List<Zone> zones700 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("7")).toList();
-                zones700.forEach(noticeElec::addZone);
+                noticeImprimee.getNoticeBiblio().findZones("700").forEach(noticeElec::addZone);
+                noticeImprimee.getNoticeBiblio().findZones("701").forEach(noticeElec::addZone);
+                noticeImprimee.getNoticeBiblio().findZones("710").forEach(noticeElec::addZone);
+                noticeImprimee.getNoticeBiblio().findZones("711").forEach(noticeElec::addZone);
 
                 //url d'accès
                 if (kbart.getTitleUrl() != null)
                     noticeElec.addZone("859", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
 
-                NoticeConcrete notice = new NoticeConcrete(noticeElec, null, generateExemplaire());
+                NoticeConcrete notice = new NoticeConcrete(noticeElec, null, null);
                 return notice;
             }
         };
         mapper.addConverter(myConverter);
-    }
-
-    private List<Exemplaire> generateExemplaire() throws ZoneException {
-        Exemplaire exemp = new Exemplaire();
-        exemp.addZone("e01", "$b", "x");
-        exemp.addZone("930", "$b", "341725297");
-        exemp.addSousZone("930", "$j", "g");
-        exemp.addZone("991", "$a", "Exemplaire créé automatiquement par l'ABES");
-        List<Exemplaire> exemplaires = new ArrayList<>();
-        exemplaires.add(exemp);
-        return exemplaires;
     }
 }
