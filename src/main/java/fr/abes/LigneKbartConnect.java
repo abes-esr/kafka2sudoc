@@ -12,10 +12,10 @@ import org.apache.avro.specific.SpecificData;
 
 @org.apache.avro.specific.AvroGenerated
 public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = -4747621436631233106L;
+  private static final long serialVersionUID = -6107934252124705352L;
 
 
-  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"LigneKbartConnect\",\"namespace\":\"fr.abes\",\"fields\":[{\"name\":\"PUBLICATION_TITLE\",\"type\":[\"null\",\"string\"]},{\"name\":\"PRINT_IDENTIFIER\",\"type\":[\"null\",\"string\"]},{\"name\":\"ONLINE_IDENTIFIER\",\"type\":[\"null\",\"string\"]},{\"name\":\"DATE_FIRST_ISSUE_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"NUM_FIRST_VOL_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"NUM_FIRST_ISSUE_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"DATE_LAST_ISSUE_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"NUM_LAST_VOL_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"NUM_LAST_ISSUE_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"TITLE_URL\",\"type\":[\"null\",\"string\"]},{\"name\":\"FIRST_AUTHOR\",\"type\":[\"null\",\"string\"]},{\"name\":\"TITLE_ID\",\"type\":[\"null\",\"string\"]},{\"name\":\"EMBARGO_INFO\",\"type\":[\"null\",\"string\"]},{\"name\":\"COVERAGE_DEPTH\",\"type\":[\"null\",\"string\"]},{\"name\":\"NOTES\",\"type\":[\"null\",\"string\"]},{\"name\":\"PUBLISHER_NAME\",\"type\":[\"null\",\"string\"]},{\"name\":\"PUBLICATION_TYPE\",\"type\":[\"null\",\"string\"]},{\"name\":\"DATE_MONOGRAPH_PUBLISHED_PRINT\",\"type\":[\"null\",\"string\"]},{\"name\":\"DATE_MONOGRAPH_PUBLISHED_ONLIN\",\"type\":[\"null\",\"string\"]},{\"name\":\"MONOGRAPH_VOLUME\",\"type\":[\"null\",\"string\"]},{\"name\":\"MONOGRAPH_EDITION\",\"type\":[\"null\",\"string\"]},{\"name\":\"FIRST_EDITOR\",\"type\":[\"null\",\"string\"]},{\"name\":\"PARENT_PUBLICATION_TITLE_ID\",\"type\":[\"null\",\"string\"]},{\"name\":\"PRECEDING_PUBLICATION_TITLE_ID\",\"type\":[\"null\",\"string\"]},{\"name\":\"ACCESS_TYPE\",\"type\":[\"null\",\"string\"]},{\"name\":\"PROVIDER_PACKAGE_PACKAGE\",\"type\":\"string\"},{\"name\":\"PROVIDER_PACKAGE_DATE_P\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"PROVIDER_PACKAGE_IDT_PROVIDER\",\"type\":\"int\"},{\"name\":\"BEST_PPN\",\"type\":[\"null\",\"string\"]}]}");
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse("{\"type\":\"record\",\"name\":\"LigneKbartConnect\",\"namespace\":\"fr.abes\",\"fields\":[{\"name\":\"PUBLICATION_TITLE\",\"type\":[\"null\",\"string\"]},{\"name\":\"PRINT_IDENTIFIER\",\"type\":[\"null\",\"string\"]},{\"name\":\"ONLINE_IDENTIFIER\",\"type\":[\"null\",\"string\"]},{\"name\":\"DATE_FIRST_ISSUE_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"NUM_FIRST_VOL_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"NUM_FIRST_ISSUE_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"DATE_LAST_ISSUE_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"NUM_LAST_VOL_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"NUM_LAST_ISSUE_ONLINE\",\"type\":[\"null\",\"string\"]},{\"name\":\"TITLE_URL\",\"type\":[\"null\",\"string\"]},{\"name\":\"FIRST_AUTHOR\",\"type\":[\"null\",\"string\"]},{\"name\":\"TITLE_ID\",\"type\":[\"null\",\"string\"]},{\"name\":\"EMBARGO_INFO\",\"type\":[\"null\",\"string\"]},{\"name\":\"COVERAGE_DEPTH\",\"type\":[\"null\",\"string\"]},{\"name\":\"NOTES\",\"type\":[\"null\",\"string\"]},{\"name\":\"PUBLISHER_NAME\",\"type\":[\"null\",\"string\"]},{\"name\":\"PUBLICATION_TYPE\",\"type\":[\"null\",\"string\"]},{\"name\":\"DATE_MONOGRAPH_PUBLISHED_PRINT\",\"type\":[\"null\",\"string\"]},{\"name\":\"DATE_MONOGRAPH_PUBLISHED_ONLIN\",\"type\":[\"null\",\"string\"]},{\"name\":\"MONOGRAPH_VOLUME\",\"type\":[\"null\",\"string\"]},{\"name\":\"MONOGRAPH_EDITION\",\"type\":[\"null\",\"string\"]},{\"name\":\"FIRST_EDITOR\",\"type\":[\"null\",\"string\"]},{\"name\":\"PARENT_PUBLICATION_TITLE_ID\",\"type\":[\"null\",\"string\"]},{\"name\":\"PRECEDING_PUBLICATION_TITLE_ID\",\"type\":[\"null\",\"string\"]},{\"name\":\"ACCESS_TYPE\",\"type\":[\"null\",\"string\"]},{\"name\":\"PROVIDER_PACKAGE_PACKAGE\",\"type\":\"string\"},{\"name\":\"PROVIDER_PACKAGE_DATE_P\",\"type\":{\"type\":\"int\",\"logicalType\":\"date\"}},{\"name\":\"PROVIDER_PACKAGE_IDT_PROVIDER\",\"type\":\"int\"},{\"name\":\"ID_PROVIDER_PACKAGE\",\"type\":\"int\"},{\"name\":\"BEST_PPN\",\"type\":[\"null\",\"string\"]}]}");
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
   private static final SpecificData MODEL$ = new SpecificData();
@@ -102,6 +102,7 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
   private CharSequence PROVIDER_PACKAGE_PACKAGE;
   private java.time.LocalDate PROVIDER_PACKAGE_DATE_P;
   private int PROVIDER_PACKAGE_IDT_PROVIDER;
+  private int ID_PROVIDER_PACKAGE;
   private CharSequence BEST_PPN;
 
   /**
@@ -141,9 +142,10 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
    * @param PROVIDER_PACKAGE_PACKAGE The new value for PROVIDER_PACKAGE_PACKAGE
    * @param PROVIDER_PACKAGE_DATE_P The new value for PROVIDER_PACKAGE_DATE_P
    * @param PROVIDER_PACKAGE_IDT_PROVIDER The new value for PROVIDER_PACKAGE_IDT_PROVIDER
+   * @param ID_PROVIDER_PACKAGE The new value for ID_PROVIDER_PACKAGE
    * @param BEST_PPN The new value for BEST_PPN
    */
-  public LigneKbartConnect(CharSequence PUBLICATION_TITLE, CharSequence PRINT_IDENTIFIER, CharSequence ONLINE_IDENTIFIER, CharSequence DATE_FIRST_ISSUE_ONLINE, CharSequence NUM_FIRST_VOL_ONLINE, CharSequence NUM_FIRST_ISSUE_ONLINE, CharSequence DATE_LAST_ISSUE_ONLINE, CharSequence NUM_LAST_VOL_ONLINE, CharSequence NUM_LAST_ISSUE_ONLINE, CharSequence TITLE_URL, CharSequence FIRST_AUTHOR, CharSequence TITLE_ID, CharSequence EMBARGO_INFO, CharSequence COVERAGE_DEPTH, CharSequence NOTES, CharSequence PUBLISHER_NAME, CharSequence PUBLICATION_TYPE, CharSequence DATE_MONOGRAPH_PUBLISHED_PRINT, CharSequence DATE_MONOGRAPH_PUBLISHED_ONLIN, CharSequence MONOGRAPH_VOLUME, CharSequence MONOGRAPH_EDITION, CharSequence FIRST_EDITOR, CharSequence PARENT_PUBLICATION_TITLE_ID, CharSequence PRECEDING_PUBLICATION_TITLE_ID, CharSequence ACCESS_TYPE, CharSequence PROVIDER_PACKAGE_PACKAGE, java.time.LocalDate PROVIDER_PACKAGE_DATE_P, Integer PROVIDER_PACKAGE_IDT_PROVIDER, CharSequence BEST_PPN) {
+  public LigneKbartConnect(CharSequence PUBLICATION_TITLE, CharSequence PRINT_IDENTIFIER, CharSequence ONLINE_IDENTIFIER, CharSequence DATE_FIRST_ISSUE_ONLINE, CharSequence NUM_FIRST_VOL_ONLINE, CharSequence NUM_FIRST_ISSUE_ONLINE, CharSequence DATE_LAST_ISSUE_ONLINE, CharSequence NUM_LAST_VOL_ONLINE, CharSequence NUM_LAST_ISSUE_ONLINE, CharSequence TITLE_URL, CharSequence FIRST_AUTHOR, CharSequence TITLE_ID, CharSequence EMBARGO_INFO, CharSequence COVERAGE_DEPTH, CharSequence NOTES, CharSequence PUBLISHER_NAME, CharSequence PUBLICATION_TYPE, CharSequence DATE_MONOGRAPH_PUBLISHED_PRINT, CharSequence DATE_MONOGRAPH_PUBLISHED_ONLIN, CharSequence MONOGRAPH_VOLUME, CharSequence MONOGRAPH_EDITION, CharSequence FIRST_EDITOR, CharSequence PARENT_PUBLICATION_TITLE_ID, CharSequence PRECEDING_PUBLICATION_TITLE_ID, CharSequence ACCESS_TYPE, CharSequence PROVIDER_PACKAGE_PACKAGE, java.time.LocalDate PROVIDER_PACKAGE_DATE_P, Integer PROVIDER_PACKAGE_IDT_PROVIDER, Integer ID_PROVIDER_PACKAGE, CharSequence BEST_PPN) {
     this.PUBLICATION_TITLE = PUBLICATION_TITLE;
     this.PRINT_IDENTIFIER = PRINT_IDENTIFIER;
     this.ONLINE_IDENTIFIER = ONLINE_IDENTIFIER;
@@ -172,6 +174,7 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
     this.PROVIDER_PACKAGE_PACKAGE = PROVIDER_PACKAGE_PACKAGE;
     this.PROVIDER_PACKAGE_DATE_P = PROVIDER_PACKAGE_DATE_P;
     this.PROVIDER_PACKAGE_IDT_PROVIDER = PROVIDER_PACKAGE_IDT_PROVIDER;
+    this.ID_PROVIDER_PACKAGE = ID_PROVIDER_PACKAGE;
     this.BEST_PPN = BEST_PPN;
   }
 
@@ -213,7 +216,8 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
     case 25: return PROVIDER_PACKAGE_PACKAGE;
     case 26: return PROVIDER_PACKAGE_DATE_P;
     case 27: return PROVIDER_PACKAGE_IDT_PROVIDER;
-    case 28: return BEST_PPN;
+    case 28: return ID_PROVIDER_PACKAGE;
+    case 29: return BEST_PPN;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -247,6 +251,7 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
       null,
       null,
       new org.apache.avro.data.TimeConversions.DateConversion(),
+      null,
       null,
       null,
       null
@@ -290,7 +295,8 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
     case 25: PROVIDER_PACKAGE_PACKAGE = (CharSequence)value$; break;
     case 26: PROVIDER_PACKAGE_DATE_P = (java.time.LocalDate)value$; break;
     case 27: PROVIDER_PACKAGE_IDT_PROVIDER = (Integer)value$; break;
-    case 28: BEST_PPN = (CharSequence)value$; break;
+    case 28: ID_PROVIDER_PACKAGE = (Integer)value$; break;
+    case 29: BEST_PPN = (CharSequence)value$; break;
     default: throw new IndexOutOfBoundsException("Invalid index: " + field$);
     }
   }
@@ -772,6 +778,23 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
   }
 
   /**
+   * Gets the value of the 'ID_PROVIDER_PACKAGE' field.
+   * @return The value of the 'ID_PROVIDER_PACKAGE' field.
+   */
+  public int getIDPROVIDERPACKAGE() {
+    return ID_PROVIDER_PACKAGE;
+  }
+
+
+  /**
+   * Sets the value of the 'ID_PROVIDER_PACKAGE' field.
+   * @param value the value to set.
+   */
+  public void setIDPROVIDERPACKAGE(int value) {
+    this.ID_PROVIDER_PACKAGE = value;
+  }
+
+  /**
    * Gets the value of the 'BEST_PPN' field.
    * @return The value of the 'BEST_PPN' field.
    */
@@ -857,6 +880,7 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
     private CharSequence PROVIDER_PACKAGE_PACKAGE;
     private java.time.LocalDate PROVIDER_PACKAGE_DATE_P;
     private int PROVIDER_PACKAGE_IDT_PROVIDER;
+    private int ID_PROVIDER_PACKAGE;
     private CharSequence BEST_PPN;
 
     /** Creates a new Builder */
@@ -982,9 +1006,13 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
         this.PROVIDER_PACKAGE_IDT_PROVIDER = data().deepCopy(fields()[27].schema(), other.PROVIDER_PACKAGE_IDT_PROVIDER);
         fieldSetFlags()[27] = other.fieldSetFlags()[27];
       }
-      if (isValidValue(fields()[28], other.BEST_PPN)) {
-        this.BEST_PPN = data().deepCopy(fields()[28].schema(), other.BEST_PPN);
+      if (isValidValue(fields()[28], other.ID_PROVIDER_PACKAGE)) {
+        this.ID_PROVIDER_PACKAGE = data().deepCopy(fields()[28].schema(), other.ID_PROVIDER_PACKAGE);
         fieldSetFlags()[28] = other.fieldSetFlags()[28];
+      }
+      if (isValidValue(fields()[29], other.BEST_PPN)) {
+        this.BEST_PPN = data().deepCopy(fields()[29].schema(), other.BEST_PPN);
+        fieldSetFlags()[29] = other.fieldSetFlags()[29];
       }
     }
 
@@ -1106,9 +1134,13 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
         this.PROVIDER_PACKAGE_IDT_PROVIDER = data().deepCopy(fields()[27].schema(), other.PROVIDER_PACKAGE_IDT_PROVIDER);
         fieldSetFlags()[27] = true;
       }
-      if (isValidValue(fields()[28], other.BEST_PPN)) {
-        this.BEST_PPN = data().deepCopy(fields()[28].schema(), other.BEST_PPN);
+      if (isValidValue(fields()[28], other.ID_PROVIDER_PACKAGE)) {
+        this.ID_PROVIDER_PACKAGE = data().deepCopy(fields()[28].schema(), other.ID_PROVIDER_PACKAGE);
         fieldSetFlags()[28] = true;
+      }
+      if (isValidValue(fields()[29], other.BEST_PPN)) {
+        this.BEST_PPN = data().deepCopy(fields()[29].schema(), other.BEST_PPN);
+        fieldSetFlags()[29] = true;
       }
     }
 
@@ -2231,6 +2263,45 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
     }
 
     /**
+      * Gets the value of the 'ID_PROVIDER_PACKAGE' field.
+      * @return The value.
+      */
+    public int getIDPROVIDERPACKAGE() {
+      return ID_PROVIDER_PACKAGE;
+    }
+
+
+    /**
+      * Sets the value of the 'ID_PROVIDER_PACKAGE' field.
+      * @param value The value of 'ID_PROVIDER_PACKAGE'.
+      * @return This builder.
+      */
+    public Builder setIDPROVIDERPACKAGE(int value) {
+      validate(fields()[28], value);
+      this.ID_PROVIDER_PACKAGE = value;
+      fieldSetFlags()[28] = true;
+      return this;
+    }
+
+    /**
+      * Checks whether the 'ID_PROVIDER_PACKAGE' field has been set.
+      * @return True if the 'ID_PROVIDER_PACKAGE' field has been set, false otherwise.
+      */
+    public boolean hasIDPROVIDERPACKAGE() {
+      return fieldSetFlags()[28];
+    }
+
+
+    /**
+      * Clears the value of the 'ID_PROVIDER_PACKAGE' field.
+      * @return This builder.
+      */
+    public Builder clearIDPROVIDERPACKAGE() {
+      fieldSetFlags()[28] = false;
+      return this;
+    }
+
+    /**
       * Gets the value of the 'BEST_PPN' field.
       * @return The value.
       */
@@ -2245,9 +2316,9 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
       * @return This builder.
       */
     public Builder setBESTPPN(CharSequence value) {
-      validate(fields()[28], value);
+      validate(fields()[29], value);
       this.BEST_PPN = value;
-      fieldSetFlags()[28] = true;
+      fieldSetFlags()[29] = true;
       return this;
     }
 
@@ -2256,7 +2327,7 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
       * @return True if the 'BEST_PPN' field has been set, false otherwise.
       */
     public boolean hasBESTPPN() {
-      return fieldSetFlags()[28];
+      return fieldSetFlags()[29];
     }
 
 
@@ -2266,7 +2337,7 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
       */
     public Builder clearBESTPPN() {
       BEST_PPN = null;
-      fieldSetFlags()[28] = false;
+      fieldSetFlags()[29] = false;
       return this;
     }
 
@@ -2303,7 +2374,8 @@ public class LigneKbartConnect extends org.apache.avro.specific.SpecificRecordBa
         record.PROVIDER_PACKAGE_PACKAGE = fieldSetFlags()[25] ? this.PROVIDER_PACKAGE_PACKAGE : (CharSequence) defaultValue(fields()[25]);
         record.PROVIDER_PACKAGE_DATE_P = fieldSetFlags()[26] ? this.PROVIDER_PACKAGE_DATE_P : (java.time.LocalDate) defaultValue(fields()[26]);
         record.PROVIDER_PACKAGE_IDT_PROVIDER = fieldSetFlags()[27] ? this.PROVIDER_PACKAGE_IDT_PROVIDER : (Integer) defaultValue(fields()[27]);
-        record.BEST_PPN = fieldSetFlags()[28] ? this.BEST_PPN : (CharSequence) defaultValue(fields()[28]);
+        record.ID_PROVIDER_PACKAGE = fieldSetFlags()[28] ? this.ID_PROVIDER_PACKAGE : (Integer) defaultValue(fields()[28]);
+        record.BEST_PPN = fieldSetFlags()[29] ? this.BEST_PPN : (CharSequence) defaultValue(fields()[29]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;
