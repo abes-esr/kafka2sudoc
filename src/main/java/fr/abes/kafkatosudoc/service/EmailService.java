@@ -50,7 +50,6 @@ public class EmailService {
         String body = "Une erreur s'est produite lors de l'authentification sur le CBS" + "Provider : " + packageKbartDto.getProvider() +
                 "Package : " + packageKbartDto.getPackageName() +
                 "Date : " + packageKbartDto.getDatePackage();
-
         //  Création du mail
         String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
         //  Envoi du message par mail
@@ -65,6 +64,33 @@ public class EmailService {
 
         //  Création du mail
         String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la création de la notice électronique à partir de l'imprimé " + kbart.getPpn(), body.toString());
+        //  Envoi du message par mail
+        sendMail(requestJson);
+        log.info("L'email a été correctement envoyé.");
+    }
+
+    public void sendErrorMailSuppressionPackage(String packageName, String provider, Exception e) {
+        StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la recherche de la notice bouquet : ");
+        body.append(packageName);
+        body.append(" / ");
+        body.append(provider);
+        body.append("<br /><br />Avec le message d'erreur suivant : ");
+        body.append(e.getMessage());
+
+        //  Création du mail
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la suppression du package " + packageName + " / " + provider, body.toString());
+        //  Envoi du message par mail
+        sendMail(requestJson);
+        log.info("L'email a été correctement envoyé.");
+    }
+
+    public void sendErrorMailSuppression469(String ppn, String ppnNoticeBouquet, Exception e) {
+        StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la suppression du lien vers la notice bouquet " + ppnNoticeBouquet + " dans la notice " + ppn);
+        body.append(" avec l'erreur suivante : <br />");
+        body.append(e.getMessage());
+
+        //  Création du mail
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la suppression du lien vers la notice bouquet", body.toString());
         //  Envoi du message par mail
         sendMail(requestJson);
         log.info("L'email a été correctement envoyé.");
@@ -124,6 +150,5 @@ public class EmailService {
         }
         return json;
     }
-
 
 }
