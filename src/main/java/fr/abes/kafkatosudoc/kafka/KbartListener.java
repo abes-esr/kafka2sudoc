@@ -148,9 +148,10 @@ public class KbartListener {
                 .setPARENTPUBLICATIONTITLEID(ligneKbart.getParentPublicationTitleId())
                 .setPRECEDINGPUBLICATIONTITLEID(ligneKbart.getPrecedeingPublicationTitleId())
                 .setACCESSTYPE(ligneKbart.getAccessType())
-                .setPROVIDERPACKAGEPACKAGE(ligneKbart.getProviderPackage().getProviderPackageId().getPackageName())
-                .setPROVIDERPACKAGEDATEP(ligneKbart.getProviderPackage().getProviderPackageId().getDateP().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
+                .setPROVIDERPACKAGEPACKAGE(ligneKbart.getProviderPackage().getPackageName())
+                .setPROVIDERPACKAGEDATEP(ligneKbart.getProviderPackage().getDateP().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
                 .setPROVIDERPACKAGEIDTPROVIDER(ligneKbart.getProviderPackage().getProvider().getIdtProvider())
+                .setIDPROVIDERPACKAGE(ligneKbart.getProviderPackage().getProviderPackageId())
                 .setBESTPPN(ligneKbart.getBestPpn())
                 .build();
 
