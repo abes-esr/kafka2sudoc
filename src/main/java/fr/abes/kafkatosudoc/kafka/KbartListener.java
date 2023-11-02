@@ -219,7 +219,7 @@ public class KbartListener {
                     }
                 } catch (CBSException | ZoneException e) {
                     log.error(e.getMessage(), e.getCause());
-                   // emailService.sendErrorMailSuppression469(ppnCourant, ppnNoticeBouquet, e);
+                    emailService.sendErrorMailSuppression469(ppnCourant, ppnNoticeBouquet, e);
                     service.retourArriere();
                 }
             }
