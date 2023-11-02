@@ -75,11 +75,11 @@ public class SudocService {
 		return notice;
 	}
 
-	public NoticeConcrete passageEditionNotice(String ppn) throws ZoneException, CBSException {
-		return cbs.editerNoticeConcrete(ppn);
+	public NoticeConcrete passageEditionNotice(int noNotice) throws ZoneException, CBSException {
+		return cbs.editerNoticeConcrete(String.valueOf(noNotice));
 	}
-	public void modifierNotice(NoticeConcrete noticeBestPpn) throws CBSException {
-		this.cbs.modifierNoticeConcrete("1", noticeBestPpn);
+	public void modifierNotice(NoticeConcrete noticeBestPpn, int noLigne) throws CBSException {
+		this.cbs.modifierNoticeConcrete(String.valueOf(noLigne), noticeBestPpn);
 	}
 
 	public void creerNotice(NoticeConcrete notice) throws CBSException {

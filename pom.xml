@@ -55,12 +55,6 @@
         </profile>
     </profiles>
     <dependencies>
-        <!--AccesCBS-->
-        <dependency>
-            <groupId>fr.abes.api-communes</groupId>
-            <artifactId>AccesCbs</artifactId>
-            <version>2.5.32</version>
-        </dependency>
         <!--Spring Core, log from core exclusion-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -179,6 +173,13 @@
             </exclusions>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>fr.abes.api-communes</groupId>
+            <artifactId>AccesCbs</artifactId>
+            <version>2.5.38</version>
+            <scope>compile</scope>
+        </dependency>
+
     </dependencies>
     <build>
         <finalName>${warName}</finalName>

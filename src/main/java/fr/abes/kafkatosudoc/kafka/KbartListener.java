@@ -163,7 +163,7 @@ public class KbartListener {
             NoticeConcrete notice = service.getNoticeFromPpn(ppn);
             if (!service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
                 service.addNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
-                service.modifierNotice(notice);
+                service.modifierNotice(notice, 1);
                 log.debug("Ajout 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
             }
         } catch (CBSException | ZoneException e) {
@@ -178,7 +178,7 @@ public class KbartListener {
             NoticeConcrete notice = service.getNoticeFromPpn(ppn);
             if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
                 service.supprimeNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
-                service.modifierNotice(notice);
+                service.modifierNotice(notice, 1);
                 log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
             }
         } catch (CBSException | ZoneException e) {
@@ -205,22 +205,22 @@ public class KbartListener {
             //affichage des notices liées
             //boucle sur les notices liées à partir de la seconde (la première étant la notice bouquet elle-même)
             int nbNoticesLiees = service.getNoticesLiees();
-            service.voirNotice(1);
             for (int i = 2 ; i <= nbNoticesLiees ; i++) {
                 String ppnCourant = "";
                 try {
                     service.voirNotice(i);
-                    NoticeConcrete notice = service.passageEditionNotice(ppnCourant);
+                    NoticeConcrete notice = service.passageEditionNotice(i);
+                    ppnCourant = notice.getNoticeBiblio().findZone("003", 0).getValeur();
                     log.debug(ppnCourant);
                     if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
                         service.supprimeNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
-                        service.modifierNotice(notice);
+                        service.modifierNotice(notice, i);
                         log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZones("003").get(0).getValeur() + " modifiée avec succès");
                     }
-                    service.retourArriere();
                 } catch (CBSException | ZoneException e) {
                     log.error(e.getMessage(), e.getCause());
-                    emailService.sendErrorMailSuppression469(ppnCourant, ppnNoticeBouquet, e);
+                   // emailService.sendErrorMailSuppression469(ppnCourant, ppnNoticeBouquet, e);
+                    service.retourArriere();
                 }
             }
     } catch(CBSException e) {
