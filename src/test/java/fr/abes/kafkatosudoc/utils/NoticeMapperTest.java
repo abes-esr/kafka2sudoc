@@ -97,9 +97,18 @@ public class NoticeMapperTest {
         Assertions.assertEquals('1', biblio.findZones("701").get(0).getIndicateurs()[1]);
 
         //controle URL
+        Assertions.assertEquals("https://www.test.com/10.1484/M.BM-EB.5.113206", biblio.findZones("856").get(0).findSubLabel("$u"));
+        Assertions.assertEquals('4', biblio.findZones("856").get(0).getIndicateurs()[0]);
+        Assertions.assertEquals('#', biblio.findZones("856").get(0).getIndicateurs()[1]);
+
+        kbart.setACCESSTYPE("P");
+        notice = mapper.map(kbart, NoticeConcrete.class);
+        biblio = notice.getNoticeBiblio();
+        //controle URL
         Assertions.assertEquals("https://www.test.com/10.1484/M.BM-EB.5.113206", biblio.findZones("859").get(0).findSubLabel("$u"));
         Assertions.assertEquals('4', biblio.findZones("859").get(0).getIndicateurs()[0]);
         Assertions.assertEquals('#', biblio.findZones("859").get(0).getIndicateurs()[1]);
+
     }
 
     @Test

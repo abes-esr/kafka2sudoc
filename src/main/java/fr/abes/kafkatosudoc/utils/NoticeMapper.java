@@ -73,7 +73,11 @@ public class NoticeMapper {
 
 
                 noticeBiblio.addZone("214", "$a", "[Lieu de diffusion inconnu]", new char[]{'#', '2'});
-                noticeBiblio.addSousZone("214", "$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), 1);
+                if(kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null) {
+                    noticeBiblio.addSousZone("214", "$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), 1);
+                } else {
+                    noticeBiblio.addSousZone("214", "$d", "[20..]");
+                }
                 noticeBiblio.addZone("309", "$a", "Notice générée automatiquement à partir des métadonnées de BACON. SUPPRIMER LA PRESENTE NOTE 309 APRES MISE A JOUR");
 
                 //Note sur les conditions d'accès
@@ -101,7 +105,11 @@ public class NoticeMapper {
                 }
 
                 //url d'accès
-                noticeBiblio.addZone("859", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
+                if (kbart.getACCESSTYPE().equals("F")) {
+                    noticeBiblio.addZone("856", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
+                } else {
+                    noticeBiblio.addZone("859", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
+                }
                 NoticeConcrete notice = new NoticeConcrete(noticeBiblio, null, null);
                 return notice;
             }
@@ -218,9 +226,15 @@ public class NoticeMapper {
                     if (ssZone210a != null) {
                         zone214.addSubLabel("$a", ssZone210a);
                     }
+                    else {
+                        zone214.addSubLabel("$a", "[Lieu de publication inconnu]");
+                    }
                     String ssZone210c = zone210.findSubLabel("$c");
                     if (ssZone210c != null) {
                         zone214.addSubLabel("$c", ssZone210c);
+                    } else {
+                        if (kbart.getPublisherName() != null)
+                            zone214.addSubLabel("$c", kbart.getPublisherName().toString());
                     }
                     noticeElec.addZone(zone214);
                 }
