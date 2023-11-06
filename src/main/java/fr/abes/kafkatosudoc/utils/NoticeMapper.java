@@ -178,7 +178,7 @@ public class NoticeMapper {
                         noticeElec.addSousZone("214", "$c", kbart.getPublisherName().toString());
                 }
                 for (Zone zone214 : listZone214) {
-                    Zone zone214Elec = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE);
+                    Zone zone214Elec = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, zone214.getIndicateurs());
                     String lieuPublication = zone214.findSubLabel("$a");
                     String nomEditeur = zone214.findSubLabel("$c");
                     if (lieuPublication != null) {
@@ -201,7 +201,29 @@ public class NoticeMapper {
                     }
                     noticeElec.addZone(zone214Elec);
                 }
-                //TODO : demander des précisions sur la gestion de la 210, est ce que le traitement de la 210 doit venir en plus de celui sur la 214 ou à la place ?
+                Zone zone214 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '2'});
+                zone214.addSubLabel("$a", "[Lieu de diffusion inconnu]");
+                if (kbart.getDateMonographPublishedOnline() != null) {
+                    zone214.addSubLabel("$d", kbart.getDateMonographPublishedOnline().toString());
+                } else {
+                    zone214.addSubLabel("$d", "[20..]");
+                }
+                noticeElec.addZone(zone214);
+
+                //gestion 210 résiduelles
+                List<Zone> zones210 = noticeImprimee.getNoticeBiblio().findZones("210");
+                for (Zone zone210 : zones210) {
+                    zone214 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '0'});
+                    String ssZone210a = zone210.findSubLabel("$a");
+                    if (ssZone210a != null) {
+                        zone214.addSubLabel("$a", ssZone210a);
+                    }
+                    String ssZone210c = zone210.findSubLabel("$c");
+                    if (ssZone210c != null) {
+                        zone214.addSubLabel("$c", ssZone210c);
+                    }
+                    noticeElec.addZone(zone214);
+                }
                 Zone zone328 = noticeImprimee.getNoticeBiblio().findZone("328", 0);
                 if (zone328 != null) {
                     noticeElec.addZone(zone328);
@@ -216,18 +238,6 @@ public class NoticeMapper {
                     noticeElec.addZone("371", "$a", "Ressource en accès libre", new char[]{'0', '#'});
                 else
                     noticeElec.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", new char[]{'0', '#'});
-
-                noticeImprimee.getNoticeBiblio().findZones("300").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("302").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("304").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("313").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("314").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("327").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("330").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("332").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("334").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("338").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("359").forEach(noticeElec::addZone);
 
                 noticeElec.addZone("452", "$0", kbart.getPpn().toString(), new char[]{'#', '#'});
 
@@ -251,7 +261,10 @@ public class NoticeMapper {
 
                 //url d'accès
                 if (kbart.getTitleUrl() != null)
-                    noticeElec.addZone("859", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
+                    if (kbart.getAccessType().equals("F"))
+                        noticeElec.addZone("856", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
+                    else
+                        noticeElec.addZone("859", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
 
                 NoticeConcrete notice = new NoticeConcrete(noticeElec, null, null);
                 return notice;
