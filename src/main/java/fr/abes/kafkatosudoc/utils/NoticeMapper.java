@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class NoticeMapper {
@@ -48,6 +49,8 @@ public class NoticeMapper {
                 //Date de publication
                 if (kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null)
                     noticeBiblio.addZone("100", "$a", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), new char[]{'0', '#'});
+                else
+                    noticeBiblio.addZone("100", "$a", "20XX", new char[]{'0', '#'});
 
                 //Langue de publication
                 noticeBiblio.addZone("101", "$a", "und", new char[]{'#', '#'});
@@ -66,6 +69,8 @@ public class NoticeMapper {
                 //Titre
 
                 noticeBiblio.addZone("200", "$a", "@" + kbart.getPUBLICATIONTITLE(), new char[]{'1', '#'});
+                if (!kbart.getFIRSTAUTHOR().isEmpty())
+                    noticeBiblio.addSousZone("200","$f", kbart.getFIRSTAUTHOR().toString());
                 //Mention de publication / diffusion
                 noticeBiblio.addZone("214", "$a", "[Lieu de publication inconnu]", new char[]{'#', '0'});
                 if (kbart.getPUBLISHERNAME() != null)
@@ -110,8 +115,7 @@ public class NoticeMapper {
                 } else {
                     noticeBiblio.addZone("859", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
                 }
-                NoticeConcrete notice = new NoticeConcrete(noticeBiblio, null, null);
-                return notice;
+                return new NoticeConcrete(noticeBiblio, null, null);
             }
         };
         mapper.addConverter(myConverter);
@@ -140,8 +144,12 @@ public class NoticeMapper {
                     noticeElec.addSousZone("017", "$2", "DOI");
                 }
 
-                //ajout date de publication
-                noticeElec.addZone(noticeImprimee.getNoticeBiblio().findZone("100", 0));
+                //Date de publication
+                if (kbart.getDateMonographPublishedOnline() != null)
+                    noticeElec.addZone("100", "$a", Utils.getYearFromDate(kbart.getDateMonographPublishedOnline().toString()), new char[]{'0', '#'});
+                else
+                    noticeElec.addZone("100", "$a", "20XX", new char[]{'0', '#'});
+
                 //langue de publication
                 noticeElec.addZone("101", "$a", noticeImprimee.getNoticeBiblio().findZone("101", 0).findSubLabel("$a"), new char[]{'0', '#'});
                 //Pays de publication
@@ -179,8 +187,7 @@ public class NoticeMapper {
                 }
 
                 //Mention  de publication
-                List<Zone> listZone214 = noticeImprimee.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).toString().equals("[#, 0]")).toList();
-                if (listZone214.isEmpty()) {
+                List<Zone> listZone214 = noticeImprimee.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 0]")).toList();                if (listZone214.isEmpty()) {
                     noticeElec.addZone("214", "$a", "Lieu de diffusion inconnu", new char[]{'#', '0'});
                     if (kbart.getPublisherName() != null)
                         noticeElec.addSousZone("214", "$c", kbart.getPublisherName().toString());
@@ -223,12 +230,7 @@ public class NoticeMapper {
                 for (Zone zone210 : zones210) {
                     zone214 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '0'});
                     String ssZone210a = zone210.findSubLabel("$a");
-                    if (ssZone210a != null) {
-                        zone214.addSubLabel("$a", ssZone210a);
-                    }
-                    else {
-                        zone214.addSubLabel("$a", "[Lieu de publication inconnu]");
-                    }
+                    zone214.addSubLabel("$a", Objects.requireNonNullElse(ssZone210a, "[Lieu de publication inconnu]"));
                     String ssZone210c = zone210.findSubLabel("$c");
                     if (ssZone210c != null) {
                         zone214.addSubLabel("$c", ssZone210c);
@@ -280,8 +282,7 @@ public class NoticeMapper {
                     else
                         noticeElec.addZone("859", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
 
-                NoticeConcrete notice = new NoticeConcrete(noticeElec, null, null);
-                return notice;
+                return new NoticeConcrete(noticeElec, null, null);
             }
         };
         mapper.addConverter(myConverter);
