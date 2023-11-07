@@ -48,21 +48,21 @@ class SudocServiceTest {
     void isNoticeBouquetInBestPpnTestTrue() throws ZoneException {
         Biblio notice = new Biblio();
         notice.addZone("469", "0", "123456789");
-        Assertions.assertTrue(sudocService.isNoticeBouquetInBestPpn(notice, "123456789"));
+        Assertions.assertTrue(sudocService.isNoticeBouquetInPpn(notice, "123456789"));
     }
 
     @Test
     void isNoticeBouquetInBestPpnTestFalse() throws ZoneException {
         Biblio notice = new Biblio();
         notice.addZone("469", "0", "987654321");
-        Assertions.assertFalse(sudocService.isNoticeBouquetInBestPpn(notice, "123456789"));
+        Assertions.assertFalse(sudocService.isNoticeBouquetInPpn(notice, "123456789"));
     }
 
     @Test
     void supprimerNoticeBouquetInBestPpnTest1() throws ZoneException {
         Biblio notice = new Biblio();
         notice.addZone("469", "0", "987654321");
-        Biblio noticeResult = sudocService.supprimeNoticeBouquetInBestPpn(notice, "987654321");
+        Biblio noticeResult = sudocService.supprimeNoticeBouquetInPpn(notice, "987654321");
         Assertions.assertEquals(0, noticeResult.getListeZones().size());
     }
 
@@ -70,7 +70,7 @@ class SudocServiceTest {
     void supprimerNoticeBouquetInBestPpnTest2() throws ZoneException {
         Biblio notice = new Biblio();
         notice.addZone("469", "0", "123456789");
-        Biblio noticeResult = sudocService.supprimeNoticeBouquetInBestPpn(notice, "987654321");
+        Biblio noticeResult = sudocService.supprimeNoticeBouquetInPpn(notice, "987654321");
         Assertions.assertEquals(1, noticeResult.getListeZones().size());
         Assertions.assertEquals("469", noticeResult.findZones("469").get(0).getLabel());
     }

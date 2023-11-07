@@ -66,26 +66,40 @@ public class SudocService {
 		return notice;
 	}
 
-	public boolean isNoticeBouquetInBestPpn(Biblio notice, String ppnNoticeBouquet) {
+	public boolean isNoticeBouquetInPpn(Biblio notice, String ppnNoticeBouquet) {
 		return !notice.findZoneWithPattern("469", "$0", ppnNoticeBouquet).isEmpty();
 	}
 
-	public Biblio addNoticeBouquetInBestPpn(Biblio notice, String ppnNoticeBouquet) throws ZoneException {
+	public Biblio addNoticeBouquetInPpn(Biblio notice, String ppnNoticeBouquet) throws ZoneException {
 		notice.addZone("469", "$0", ppnNoticeBouquet);
 		return notice;
 	}
 
-	public void modifierNotice(NoticeConcrete noticeBestPpn) throws CBSException {
-		this.cbs.modifierNoticeConcrete("1", noticeBestPpn);
+	public NoticeConcrete passageEditionNotice(int noNotice) throws ZoneException, CBSException {
+		return cbs.editerNoticeConcrete(String.valueOf(noNotice));
+	}
+	public void modifierNotice(NoticeConcrete noticeBestPpn, int noLigne) throws CBSException {
+		this.cbs.modifierNoticeConcrete(String.valueOf(noLigne), noticeBestPpn);
 	}
 
 	public void creerNotice(NoticeConcrete notice) throws CBSException {
 		this.cbs.enregistrerNew(notice.toString());
 	}
 
-	public Biblio supprimeNoticeBouquetInBestPpn(Biblio notice, String ppnNoticeBouquet) {
+	public Biblio supprimeNoticeBouquetInPpn(Biblio notice, String ppnNoticeBouquet) {
 		notice.deleteZoneWithValue("469", "$0", ppnNoticeBouquet);
 		return notice;
 	}
 
+	public int getNoticesLiees() throws CBSException {
+		return this.cbs.rel();
+	}
+
+	public void retourArriere() throws CBSException {
+		this.cbs.back();
+	}
+
+	public void voirNotice(int pos) throws CBSException {
+		this.cbs.view(String.valueOf(pos), false, "UNM");
+	}
 }
