@@ -5,6 +5,7 @@ import fr.abes.LigneKbartImprime;
 import fr.abes.cbs.exception.CBSException;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.NoticeConcrete;
+import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
 import fr.abes.kafkatosudoc.entity.LigneKbart;
@@ -242,6 +243,7 @@ public class KbartListener {
         try {
             filename = getFileNameFromHeader(lignesKbart.headers());
             String provider = CheckFiles.getProviderFromFilename(filename);
+            String packageName = CheckFiles.getPackageFromFilename(filename);
             service.authenticate();
             NoticeConcrete notice = mapper.map(lignesKbart.value(), NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
@@ -250,6 +252,8 @@ public class KbartListener {
                 notice.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
             }
             service.creerNotice(notice);
+            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
+            service.addNoticeBouquetInBestPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
             log.debug("Ajout notice exNihilo effectué");
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
@@ -279,7 +283,9 @@ public class KbartListener {
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
             if (providerDisplay != null) {
-                noticeElec.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
+                List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).toString().equals("[#, 2]")).toList();
+                for (Zone zone : zones214)
+                    zone.addSubLabel("c", providerDisplay);
             }
             String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
             service.addNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), ppnNoticeBouquet);

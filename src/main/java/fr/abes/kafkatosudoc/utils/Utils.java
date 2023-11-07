@@ -21,24 +21,22 @@ public class Utils {
         String doiPattern = "10.\\d{0,15}.\\d{0,15}.+";
 
         if (titleUrl != null && !titleUrl.isEmpty()){
-            Pattern pattern = Pattern.compile(doiPattern);
-            Matcher matcher = pattern.matcher(titleUrl);
-            if (matcher.find()) {
-                return matcher.group(0);
-            } else {
-                return "";
-            }
+            return findDoiWithPatternDoi(titleUrl, doiPattern);
         }
         if (titleId != null && !titleId.isEmpty()){
-            Pattern pattern = Pattern.compile(doiPattern);
-            Matcher matcher = pattern.matcher(titleId);
-            if (matcher.find()) {
-                return matcher.group(0);
-            } else {
-                return "";
-            }
+            return findDoiWithPatternDoi(titleId, doiPattern);
         }
         return "";
+    }
+
+    private static String findDoiWithPatternDoi(CharSequence titleUrl, String doiPattern) {
+        Pattern pattern = Pattern.compile(doiPattern);
+        Matcher matcher = pattern.matcher(titleUrl);
+        if (matcher.find()) {
+            return matcher.group(0);
+        } else {
+            return "";
+        }
     }
 
     /**
