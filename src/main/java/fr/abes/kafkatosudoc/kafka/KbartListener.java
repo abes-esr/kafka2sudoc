@@ -253,7 +253,7 @@ public class KbartListener {
             }
             service.creerNotice(notice);
             String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-            service.addNoticeBouquetInBestPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
+            service.addNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
             log.debug("Ajout notice exNihilo effectué");
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
