@@ -2,8 +2,10 @@ package fr.abes.kafkatosudoc.utils;
 
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
-import fr.abes.cbs.exception.ZoneException;
-import fr.abes.cbs.notices.*;
+import fr.abes.cbs.notices.Biblio;
+import fr.abes.cbs.notices.NoticeConcrete;
+import fr.abes.cbs.notices.TYPE_NOTICE;
+import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import lombok.SneakyThrows;
 import org.modelmapper.Converter;
@@ -11,9 +13,9 @@ import org.modelmapper.spi.MappingContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 public class NoticeMapper {
@@ -47,6 +49,8 @@ public class NoticeMapper {
                 //Date de publication
                 if (kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null)
                     noticeBiblio.addZone("100", "$a", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), new char[]{'0', '#'});
+                else
+                    noticeBiblio.addZone("100", "$a", "20XX", new char[]{'0', '#'});
 
                 //Langue de publication
                 noticeBiblio.addZone("101", "$a", "und", new char[]{'#', '#'});
@@ -65,6 +69,8 @@ public class NoticeMapper {
                 //Titre
 
                 noticeBiblio.addZone("200", "$a", "@" + kbart.getPUBLICATIONTITLE(), new char[]{'1', '#'});
+                if (!kbart.getFIRSTAUTHOR().isEmpty())
+                    noticeBiblio.addSousZone("200","$f", kbart.getFIRSTAUTHOR().toString());
                 //Mention de publication / diffusion
                 noticeBiblio.addZone("214", "$a", "[Lieu de publication inconnu]", new char[]{'#', '0'});
                 if (kbart.getPUBLISHERNAME() != null)
@@ -72,7 +78,11 @@ public class NoticeMapper {
 
 
                 noticeBiblio.addZone("214", "$a", "[Lieu de diffusion inconnu]", new char[]{'#', '2'});
-                noticeBiblio.addSousZone("214", "$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), 1);
+                if(kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null) {
+                    noticeBiblio.addSousZone("214", "$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), 1);
+                } else {
+                    noticeBiblio.addSousZone("214", "$d", "[20..]");
+                }
                 noticeBiblio.addZone("309", "$a", "Notice générée automatiquement à partir des métadonnées de BACON. SUPPRIMER LA PRESENTE NOTE 309 APRES MISE A JOUR");
 
                 //Note sur les conditions d'accès
@@ -100,9 +110,12 @@ public class NoticeMapper {
                 }
 
                 //url d'accès
-                noticeBiblio.addZone("859", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
-                NoticeConcrete notice = new NoticeConcrete(noticeBiblio, null, generateExemplaire());
-                return notice;
+                if (kbart.getACCESSTYPE().equals("F")) {
+                    noticeBiblio.addZone("856", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
+                } else {
+                    noticeBiblio.addZone("859", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
+                }
+                return new NoticeConcrete(noticeBiblio, null, null);
             }
         };
         mapper.addConverter(myConverter);
@@ -131,8 +144,12 @@ public class NoticeMapper {
                     noticeElec.addSousZone("017", "$2", "DOI");
                 }
 
-                //ajout date de publication
-                noticeElec.addZone(noticeImprimee.getNoticeBiblio().findZone("100", 0));
+                //Date de publication
+                if (kbart.getDateMonographPublishedOnline() != null)
+                    noticeElec.addZone("100", "$a", Utils.getYearFromDate(kbart.getDateMonographPublishedOnline().toString()), new char[]{'0', '#'});
+                else
+                    noticeElec.addZone(noticeImprimee.getNoticeBiblio().findZone("100", 0));
+
                 //langue de publication
                 noticeElec.addZone("101", "$a", noticeImprimee.getNoticeBiblio().findZone("101", 0).findSubLabel("$a"), new char[]{'0', '#'});
                 //Pays de publication
@@ -170,14 +187,13 @@ public class NoticeMapper {
                 }
 
                 //Mention  de publication
-                List<Zone> listZone214 = noticeImprimee.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).toString().equals("[#, 0]")).toList();
-                if (listZone214.isEmpty()) {
+                List<Zone> listZone214 = noticeImprimee.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 0]")).toList();                if (listZone214.isEmpty()) {
                     noticeElec.addZone("214", "$a", "Lieu de diffusion inconnu", new char[]{'#', '0'});
                     if (kbart.getPublisherName() != null)
                         noticeElec.addSousZone("214", "$c", kbart.getPublisherName().toString());
                 }
                 for (Zone zone214 : listZone214) {
-                    Zone zone214Elec = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE);
+                    Zone zone214Elec = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, zone214.getIndicateurs());
                     String lieuPublication = zone214.findSubLabel("$a");
                     String nomEditeur = zone214.findSubLabel("$c");
                     if (lieuPublication != null) {
@@ -200,7 +216,30 @@ public class NoticeMapper {
                     }
                     noticeElec.addZone(zone214Elec);
                 }
+                Zone zone214 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '2'});
+                zone214.addSubLabel("$a", "[Lieu de diffusion inconnu]");
+                if (kbart.getDateMonographPublishedOnline() != null) {
+                    zone214.addSubLabel("$d", kbart.getDateMonographPublishedOnline().toString());
+                } else {
+                    zone214.addSubLabel("$d", "[20..]");
+                }
+                noticeElec.addZone(zone214);
 
+                //gestion 210 résiduelles
+                List<Zone> zones210 = noticeImprimee.getNoticeBiblio().findZones("210");
+                for (Zone zone210 : zones210) {
+                    zone214 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '0'});
+                    String ssZone210a = zone210.findSubLabel("$a");
+                    zone214.addSubLabel("$a", Objects.requireNonNullElse(ssZone210a, "[Lieu de publication inconnu]"));
+                    String ssZone210c = zone210.findSubLabel("$c");
+                    if (ssZone210c != null) {
+                        zone214.addSubLabel("$c", ssZone210c);
+                    } else {
+                        if (kbart.getPublisherName() != null)
+                            zone214.addSubLabel("$c", kbart.getPublisherName().toString());
+                    }
+                    noticeElec.addZone(zone214);
+                }
                 Zone zone328 = noticeImprimee.getNoticeBiblio().findZone("328", 0);
                 if (zone328 != null) {
                     noticeElec.addZone(zone328);
@@ -215,18 +254,6 @@ public class NoticeMapper {
                     noticeElec.addZone("371", "$a", "Ressource en accès libre", new char[]{'0', '#'});
                 else
                     noticeElec.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", new char[]{'0', '#'});
-
-                noticeImprimee.getNoticeBiblio().findZones("300").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("302").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("304").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("313").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("314").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("327").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("330").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("332").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("334").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("338").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("359").forEach(noticeElec::addZone);
 
                 noticeElec.addZone("452", "$0", kbart.getPpn().toString(), new char[]{'#', '#'});
 
@@ -243,28 +270,21 @@ public class NoticeMapper {
                 List<Zone> zones600 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
                 zones600.forEach(noticeElec::addZone);
 
-                List<Zone> zones700 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("7")).toList();
-                zones700.forEach(noticeElec::addZone);
+                noticeImprimee.getNoticeBiblio().findZones("700").forEach(noticeElec::addZone);
+                noticeImprimee.getNoticeBiblio().findZones("701").forEach(noticeElec::addZone);
+                noticeImprimee.getNoticeBiblio().findZones("710").forEach(noticeElec::addZone);
+                noticeImprimee.getNoticeBiblio().findZones("711").forEach(noticeElec::addZone);
 
                 //url d'accès
                 if (kbart.getTitleUrl() != null)
-                    noticeElec.addZone("859", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
+                    if (kbart.getAccessType().equals("F"))
+                        noticeElec.addZone("856", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
+                    else
+                        noticeElec.addZone("859", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
 
-                NoticeConcrete notice = new NoticeConcrete(noticeElec, null, generateExemplaire());
-                return notice;
+                return new NoticeConcrete(noticeElec, null, null);
             }
         };
         mapper.addConverter(myConverter);
-    }
-
-    private List<Exemplaire> generateExemplaire() throws ZoneException {
-        Exemplaire exemp = new Exemplaire();
-        exemp.addZone("e01", "$b", "x");
-        exemp.addZone("930", "$b", "341725297");
-        exemp.addSousZone("930", "$j", "g");
-        exemp.addZone("991", "$a", "Exemplaire créé automatiquement par l'ABES");
-        List<Exemplaire> exemplaires = new ArrayList<>();
-        exemplaires.add(exemp);
-        return exemplaires;
     }
 }

@@ -5,6 +5,7 @@ import fr.abes.LigneKbartImprime;
 import fr.abes.cbs.exception.CBSException;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.NoticeConcrete;
+import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
 import fr.abes.kafkatosudoc.entity.LigneKbart;
@@ -16,6 +17,7 @@ import fr.abes.kafkatosudoc.service.SudocService;
 import fr.abes.kafkatosudoc.utils.CheckFiles;
 import fr.abes.kafkatosudoc.utils.UtilsMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
@@ -41,6 +43,7 @@ public class KbartListener {
     private final List<LigneKbartConnect> listeNotices = new ArrayList<>();
 
     private String filename = "";
+
     public KbartListener(UtilsMapper mapper, SudocService service, BaconService baconService, EmailService emailService) {
         this.mapper = mapper;
         this.service = service;
@@ -154,15 +157,14 @@ public class KbartListener {
                 .setIDPROVIDERPACKAGE(ligneKbart.getProviderPackage().getProviderPackageId())
                 .setBESTPPN(ligneKbart.getBestPpn())
                 .build();
-
     }
 
     private void ajout469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart) {
         try {
             NoticeConcrete notice = service.getNoticeFromPpn(ppn);
-            if (!service.isNoticeBouquetInBestPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
-                service.addNoticeBouquetInBestPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
-                service.modifierNotice(notice);
+            if (!service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
+                service.addNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
+                service.modifierNotice(notice, 1);
                 log.debug("Ajout 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
             }
         } catch (CBSException | ZoneException e) {
@@ -175,9 +177,9 @@ public class KbartListener {
     private void suppression469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart) {
         try {
             NoticeConcrete notice = service.getNoticeFromPpn(ppn);
-            if (service.isNoticeBouquetInBestPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
-                service.supprimeNoticeBouquetInBestPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
-                service.modifierNotice(notice);
+            if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
+                service.supprimeNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
+                service.modifierNotice(notice, 1);
                 log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
             }
         } catch (CBSException | ZoneException e) {
@@ -190,33 +192,46 @@ public class KbartListener {
     /**
      * Listener pour modification notice biblio (suppression 469)
      *
-     * @param lignesKbart enregistrement dans kafka
+     * @param providerPackageDeleted enregistrement dans kafka
      * @throws CBSException : erreur CBS
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "${topic.groupid.source.delete}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartToDeleteFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws CBSException {
-        String filename = "";
+    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "${topic.groupid.source.delete}", containerFactory = "kafkaDeletePackageListenerContainerFactory")
+    public void listenKbartToDeleteFromKafka(ConsumerRecord<String, GenericRecord> providerPackageDeleted) throws CBSException {
+        String provider = providerPackageDeleted.value().get("PROVIDER").toString();
+        String packageName = providerPackageDeleted.value().get("PACKAGE").toString();
         try {
-            filename = getFileNameFromHeader(lignesKbart.headers());
-            String provider = CheckFiles.getProviderFromFilename(filename);
-            String packageName = CheckFiles.getPackageFromFilename(filename);
-            if (!lignesKbart.value().getBESTPPN().isEmpty()) {
-                service.authenticate();
-                String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-                NoticeConcrete noticeBestPpn = service.getNoticeFromPpn(lignesKbart.value().getBESTPPN().toString());
-                if (service.isNoticeBouquetInBestPpn(noticeBestPpn.getNoticeBiblio(), ppnNoticeBouquet)) {
-                    service.supprimeNoticeBouquetInBestPpn(noticeBestPpn.getNoticeBiblio(), ppnNoticeBouquet);
-                    service.modifierNotice(noticeBestPpn);
-                    log.debug("Suppression 469 : Notice " + lignesKbart.value().getBESTPPN().toString() + " modifiée avec succès");
+            service.authenticate();
+            //recherche de la notice bouquet
+            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
+            //affichage des notices liées
+            //boucle sur les notices liées à partir de la seconde (la première étant la notice bouquet elle-même)
+            int nbNoticesLiees = service.getNoticesLiees();
+            for (int i = 2 ; i <= nbNoticesLiees ; i++) {
+                String ppnCourant = "";
+                try {
+                    service.voirNotice(i);
+                    NoticeConcrete notice = service.passageEditionNotice(i);
+                    ppnCourant = notice.getNoticeBiblio().findZone("003", 0).getValeur();
+                    log.debug(ppnCourant);
+                    if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
+                        service.supprimeNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
+                        service.modifierNotice(notice, i);
+                        log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZones("003").get(0).getValeur() + " modifiée avec succès");
+                    }
+                } catch (CBSException | ZoneException e) {
+                    log.error(e.getMessage(), e.getCause());
+                    emailService.sendErrorMailSuppression469(ppnCourant, ppnNoticeBouquet, e);
+                    service.retourArriere();
                 }
             }
-        } catch (Exception e) {
-            log.error(e.getMessage(), e.getCause());
-            emailService.sendErrorMailConnect(filename, lignesKbart.value(), e);
-        } finally {
-            service.disconnect();
-        }
+    } catch(CBSException e) {
+        log.error(e.getMessage(), e.getCause());
+        emailService.sendErrorMailSuppressionPackage(packageName, provider, e);
+    } finally {
+        service.disconnect();
     }
+
+}
 
     /**
      * @param lignesKbart : enregistrement dans Kafka
@@ -228,6 +243,7 @@ public class KbartListener {
         try {
             filename = getFileNameFromHeader(lignesKbart.headers());
             String provider = CheckFiles.getProviderFromFilename(filename);
+            String packageName = CheckFiles.getPackageFromFilename(filename);
             service.authenticate();
             NoticeConcrete notice = mapper.map(lignesKbart.value(), NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
@@ -236,6 +252,8 @@ public class KbartListener {
                 notice.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
             }
             service.creerNotice(notice);
+            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
+            service.addNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
             log.debug("Ajout notice exNihilo effectué");
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
@@ -265,10 +283,12 @@ public class KbartListener {
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
             if (providerDisplay != null) {
-                noticeElec.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
+                List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).toString().equals("[#, 2]")).toList();
+                for (Zone zone : zones214)
+                    zone.addSubLabel("c", providerDisplay);
             }
             String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-            service.addNoticeBouquetInBestPpn(noticeElec.getNoticeBiblio(), ppnNoticeBouquet);
+            service.addNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), ppnNoticeBouquet);
             service.creerNotice(noticeElec);
             log.debug("Création notice à partir de l'imprimée terminée");
         } catch (CBSException | ZoneException e) {
