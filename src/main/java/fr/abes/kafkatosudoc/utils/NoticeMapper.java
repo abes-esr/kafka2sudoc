@@ -13,6 +13,7 @@ import org.modelmapper.spi.MappingContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -115,7 +116,7 @@ public class NoticeMapper {
                 } else {
                     noticeBiblio.addZone("859", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
                 }
-                return new NoticeConcrete(noticeBiblio, null, null);
+                return new NoticeConcrete(noticeBiblio);
             }
         };
         mapper.addConverter(myConverter);
@@ -282,7 +283,7 @@ public class NoticeMapper {
                     else
                         noticeElec.addZone("859", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
 
-                return new NoticeConcrete(noticeElec, null, null);
+                return new NoticeConcrete(noticeElec);
             }
         };
         mapper.addConverter(myConverter);
