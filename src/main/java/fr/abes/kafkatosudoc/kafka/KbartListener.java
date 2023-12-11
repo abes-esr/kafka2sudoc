@@ -44,6 +44,9 @@ public class KbartListener {
 
     private String filename = "";
 
+    private int counterForNumberOfLinesDone = 0;
+    private int totalNumberOfLineForThisFile = -1;
+
     public KbartListener(UtilsMapper mapper, SudocService service, BaconService baconService, EmailService emailService) {
         this.mapper = mapper;
         this.service = service;
@@ -69,13 +72,21 @@ public class KbartListener {
                 //on alimente la liste des notices d'un package qui sera traitée intégralement
                 this.listeNotices.add(lignesKbart.value());
             }
+            this.counterForNumberOfLinesDone += 1;
             for (Header header : lignesKbart.headers().toArray()) {
-                if (header.key().equals("OK") && new String(header.value()).equals("true")) {
-                    traiterPackageDansSudoc(listeNotices, packageKbartDto);
-                    this.listeNotices.clear();
-                    this.filename = "";
-                    break;
+                if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
+                    log.info("nombre total de lignes du fichier :" + new String(header.value()));
+                    this.totalNumberOfLineForThisFile = Integer.parseInt(new String(header.value())); //on indique le nb total de lignes du fichier
                 }
+            }
+            //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
+            if(this.counterForNumberOfLinesDone == this.totalNumberOfLineForThisFile){
+                log.info("traitement dans sudoc" + listeNotices);
+                traiterPackageDansSudoc(listeNotices, packageKbartDto);
+                this.listeNotices.clear();
+                this.filename = "";
+                this.totalNumberOfLineForThisFile = -1;
+                this.counterForNumberOfLinesDone = 0;
             }
         } catch (IllegalDateException ex) {
             log.error("Erreur dans le format de date sur le fichier " + filename);
