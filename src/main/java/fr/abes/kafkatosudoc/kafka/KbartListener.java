@@ -57,24 +57,28 @@ public class KbartListener {
      * @param lignesKbart : ligne trouvée dans kafka
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws IllegalDateException {
-        this.filename = getFileNameFromHeader(lignesKbart.headers());
-        String provider = CheckFiles.getProviderFromFilename(this.filename);
-        String packageName = CheckFiles.getPackageFromFilename(this.filename);
-        Date dateFromFile = CheckFiles.extractDate(this.filename);
-        PackageKbartDto packageKbartDto = new PackageKbartDto(packageName, dateFromFile, provider);
+    public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
+        try {
+            this.filename = getFileNameFromHeader(lignesKbart.headers());
+            String provider = CheckFiles.getProviderFromFilename(this.filename);
+            String packageName = CheckFiles.getPackageFromFilename(this.filename);
+            Date dateFromFile = CheckFiles.extractDate(this.filename);
+            PackageKbartDto packageKbartDto = new PackageKbartDto(packageName, dateFromFile, provider);
 
-        if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
-            //on alimente la liste des notices d'un package qui sera traitée intégralement
-            this.listeNotices.add(lignesKbart.value());
-        }
-        for (Header header : lignesKbart.headers().toArray()) {
-            if (header.key().equals("OK") && new String(header.value()).equals("true")) {
-                traiterPackageDansSudoc(listeNotices, packageKbartDto);
-                this.listeNotices.clear();
-                this.filename = "";
-                break;
+            if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
+                //on alimente la liste des notices d'un package qui sera traitée intégralement
+                this.listeNotices.add(lignesKbart.value());
             }
+            for (Header header : lignesKbart.headers().toArray()) {
+                if (header.key().equals("OK") && new String(header.value()).equals("true")) {
+                    traiterPackageDansSudoc(listeNotices, packageKbartDto);
+                    this.listeNotices.clear();
+                    this.filename = "";
+                    break;
+                }
+            }
+        } catch (IllegalDateException ex) {
+            log.error("Erreur dans le format de date sur le fichier " + filename);
         }
     }
 
