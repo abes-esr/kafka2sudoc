@@ -47,9 +47,9 @@ public class EmailService {
     }
 
     public void sendErrorMailAuthentification(String filename, PackageKbartDto packageKbartDto, CBSException e) {
-        String body = "Une erreur s'est produite lors de l'authentification sur le CBS" + "Provider : " + packageKbartDto.getProvider() +
-                "Package : " + packageKbartDto.getPackageName() +
-                "Date : " + packageKbartDto.getDatePackage();
+        String body = "Une erreur s'est produite lors de l'authentification sur le CBS " + "Provider : " + packageKbartDto.getProvider() +
+                " Package : " + packageKbartDto.getPackageName() +
+                " Date : " + packageKbartDto.getDatePackage();
         //  Création du mail
         String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
         //  Envoi du message par mail

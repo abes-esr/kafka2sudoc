@@ -44,8 +44,8 @@ public class KbartListener {
 
     private String filename = "";
 
-    private int counterForNumberOfLinesDone = 0;
-    private int totalNumberOfLineForThisFile = -1;
+    private int currentNbLines = 0;
+    private int nbLinesTotal = -1;
 
     public KbartListener(UtilsMapper mapper, SudocService service, BaconService baconService, EmailService emailService) {
         this.mapper = mapper;
@@ -72,21 +72,21 @@ public class KbartListener {
                 //on alimente la liste des notices d'un package qui sera traitée intégralement
                 this.listeNotices.add(lignesKbart.value());
             }
-            this.counterForNumberOfLinesDone += 1;
+            this.currentNbLines += 1;
             for (Header header : lignesKbart.headers().toArray()) {
                 if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
                     log.info("nombre total de lignes du fichier :" + new String(header.value()));
-                    this.totalNumberOfLineForThisFile = Integer.parseInt(new String(header.value())); //on indique le nb total de lignes du fichier
+                    this.nbLinesTotal = Integer.parseInt(new String(header.value())); //on indique le nb total de lignes du fichier
                 }
             }
             //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
-            if(this.counterForNumberOfLinesDone == this.totalNumberOfLineForThisFile){
-                log.info("traitement dans sudoc" + listeNotices);
+            if(this.currentNbLines == this.nbLinesTotal){
+                log.debug("Traitement des notices existantes dans le Sudoc");
                 traiterPackageDansSudoc(listeNotices, packageKbartDto);
                 this.listeNotices.clear();
                 this.filename = "";
-                this.totalNumberOfLineForThisFile = -1;
-                this.counterForNumberOfLinesDone = 0;
+                this.nbLinesTotal = -1;
+                this.currentNbLines = 0;
             }
         } catch (IllegalDateException ex) {
             log.error("Erreur dans le format de date sur le fichier " + filename);
@@ -298,7 +298,7 @@ public class KbartListener {
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
             if (providerDisplay != null) {
-                List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).toString().equals("[#, 2]")).toList();
+                List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 2]")).toList();
                 for (Zone zone : zones214)
                     zone.addSubLabel("c", providerDisplay);
             }
