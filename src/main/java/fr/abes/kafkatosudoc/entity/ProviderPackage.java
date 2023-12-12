@@ -9,10 +9,11 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.util.Date;
 
+@AllArgsConstructor
 @Entity
 @Table(name = "PROVIDER_PACKAGE")
-@Getter @Setter
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
 public class ProviderPackage implements Serializable, Comparable<ProviderPackage> {
     @Id
