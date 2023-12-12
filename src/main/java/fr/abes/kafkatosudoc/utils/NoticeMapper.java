@@ -13,7 +13,6 @@ import org.modelmapper.spi.MappingContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -35,10 +34,12 @@ public class NoticeMapper {
                 //ajout zone type de document
                 noticeBiblio.addZone("008", "$a", "Oax3");
                 //ajout ISBN
-                if ((Utils.extractOnlineIdentifier(kbart.getONLINEIDENTIFIER().toString()).length() == 10)) {
-                    noticeBiblio.addZone("010", "$a", kbart.getONLINEIDENTIFIER().toString());
-                } else {
-                    noticeBiblio.addZone("010", "$A", kbart.getONLINEIDENTIFIER().toString());
+                if (!kbart.getONLINEIDENTIFIER().isEmpty()) {
+                    if ((Utils.extractOnlineIdentifier(kbart.getONLINEIDENTIFIER().toString()).length() == 10)) {
+                        noticeBiblio.addZone("010", "$a", kbart.getONLINEIDENTIFIER().toString());
+                    } else {
+                        noticeBiblio.addZone("010", "$A", kbart.getONLINEIDENTIFIER().toString());
+                    }
                 }
 
                 //DOI
