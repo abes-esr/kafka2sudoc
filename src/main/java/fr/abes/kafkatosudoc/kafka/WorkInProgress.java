@@ -11,7 +11,6 @@ import java.util.List;
 @Getter
 @Setter
 public class WorkInProgress {
-    @Getter
     private final List<LigneKbartConnect> listeNotices;
 
     private Integer currentNbLines;

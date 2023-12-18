@@ -36,14 +36,15 @@ public class KbartListener {
 
     private final EmailService emailService;
 
-    private final Map<String, WorkInProgress> workInProgressMap = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, WorkInProgress> workInProgressMap;
 
 
-    public KbartListener(UtilsMapper mapper, SudocService service, BaconService baconService, EmailService emailService) {
+    public KbartListener(UtilsMapper mapper, SudocService service, BaconService baconService, EmailService emailService, Map<String, WorkInProgress> workInProgressMap) {
         this.mapper = mapper;
         this.service = service;
         this.baconService = baconService;
         this.emailService = emailService;
+        this.workInProgressMap = workInProgressMap;
     }
 
     /**
@@ -64,7 +65,6 @@ public class KbartListener {
         this.workInProgressMap.get(filename).incrementCurrentNbLignes();
         for (Header header : lignesKbart.headers().toArray()) {
             if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
-                log.debug("nombre total de lignes du fichier :" + new String(header.value()));
                 this.workInProgressMap.get(filename).setNbLinesTotal(Integer.parseInt(new String(header.value()))); //on indique le nb total de lignes du fichier
             }
         }
