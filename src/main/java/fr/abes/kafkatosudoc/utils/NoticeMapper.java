@@ -7,12 +7,16 @@ import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.notices.TYPE_NOTICE;
 import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
+import fr.abes.kafkatosudoc.entity.LigneKbart;
 import lombok.SneakyThrows;
 import org.modelmapper.Converter;
 import org.modelmapper.spi.MappingContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -21,7 +25,9 @@ import java.util.Objects;
 public class NoticeMapper {
     private final UtilsMapper mapper;
 
-    public NoticeMapper(UtilsMapper mapper) { this.mapper = mapper; }
+    public NoticeMapper(UtilsMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @Bean
     public void converterKbartToNoticeConcrete() {
@@ -43,7 +49,7 @@ public class NoticeMapper {
                 }
 
                 //DOI
-                String doi =  Utils.extractDoiFromConnect(kbart);
+                String doi = Utils.extractDoiFromConnect(kbart);
                 if (!doi.equals("")) {
                     noticeBiblio.addZone("017", "$a", doi, new char[]{'7', '0'});
                     noticeBiblio.addSousZone("017", "$2", "DOI");
@@ -72,7 +78,7 @@ public class NoticeMapper {
 
                 noticeBiblio.addZone("200", "$a", "@" + kbart.getPUBLICATIONTITLE(), new char[]{'1', '#'});
                 if (!kbart.getFIRSTAUTHOR().isEmpty())
-                    noticeBiblio.addSousZone("200","$f", kbart.getFIRSTAUTHOR().toString());
+                    noticeBiblio.addSousZone("200", "$f", kbart.getFIRSTAUTHOR().toString());
                 //Mention de publication / diffusion
                 noticeBiblio.addZone("214", "$a", "[Lieu de publication inconnu]", new char[]{'#', '0'});
                 if (kbart.getPUBLISHERNAME() != null)
@@ -80,7 +86,7 @@ public class NoticeMapper {
 
 
                 noticeBiblio.addZone("214", "$a", "[Lieu de diffusion inconnu]", new char[]{'#', '2'});
-                if(kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null) {
+                if (kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null) {
                     noticeBiblio.addSousZone("214", "$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), 1);
                 } else {
                     noticeBiblio.addSousZone("214", "$d", "[20..]");
@@ -140,7 +146,7 @@ public class NoticeMapper {
                 }
 
                 //DOI
-                String doi =  Utils.extractDoiFromImprime(kbart);
+                String doi = Utils.extractDoiFromImprime(kbart);
                 if (!doi.equals("")) {
                     noticeElec.addZone("017", "$a", doi, new char[]{'7', '0'});
                     noticeElec.addSousZone("017", "$2", "DOI");
@@ -189,7 +195,8 @@ public class NoticeMapper {
                 }
 
                 //Mention  de publication
-                List<Zone> listZone214 = noticeImprimee.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 0]")).toList();                if (listZone214.isEmpty()) {
+                List<Zone> listZone214 = noticeImprimee.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 0]")).toList();
+                if (listZone214.isEmpty()) {
                     noticeElec.addZone("214", "$a", "Lieu de diffusion inconnu", new char[]{'#', '0'});
                     if (kbart.getPublisherName() != null)
                         noticeElec.addSousZone("214", "$c", kbart.getPublisherName().toString());
@@ -206,8 +213,7 @@ public class NoticeMapper {
                             if (kbart.getPublisherName() != null)
                                 zone214Elec.addSubLabel("$c", kbart.getPublisherName().toString());
                         }
-                    }
-                    else {
+                    } else {
                         zone214Elec.addSubLabel("$a", "[Lieu de publication inconnu]");
                         if (nomEditeur != null)
                             zone214Elec.addSubLabel("$c", nomEditeur);
@@ -289,4 +295,51 @@ public class NoticeMapper {
         };
         mapper.addConverter(myConverter);
     }
+
+    @Bean
+    public void converterLigneKbartToLigneKbartConnect() {
+        Converter<LigneKbart, LigneKbartConnect> myConverter = new Converter<LigneKbart, LigneKbartConnect>() {
+            public LigneKbartConnect convert(MappingContext<LigneKbart, LigneKbartConnect> context) {
+                LigneKbart ligneKbart = context.getSource();
+                DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+                return LigneKbartConnect.newBuilder()
+                        .setPUBLICATIONTITLE(ligneKbart.getPublicationTitle())
+                        .setPUBLICATIONTYPE(ligneKbart.getPublicationType())
+                        .setPRINTIDENTIFIER(ligneKbart.getPrintIdentifier())
+                        .setONLINEIDENTIFIER(ligneKbart.getOnlineIdentifer())
+                        .setDATEFIRSTISSUEONLINE(ligneKbart.getDateFirstIssueOnline() != null ? format.format(ligneKbart.getDateFirstIssueOnline()) : null)
+                        .setNUMFIRSTVOLONLINE(ligneKbart.getNumFirstVolOnline())
+                        .setNUMFIRSTISSUEONLINE(ligneKbart.getNumFirstIssueOnline())
+                        .setDATELASTISSUEONLINE(ligneKbart.getDateLastIssueOnline() != null ? format.format(ligneKbart.getDateLastIssueOnline()) : null)
+                        .setNUMLASTVOLONLINE(ligneKbart.getNumLastVolOnline())
+                        .setNUMLASTISSUEONLINE(ligneKbart.getNumlastIssueOnline())
+                        .setTITLEURL(ligneKbart.getTitleUrl())
+                        .setFIRSTAUTHOR(ligneKbart.getFirstAuthor())
+                        .setTITLEID(ligneKbart.getTitleId())
+                        .setEMBARGOINFO(ligneKbart.getEmbargoInfo())
+                        .setCOVERAGEDEPTH(ligneKbart.getCoverageDepth())
+                        .setNOTES(ligneKbart.getNotes())
+                        .setPUBLISHERNAME(ligneKbart.getPublisherName())
+                        .setPUBLICATIONTYPE(ligneKbart.getPublicationType())
+                        .setDATEMONOGRAPHPUBLISHEDPRINT(ligneKbart.getDateMonographPublishedPrint() != null ? format.format(ligneKbart.getDateMonographPublishedPrint()) : null)
+                        .setDATEMONOGRAPHPUBLISHEDONLIN(ligneKbart.getDateMonographPublishedOnline() != null ? format.format(ligneKbart.getDateMonographPublishedOnline()) : null)
+                        .setMONOGRAPHVOLUME(ligneKbart.getMonographVolume())
+                        .setMONOGRAPHEDITION(ligneKbart.getMonographEdition())
+                        .setFIRSTEDITOR(ligneKbart.getFirstEditor())
+                        .setPARENTPUBLICATIONTITLEID(ligneKbart.getParentPublicationTitleId())
+                        .setPRECEDINGPUBLICATIONTITLEID(ligneKbart.getPrecedeingPublicationTitleId())
+                        .setACCESSTYPE(ligneKbart.getAccessType())
+                        .setPROVIDERPACKAGEPACKAGE(ligneKbart.getProviderPackage().getPackageName())
+                        .setPROVIDERPACKAGEDATEP(ligneKbart.getProviderPackage().getDateP().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
+                        .setPROVIDERPACKAGEIDTPROVIDER(ligneKbart.getProviderPackage().getProvider().getIdtProvider())
+                        .setIDPROVIDERPACKAGE(ligneKbart.getProviderPackage().getProviderPackageId())
+                        .setBESTPPN(ligneKbart.getBestPpn())
+                        .build();
+            }
+        };
+        mapper.addConverter(myConverter);
+    }
+
+
+
 }

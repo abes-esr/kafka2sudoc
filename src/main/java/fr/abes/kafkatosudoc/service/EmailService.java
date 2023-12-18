@@ -7,6 +7,7 @@ import fr.abes.LigneKbartImprime;
 import fr.abes.cbs.exception.CBSException;
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
 import fr.abes.kafkatosudoc.dto.mail.MailDto;
+import fr.abes.kafkatosudoc.exception.IllegalDateException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -46,10 +47,23 @@ public class EmailService {
         log.info("L'email a été correctement envoyé.");
     }
 
-    public void sendErrorMailAuthentification(String filename, PackageKbartDto packageKbartDto, CBSException e) {
-        String body = "Une erreur s'est produite lors de l'authentification sur le CBS " + "Provider : " + packageKbartDto.getProvider() +
+    public void sendErrorMailDate(String filename, PackageKbartDto packageKbartDto, IllegalDateException e) {
+        String body = "Une erreur s'est produite lors du traitement du package dans le Sudoc. Provider : " + packageKbartDto.getProvider() +
                 " Package : " + packageKbartDto.getPackageName() +
-                " Date : " + packageKbartDto.getDatePackage();
+                " Date : " + packageKbartDto.getDatePackage() +
+                " Format de date incorrect. Message : " + e.getMessage();
+        //  Création du mail
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
+        //  Envoi du message par mail
+        sendMail(requestJson);
+        log.info("L'email a été correctement envoyé.");
+    }
+
+    public void sendErrorMailAuthentification(String filename, PackageKbartDto packageKbartDto, CBSException e) {
+        String body = "Une erreur s'est produite lors de l'authentification sur le CBS. Provider : " + packageKbartDto.getProvider() +
+                " Package : " + packageKbartDto.getPackageName() +
+                " Date : " + packageKbartDto.getDatePackage() +
+                " Message : " + e.getMessage();
         //  Création du mail
         String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
         //  Envoi du message par mail
