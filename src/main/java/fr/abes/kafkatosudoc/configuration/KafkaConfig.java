@@ -1,5 +1,6 @@
 package fr.abes.kafkatosudoc.configuration;
 
+import fr.abes.kafkatosudoc.kafka.WorkInProgress;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -13,6 +14,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -69,5 +71,10 @@ public class KafkaConfig {
         props.put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, registryUrl);
         props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, false);
         return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean
+    public Map<String, WorkInProgress> workInProgressMap() {
+        return Collections.synchronizedMap(new HashMap<>());
     }
 }

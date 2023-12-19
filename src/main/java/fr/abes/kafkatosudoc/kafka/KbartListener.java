@@ -20,13 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
-import org.apache.kafka.common.header.Headers;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -40,18 +36,15 @@ public class KbartListener {
 
     private final EmailService emailService;
 
-    private final List<LigneKbartConnect> listeNotices = new ArrayList<>();
+    private final Map<String, WorkInProgress> workInProgressMap;
 
-    private String filename = "";
 
-    private int currentNbLines = 0;
-    private int nbLinesTotal = -1;
-
-    public KbartListener(UtilsMapper mapper, SudocService service, BaconService baconService, EmailService emailService) {
+    public KbartListener(UtilsMapper mapper, SudocService service, BaconService baconService, EmailService emailService, Map<String, WorkInProgress> workInProgressMap) {
         this.mapper = mapper;
         this.service = service;
         this.baconService = baconService;
         this.emailService = emailService;
+        this.workInProgressMap = workInProgressMap;
     }
 
     /**
@@ -61,44 +54,41 @@ public class KbartListener {
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
-        try {
-            this.filename = getFileNameFromHeader(lignesKbart.headers());
-            String provider = CheckFiles.getProviderFromFilename(this.filename);
-            String packageName = CheckFiles.getPackageFromFilename(this.filename);
-            Date dateFromFile = CheckFiles.extractDate(this.filename);
-            PackageKbartDto packageKbartDto = new PackageKbartDto(packageName, dateFromFile, provider);
+        String filename = lignesKbart.key();
+        if (!this.workInProgressMap.containsKey(filename))
+            this.workInProgressMap.put(lignesKbart.key(), new WorkInProgress());
 
-            if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
-                //on alimente la liste des notices d'un package qui sera traitée intégralement
-                this.listeNotices.add(lignesKbart.value());
-            }
-            this.currentNbLines += 1;
-            for (Header header : lignesKbart.headers().toArray()) {
-                if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
-                    log.info("nombre total de lignes du fichier :" + new String(header.value()));
-                    this.nbLinesTotal = Integer.parseInt(new String(header.value())); //on indique le nb total de lignes du fichier
-                }
-            }
-            //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
-            if(this.currentNbLines == this.nbLinesTotal){
-                log.debug("Traitement des notices existantes dans le Sudoc");
-                traiterPackageDansSudoc(listeNotices, packageKbartDto);
-                this.listeNotices.clear();
-                this.filename = "";
-                this.nbLinesTotal = -1;
-                this.currentNbLines = 0;
-            }
-        } catch (IllegalDateException ex) {
-            log.error("Erreur dans le format de date sur le fichier " + filename);
+        if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
+            //on alimente la liste des notices d'un package qui sera traitée intégralement
+            this.workInProgressMap.get(filename).addNotice(lignesKbart.value());
         }
+        this.workInProgressMap.get(filename).incrementCurrentNbLignes();
+        for (Header header : lignesKbart.headers().toArray()) {
+            if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
+                this.workInProgressMap.get(filename).setNbLinesTotal(Integer.parseInt(new String(header.value()))); //on indique le nb total de lignes du fichier
+            }
+        }
+        //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
+        if (this.workInProgressMap.get(filename).getCurrentNbLines().equals(this.workInProgressMap.get(filename).getNbLinesTotal())) {
+            log.debug("Traitement des notices existantes dans le Sudoc");
+            traiterPackageDansSudoc(this.workInProgressMap.get(filename).getListeNotices(), filename);
+            this.workInProgressMap.remove(filename);
+        }
+
     }
 
-    private void traiterPackageDansSudoc(List<LigneKbartConnect> listeNotices, PackageKbartDto packageKbartDto) {
+    private void traiterPackageDansSudoc(List<LigneKbartConnect> listeNotices, String filename) {
+        PackageKbartDto packageKbartDto = new PackageKbartDto();
         List<String> newBestPpn = new ArrayList<>();
         List<String> deletedBestPpn = new ArrayList<>();
-
-        ProviderPackage lastPackage = baconService.findLastVersionOfPackage(packageKbartDto);
         try {
+            String provider = CheckFiles.getProviderFromFilename(filename);
+            String packageName = CheckFiles.getPackageFromFilename(filename);
+            Date dateFromFile = CheckFiles.extractDate(filename);
+            packageKbartDto = new PackageKbartDto(packageName, dateFromFile, provider);
+
+            ProviderPackage lastPackage = baconService.findLastVersionOfPackage(packageKbartDto);
+
             service.authenticate();
             String ppnNoticeBouquet = service.getNoticeBouquet(packageKbartDto.getProvider(), packageKbartDto.getPackageName());
             //cas ou on a une version antérieure de package
@@ -119,62 +109,22 @@ public class KbartListener {
             }
             //traitement des notices dans le cbs : ajout ou suppression de 469 en fonction des cas
             for (String ppn : newBestPpn) {
-                ajout469(ppnNoticeBouquet, ppn, listeNotices.stream().filter(ligneKbartConnect -> ligneKbartConnect.getBESTPPN().toString().equals(ppn)).findFirst().get());
+                ajout469(ppnNoticeBouquet, ppn, listeNotices.stream().filter(ligneKbartConnect -> ligneKbartConnect.getBESTPPN().toString().equals(ppn)).findFirst().get(), filename);
             }
 
             for (String ppn : deletedBestPpn) {
-                suppression469(ppnNoticeBouquet, ppn, constructLigneKbartConnect(ppnLastVersion.stream().filter(ligne -> ligne.getBestPpn().equals(ppn)).findFirst().get()));
+                suppression469(ppnNoticeBouquet, ppn, mapper.map(ppnLastVersion.stream().filter(ligne -> ligne.getBestPpn().equals(ppn)).findFirst().get(), LigneKbartConnect.class), filename);
             }
         } catch (CBSException e) {
             log.error(e.getMessage(), e.getCause());
-            emailService.sendErrorMailAuthentification(this.filename, packageKbartDto, e);
-        } finally {
-            try {
-                service.disconnect();
-            } catch (CBSException e) {
-                log.error("Impossible de se déconnecter du cbs");
-            }
+            emailService.sendErrorMailAuthentification(filename, packageKbartDto, e);
+        } catch (IllegalDateException e) {
+            log.error("Erreur lors du traitement du package dans le Sudoc : format de date incorrect", e.getCause());
+            emailService.sendErrorMailDate(filename, packageKbartDto, e);
         }
     }
 
-    private LigneKbartConnect constructLigneKbartConnect(LigneKbart ligneKbart) {
-        DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
-        return LigneKbartConnect.newBuilder()
-                .setPUBLICATIONTITLE(ligneKbart.getPublicationTitle())
-                .setPUBLICATIONTYPE(ligneKbart.getPublicationType())
-                .setPRINTIDENTIFIER(ligneKbart.getPrintIdentifier())
-                .setONLINEIDENTIFIER(ligneKbart.getOnlineIdentifer())
-                .setDATEFIRSTISSUEONLINE(ligneKbart.getDateFirstIssueOnline() != null ? format.format(ligneKbart.getDateFirstIssueOnline()) : null)
-                .setNUMFIRSTVOLONLINE(ligneKbart.getNumFirstVolOnline())
-                .setNUMFIRSTISSUEONLINE(ligneKbart.getNumFirstIssueOnline())
-                .setDATELASTISSUEONLINE(ligneKbart.getDateLastIssueOnline() != null ? format.format(ligneKbart.getDateLastIssueOnline()) : null)
-                .setNUMLASTVOLONLINE(ligneKbart.getNumLastVolOnline())
-                .setNUMLASTISSUEONLINE(ligneKbart.getNumlastIssueOnline())
-                .setTITLEURL(ligneKbart.getTitleUrl())
-                .setFIRSTAUTHOR(ligneKbart.getFirstAuthor())
-                .setTITLEID(ligneKbart.getTitleId())
-                .setEMBARGOINFO(ligneKbart.getEmbargoInfo())
-                .setCOVERAGEDEPTH(ligneKbart.getCoverageDepth())
-                .setNOTES(ligneKbart.getNotes())
-                .setPUBLISHERNAME(ligneKbart.getPublisherName())
-                .setPUBLICATIONTYPE(ligneKbart.getPublicationType())
-                .setDATEMONOGRAPHPUBLISHEDPRINT(ligneKbart.getDateMonographPublishedPrint() != null ? format.format(ligneKbart.getDateMonographPublishedPrint()) : null)
-                .setDATEMONOGRAPHPUBLISHEDONLIN(ligneKbart.getDateMonographPublishedOnline() != null ? format.format(ligneKbart.getDateMonographPublishedOnline()) : null)
-                .setMONOGRAPHVOLUME(ligneKbart.getMonographVolume())
-                .setMONOGRAPHEDITION(ligneKbart.getMonographEdition())
-                .setFIRSTEDITOR(ligneKbart.getFirstEditor())
-                .setPARENTPUBLICATIONTITLEID(ligneKbart.getParentPublicationTitleId())
-                .setPRECEDINGPUBLICATIONTITLEID(ligneKbart.getPrecedeingPublicationTitleId())
-                .setACCESSTYPE(ligneKbart.getAccessType())
-                .setPROVIDERPACKAGEPACKAGE(ligneKbart.getProviderPackage().getPackageName())
-                .setPROVIDERPACKAGEDATEP(ligneKbart.getProviderPackage().getDateP().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
-                .setPROVIDERPACKAGEIDTPROVIDER(ligneKbart.getProviderPackage().getProvider().getIdtProvider())
-                .setIDPROVIDERPACKAGE(ligneKbart.getProviderPackage().getProviderPackageId())
-                .setBESTPPN(ligneKbart.getBestPpn())
-                .build();
-    }
-
-    private void ajout469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart) {
+    private void ajout469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename) {
         try {
             NoticeConcrete notice = service.getNoticeFromPpn(ppn);
             if (!service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
@@ -185,11 +135,11 @@ public class KbartListener {
         } catch (CBSException | ZoneException e) {
             String message = "PPN : " + ppn + " : " + e.getMessage();
             log.error(message, e.getCause());
-            emailService.sendErrorMailConnect(this.filename, ligneKbart, e);
+            emailService.sendErrorMailConnect(filename, ligneKbart, e);
         }
     }
 
-    private void suppression469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart) {
+    private void suppression469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename) {
         try {
             NoticeConcrete notice = service.getNoticeFromPpn(ppn);
             if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
@@ -200,7 +150,7 @@ public class KbartListener {
         } catch (CBSException | ZoneException e) {
             String message = "PPN : " + ppn + " : " + e.getMessage();
             log.error(message, e.getCause());
-            emailService.sendErrorMailConnect(this.filename, ligneKbart, e);
+            emailService.sendErrorMailConnect(filename, ligneKbart, e);
         }
     }
 
@@ -208,10 +158,9 @@ public class KbartListener {
      * Listener pour modification notice biblio (suppression 469)
      *
      * @param providerPackageDeleted enregistrement dans kafka
-     * @throws CBSException : erreur CBS
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "${topic.groupid.source.delete}", containerFactory = "kafkaDeletePackageListenerContainerFactory")
-    public void listenKbartToDeleteFromKafka(ConsumerRecord<String, GenericRecord> providerPackageDeleted) throws CBSException {
+    public void listenKbartToDeleteFromKafka(ConsumerRecord<String, GenericRecord> providerPackageDeleted) {
         String provider = providerPackageDeleted.value().get("PROVIDER").toString();
         String packageName = providerPackageDeleted.value().get("PACKAGE").toString();
         try {
@@ -221,7 +170,7 @@ public class KbartListener {
             //affichage des notices liées
             //boucle sur les notices liées à partir de la seconde (la première étant la notice bouquet elle-même)
             int nbNoticesLiees = service.getNoticesLiees();
-            for (int i = 2 ; i <= nbNoticesLiees ; i++) {
+            for (int i = 2; i <= nbNoticesLiees; i++) {
                 String ppnCourant = "";
                 try {
                     service.voirNotice(i);
@@ -239,24 +188,20 @@ public class KbartListener {
                     service.retourArriere();
                 }
             }
-    } catch(CBSException e) {
-        log.error(e.getMessage(), e.getCause());
-        emailService.sendErrorMailSuppressionPackage(packageName, provider, e);
-    } finally {
-        service.disconnect();
-    }
+        } catch (CBSException e) {
+            log.error(e.getMessage(), e.getCause());
+            emailService.sendErrorMailSuppressionPackage(packageName, provider, e);
+        }
 
-}
+    }
 
     /**
      * @param lignesKbart : enregistrement dans Kafka
-     * @throws CBSException : erreur CBS
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws CBSException {
-        String filename = "";
+    public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
+        String filename = lignesKbart.key();
         try {
-            filename = getFileNameFromHeader(lignesKbart.headers());
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
             service.authenticate();
@@ -273,8 +218,6 @@ public class KbartListener {
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
             emailService.sendErrorMailConnect(filename, lignesKbart.value(), e);
-        } finally {
-            service.disconnect();
         }
     }
 
@@ -282,11 +225,10 @@ public class KbartListener {
      * Listener Kafka pour la création de notices électronique à partir du kbart et de la notice imprimée
      *
      * @param lignesKbart : ligne kbart + ppn de la notice imprimée
-     * @throws CBSException : erreur liée au cbs
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.imprime}"}, groupId = "${topic.groupid.source.imprime}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartFromKafkaImprime(ConsumerRecord<String, LigneKbartImprime> lignesKbart) throws CBSException {
-        String filename = getFileNameFromHeader(lignesKbart.headers());
+    public void listenKbartFromKafkaImprime(ConsumerRecord<String, LigneKbartImprime> lignesKbart) {
+        String filename = lignesKbart.key();
         String provider = CheckFiles.getProviderFromFilename(filename);
         String packageName = CheckFiles.getPackageFromFilename(filename);
         try {
@@ -309,19 +251,6 @@ public class KbartListener {
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
             emailService.sendErrorMailImprime(filename, lignesKbart.value(), e);
-        } finally {
-            service.disconnect();
         }
-    }
-
-    private String getFileNameFromHeader(Headers headers) {
-        String filename = "";
-        for (Header header : headers.toArray()) {
-            if (header.key().equals("filename")) {
-                filename = new String(header.value());
-                break;
-            }
-        }
-        return filename;
     }
 }
