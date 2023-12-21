@@ -25,6 +25,9 @@ public class SudocService {
 	@Value("${sudoc.login}")
 	private String loginSudoc;
 
+	@Value("${sudoc.base.number}")
+	private String sudocBaseNumber;
+
 	private final ProcessCBS cbs;
 
 	public SudocService(ProcessCBS cbs) {
@@ -39,6 +42,15 @@ public class SudocService {
 	public void authenticate() throws CBSException {
 		if (!isLogged())
 			this.cbs.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+	}
+
+	/**
+	 *
+	 * @throws CBSException
+	 */
+	public void authenticateWithLogicalDb() throws CBSException {
+		if (!isLogged())
+			this.cbs.authenticateWithLogicalDb(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, sudocBaseNumber);
 	}
 
 	/**

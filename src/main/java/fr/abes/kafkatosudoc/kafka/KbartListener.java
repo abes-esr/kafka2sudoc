@@ -89,7 +89,7 @@ public class KbartListener {
 
             ProviderPackage lastPackage = baconService.findLastVersionOfPackage(packageKbartDto);
 
-            service.authenticate();
+            service.authenticateWithLogicalDb();
             String ppnNoticeBouquet = service.getNoticeBouquet(packageKbartDto.getProvider(), packageKbartDto.getPackageName());
             //cas ou on a une version antérieure de package
             Set<LigneKbart> ppnLastVersion = new HashSet<>();
@@ -164,7 +164,7 @@ public class KbartListener {
         String provider = providerPackageDeleted.value().get("PROVIDER").toString();
         String packageName = providerPackageDeleted.value().get("PACKAGE").toString();
         try {
-            service.authenticate();
+            service.authenticateWithLogicalDb();
             //recherche de la notice bouquet
             String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
             //affichage des notices liées
@@ -204,7 +204,7 @@ public class KbartListener {
         try {
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
-            service.authenticate();
+            service.authenticateWithLogicalDb();
             NoticeConcrete notice = mapper.map(lignesKbart.value(), NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
@@ -232,7 +232,7 @@ public class KbartListener {
         String provider = CheckFiles.getProviderFromFilename(filename);
         String packageName = CheckFiles.getPackageFromFilename(filename);
         try {
-            service.authenticate();
+            service.authenticateWithLogicalDb();
             KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
             kbartAndImprimeDto.setKbart(mapper.map(lignesKbart.value(), LigneKbartImprime.class));
             kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(lignesKbart.value().getPpn().toString()));
