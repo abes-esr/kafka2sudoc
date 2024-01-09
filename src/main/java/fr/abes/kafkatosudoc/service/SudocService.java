@@ -25,8 +25,9 @@ public class SudocService {
 	@Value("${sudoc.login}")
 	private String loginSudoc;
 
-	@Value("${sudoc.base.number}")
-	private String sudocBaseNumber;
+
+	@Value("${sudoc.signalDb}")
+	private String signalDB;
 
 	private final ProcessCBS cbs;
 
@@ -35,7 +36,8 @@ public class SudocService {
 	}
 
 
-	/** méthode d'authentification au Sudoc : on vérifie avant qu'une connexion n'est pas déjà établie
+	/**
+	 * méthode d'authentification au Sudoc : on vérifie avant qu'une connexion n'est pas déjà établie
 	 *
 	 * @throws CBSException erreur d'authentification
 	 */
@@ -44,17 +46,14 @@ public class SudocService {
 			this.cbs.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
 	}
 
-	/**
-	 *
-	 * @throws CBSException
-	 */
-	public void authenticateWithLogicalDb() throws CBSException {
+	public void authenticateBaseSignal() throws CBSException {
 		if (!isLogged())
-			this.cbs.authenticateWithLogicalDb(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, sudocBaseNumber);
+			this.cbs.authenticateWithLogicalDb(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDB);
 	}
 
 	/**
 	 * Méthode vérifiant si l'instance CBS est déjà connectée au Sudoc
+	 *
 	 * @return true si authentifié
 	 */
 	private boolean isLogged() {
@@ -63,6 +62,7 @@ public class SudocService {
 
 	/**
 	 * Méthode récupérant une notice bouquet en fonction d'un nom de package et d'un provider
+	 *
 	 * @param provider
 	 * @param packageKbart
 	 * @return le ppn de la notice récupérée
@@ -81,9 +81,10 @@ public class SudocService {
 
 	/**
 	 * Méthode de recherche d'une notice par son ppn
+	 *
 	 * @param ppn ppn de la notice à chercher
 	 * @return la notice trouvée mappée en objet
-	 * @throws CBSException : Aucune notice ne correspondant au ppn
+	 * @throws CBSException  : Aucune notice ne correspondant au ppn
 	 * @throws ZoneException : erreur de construction de l'objet NoticeConcrete
 	 */
 	public NoticeConcrete getNoticeFromPpn(String ppn) throws CBSException, ZoneException {
@@ -102,7 +103,8 @@ public class SudocService {
 
 	/**
 	 * Méthode vérifiant si une notice bibliographique contient un lien vers une notice bouquet
-	 * @param notice notice à examiner
+	 *
+	 * @param notice           notice à examiner
 	 * @param ppnNoticeBouquet ppn de la notice bouquet à chercher dans la notice bibliographique
 	 * @return true si un lien vers la notice bouquet est trouvé dans la notice bibliographique
 	 */
@@ -112,7 +114,8 @@ public class SudocService {
 
 	/**
 	 * Méthode d'ajout d'un lien vers une notice bouquet dans une notice bibliographique
-	 * @param notice notice à laquelle ajouter un lien vers la notice bouquet
+	 *
+	 * @param notice           notice à laquelle ajouter un lien vers la notice bouquet
 	 * @param ppnNoticeBouquet ppn de la notice bouquet à lier à la notice bibliographique
 	 * @throws ZoneException erreur de construction de la notice
 	 */
@@ -121,11 +124,23 @@ public class SudocService {
 	}
 
 	/**
+	 * Méthode d'ajout du libellé d'une notice bouquet dans une notice bibliographique
+	 *
+	 * @param notice         notice à laquelle ajouter un lien vers la notice bouquet
+	 * @param libelleBouquet ppn de la notice bouquet à lier à la notice bibliographique
+	 * @throws ZoneException erreur de construction de la notice
+	 */
+	public void addLibelleNoticeBouquetInPpn(Biblio notice, String libelleBouquet) throws ZoneException {
+		notice.addZone("469", "$s", libelleBouquet);
+	}
+
+	/**
 	 * Passage en édition d'une noticeConcrete. ne peut être appelée qu'après une recherche
+	 *
 	 * @param noNotice numéro de la notice dans le lot récupéré via une recherche antérieure
 	 * @return la notice en mode édition
 	 * @throws ZoneException erreur de construction de la notice
-	 * @throws CBSException erreur lors du passage en édition
+	 * @throws CBSException  erreur lors du passage en édition
 	 */
 	public NoticeConcrete passageEditionNotice(int noNotice) throws ZoneException, CBSException {
 		return cbs.editerNoticeConcrete(String.valueOf(noNotice));
@@ -133,7 +148,8 @@ public class SudocService {
 
 	/**
 	 * Méthode de sauvegarde intégrale d'une notice (passage en édition + validation). ne peut être appelée qu'après une recherche
-	 * @param notice notice à sauvegarder
+	 *
+	 * @param notice  notice à sauvegarder
 	 * @param noLigne numéro de notice dans le lot récupéré via une recherche antérieure
 	 * @throws CBSException erreur de modification de la notice
 	 */
@@ -143,6 +159,7 @@ public class SudocService {
 
 	/**
 	 * Méthode de création d'une notice exnihilo
+	 *
 	 * @param notice notice à créer
 	 * @throws CBSException Erreur de création de notice
 	 */
@@ -152,7 +169,8 @@ public class SudocService {
 
 	/**
 	 * Méthode de suppression d'un lien vers une notice bouquet dans une notice bibliographique
-	 * @param notice notice à modifier
+	 *
+	 * @param notice           notice à modifier
 	 * @param ppnNoticeBouquet ppn de la notice bouquet à supprimer de la notice bibliographique
 	 * @return la notice après suppresion du lien vers la notice bouquet
 	 */
@@ -163,6 +181,7 @@ public class SudocService {
 
 	/**
 	 * Méthode permettant de lister les notices liées à la notice courante
+	 *
 	 * @return le nombre de notices liées
 	 * @throws CBSException erreur sur la commande CBS
 	 */
@@ -172,6 +191,7 @@ public class SudocService {
 
 	/**
 	 * Méthode permettant de faire un retour arrière sur la dernière commande lancée dans le Sudoc
+	 *
 	 * @throws CBSException erreur sur la commande CBS
 	 */
 	public void retourArriere() throws CBSException {
@@ -180,6 +200,7 @@ public class SudocService {
 
 	/**
 	 * Méthode permettant d'afficher le détail d'une notice dans un lot
+	 *
 	 * @param pos la position de la notice dans le lot
 	 * @throws CBSException erreur sur la commande CBS
 	 */
@@ -187,3 +208,4 @@ public class SudocService {
 		this.cbs.view(String.valueOf(pos), false, "UNM");
 	}
 }
+

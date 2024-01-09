@@ -89,7 +89,7 @@ public class KbartListener {
 
             ProviderPackage lastPackage = baconService.findLastVersionOfPackage(packageKbartDto);
 
-            service.authenticateWithLogicalDb();
+            service.authenticate();
             String ppnNoticeBouquet = service.getNoticeBouquet(packageKbartDto.getProvider(), packageKbartDto.getPackageName());
             //cas ou on a une version antérieure de package
             Set<LigneKbart> ppnLastVersion = new HashSet<>();
@@ -164,7 +164,7 @@ public class KbartListener {
         String provider = providerPackageDeleted.value().get("PROVIDER").toString();
         String packageName = providerPackageDeleted.value().get("PACKAGE").toString();
         try {
-            service.authenticateWithLogicalDb();
+            service.authenticate();
             //recherche de la notice bouquet
             String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
             //affichage des notices liées
@@ -204,16 +204,15 @@ public class KbartListener {
         try {
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
-            service.authenticateWithLogicalDb();
+            service.authenticateBaseSignal();
             NoticeConcrete notice = mapper.map(lignesKbart.value(), NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
             if (providerDisplay != null) {
                 notice.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
             }
+            service.addLibelleNoticeBouquetInPpn(notice.getNoticeBiblio(), provider + "_" + packageName);
             service.creerNotice(notice);
-            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-            service.addNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
             log.debug("Ajout notice exNihilo effectué");
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
@@ -232,7 +231,7 @@ public class KbartListener {
         String provider = CheckFiles.getProviderFromFilename(filename);
         String packageName = CheckFiles.getPackageFromFilename(filename);
         try {
-            service.authenticateWithLogicalDb();
+            service.authenticateBaseSignal();
             KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
             kbartAndImprimeDto.setKbart(mapper.map(lignesKbart.value(), LigneKbartImprime.class));
             kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(lignesKbart.value().getPpn().toString()));
@@ -244,8 +243,7 @@ public class KbartListener {
                 for (Zone zone : zones214)
                     zone.addSubLabel("c", providerDisplay);
             }
-            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-            service.addNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), ppnNoticeBouquet);
+            service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
             service.creerNotice(noticeElec);
             log.debug("Création notice à partir de l'imprimée terminée");
         } catch (CBSException | ZoneException e) {
