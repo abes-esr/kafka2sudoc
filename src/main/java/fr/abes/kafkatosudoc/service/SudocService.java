@@ -6,26 +6,14 @@ import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.process.ProcessCBS;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service
 public class SudocService {
+	private ProcessCBS cbs;
 
-	@Value("${sudoc.serveur}")
-	private String serveurSudoc;
-
-	@Value("${sudoc.port}")
-	private String portSudoc;
-
-	@Value("${sudoc.password}")
-	private String passwordSudoc;
-
-	@Value("${sudoc.login}")
-	private String loginSudoc;
-
-	private final ProcessCBS cbs;
+	public SudocService() {
+		this.cbs = new ProcessCBS();
+	}
 
 	public SudocService(ProcessCBS cbs) {
 		this.cbs = cbs;
@@ -36,7 +24,7 @@ public class SudocService {
 	 *
 	 * @throws CBSException erreur d'authentification
 	 */
-	public void authenticate() throws CBSException {
+	public void authenticate(String serveurSudoc, String portSudoc, String loginSudoc, String passwordSudoc) throws CBSException {
 		if (!isLogged())
 			this.cbs.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
 	}
