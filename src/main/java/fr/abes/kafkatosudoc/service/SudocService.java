@@ -131,7 +131,7 @@ public class SudocService {
 	 * @throws ZoneException erreur de construction de la notice
 	 */
 	public void addLibelleNoticeBouquetInPpn(Biblio notice, String libelleBouquet) throws ZoneException {
-		notice.addZone("469", "$s", libelleBouquet);
+		notice.addZone("469", "$", libelleBouquet);
 	}
 
 	/**

@@ -200,6 +200,7 @@ public class KbartListener {
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
+        log.debug("Entrée dans création ex nihilo");
         String filename = lignesKbart.key();
         try {
             String provider = CheckFiles.getProviderFromFilename(filename);
@@ -227,6 +228,7 @@ public class KbartListener {
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.imprime}"}, groupId = "${topic.groupid.source.imprime}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaImprime(ConsumerRecord<String, LigneKbartImprime> lignesKbart) {
+        log.debug("entree dans création from imprimé et kbart");
         String filename = lignesKbart.key();
         String provider = CheckFiles.getProviderFromFilename(filename);
         String packageName = CheckFiles.getPackageFromFilename(filename);
