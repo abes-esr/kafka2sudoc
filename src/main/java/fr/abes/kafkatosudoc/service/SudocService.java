@@ -9,12 +9,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SudocService {
-
-
 	private ProcessCBS cbs;
 
 	public SudocService() {
 		this.cbs = new ProcessCBS();
+	}
+
+	public SudocService(ProcessCBS cbs) {
+		this.cbs = cbs;
 	}
 
 
