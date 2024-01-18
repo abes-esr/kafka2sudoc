@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -28,9 +29,21 @@ import java.util.*;
 @Service
 @Slf4j
 public class KbartListener {
+
+    @Value("${sudoc.serveur}")
+    private String serveurSudoc;
+
+    @Value("${sudoc.port}")
+    private String portSudoc;
+
+    @Value("${sudoc.password}")
+    private String passwordSudoc;
+
+    @Value("${sudoc.login}")
+    private String loginSudoc;
+
     private final UtilsMapper mapper;
 
-    private final SudocService service;
 
     private final BaconService baconService;
 
@@ -39,9 +52,8 @@ public class KbartListener {
     private final Map<String, WorkInProgress> workInProgressMap;
 
 
-    public KbartListener(UtilsMapper mapper, SudocService service, BaconService baconService, EmailService emailService, Map<String, WorkInProgress> workInProgressMap) {
+    public KbartListener(UtilsMapper mapper, BaconService baconService, EmailService emailService, Map<String, WorkInProgress> workInProgressMap) {
         this.mapper = mapper;
-        this.service = service;
         this.baconService = baconService;
         this.emailService = emailService;
         this.workInProgressMap = workInProgressMap;
@@ -88,8 +100,8 @@ public class KbartListener {
             packageKbartDto = new PackageKbartDto(packageName, dateFromFile, provider);
 
             ProviderPackage lastPackage = baconService.findLastVersionOfPackage(packageKbartDto);
-
-            service.authenticate();
+            SudocService service = new SudocService();
+            service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             String ppnNoticeBouquet = service.getNoticeBouquet(packageKbartDto.getProvider(), packageKbartDto.getPackageName());
             //cas ou on a une version antérieure de package
             Set<LigneKbart> ppnLastVersion = new HashSet<>();
@@ -109,11 +121,11 @@ public class KbartListener {
             }
             //traitement des notices dans le cbs : ajout ou suppression de 469 en fonction des cas
             for (String ppn : newBestPpn) {
-                ajout469(ppnNoticeBouquet, ppn, listeNotices.stream().filter(ligneKbartConnect -> ligneKbartConnect.getBESTPPN().toString().equals(ppn)).findFirst().get(), filename);
+                ajout469(ppnNoticeBouquet, ppn, listeNotices.stream().filter(ligneKbartConnect -> ligneKbartConnect.getBESTPPN().toString().equals(ppn)).findFirst().get(), filename, service);
             }
 
             for (String ppn : deletedBestPpn) {
-                suppression469(ppnNoticeBouquet, ppn, mapper.map(ppnLastVersion.stream().filter(ligne -> ligne.getBestPpn().equals(ppn)).findFirst().get(), LigneKbartConnect.class), filename);
+                suppression469(ppnNoticeBouquet, ppn, mapper.map(ppnLastVersion.stream().filter(ligne -> ligne.getBestPpn().equals(ppn)).findFirst().get(), LigneKbartConnect.class), filename, service);
             }
         } catch (CBSException e) {
             log.error(e.getMessage(), e.getCause());
@@ -124,7 +136,7 @@ public class KbartListener {
         }
     }
 
-    private void ajout469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename) {
+    private void ajout469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename, SudocService service) {
         try {
             NoticeConcrete notice = service.getNoticeFromPpn(ppn);
             if (!service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
@@ -139,7 +151,7 @@ public class KbartListener {
         }
     }
 
-    private void suppression469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename) {
+    private void suppression469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename, SudocService service) {
         try {
             NoticeConcrete notice = service.getNoticeFromPpn(ppn);
             if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
@@ -164,7 +176,8 @@ public class KbartListener {
         String provider = providerPackageDeleted.value().get("PROVIDER").toString();
         String packageName = providerPackageDeleted.value().get("PACKAGE").toString();
         try {
-            service.authenticate();
+            SudocService service = new SudocService();
+            service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             //recherche de la notice bouquet
             String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
             //affichage des notices liées
@@ -205,6 +218,8 @@ public class KbartListener {
         try {
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
+            SudocService service = new SudocService();
+            service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             service.authenticateBaseSignal();
             NoticeConcrete notice = mapper.map(lignesKbart.value(), NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
@@ -232,6 +247,7 @@ public class KbartListener {
         String filename = lignesKbart.key();
         String provider = CheckFiles.getProviderFromFilename(filename);
         String packageName = CheckFiles.getPackageFromFilename(filename);
+        SudocService service = new SudocService();
         try {
             service.authenticateBaseSignal();
             KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();

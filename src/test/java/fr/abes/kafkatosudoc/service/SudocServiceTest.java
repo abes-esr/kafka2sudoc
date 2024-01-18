@@ -5,22 +5,23 @@ import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.process.ProcessCBS;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest(classes = {SudocService.class})
 class SudocServiceTest {
-    @MockBean
     ProcessCBS cbs;
 
-    @Autowired
     SudocService sudocService;
 
+    @BeforeEach
+    void init() {
+        this.cbs = Mockito.mock(ProcessCBS.class);
+        this.sudocService = new SudocService(this.cbs);
+
+    }
     @Test
     void getNoticeBouquetException() throws CBSException {
         Mockito.when(cbs.search(Mockito.anyString())).thenThrow(new CBSException("V/VERROR", "Erreur Recherche"));
