@@ -30,7 +30,7 @@ public class SudocService {
 			this.cbs.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
 	}
 
-	public void authenticateBaseSignal() throws CBSException {
+	public void authenticateBaseSignal(String serveurSudoc, String portSudoc, String loginSudoc, String passwordSudoc, String signalDB) throws CBSException {
 		if (!isLogged())
 			this.cbs.authenticateWithLogicalDb(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDB);
 	}
@@ -115,7 +115,7 @@ public class SudocService {
 	 * @throws ZoneException erreur de construction de la notice
 	 */
 	public void addLibelleNoticeBouquetInPpn(Biblio notice, String libelleBouquet) throws ZoneException {
-		notice.addZone("469", "$", libelleBouquet);
+		notice.addZone("469", "$s", libelleBouquet);
 	}
 
 	/**

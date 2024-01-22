@@ -44,8 +44,24 @@ public class Utils {
      * @param isbn
      * @return
      */
-    public static String extractOnlineIdentifier(String isbn) {
-        return isbn.replace("-", "");
+    public static ISBN_TYPE getIsbnType(String isbn) {
+        String isbnWithoutHyphen = isbn.replace("-", "");
+        return switch (isbnWithoutHyphen.length()){
+            case 10 -> ISBN_TYPE.ISBN10;
+            case 13 -> ISBN_TYPE.ISBN13;
+            default -> ISBN_TYPE.OTHER;
+        };
+    }
+
+    public static String addHyphensToIsbn(String isbn) {
+        if (!isbn.contains("-")) {
+            if (isbn.length() == 10)
+                return isbn.substring(0, 2) + "-" + isbn.substring(2, 5) + "-" + isbn.substring(5, 9) + "-" + isbn.charAt(9);
+            if (isbn.length() == 13) {
+                return isbn.substring(0, 3) + "-" + isbn.charAt(3) + "-" + isbn.substring(4, 8) + "-" + isbn.substring(8, 12) + "-" + isbn.charAt(12);
+            }
+        }
+        return isbn;
     }
 
     public static String getYearFromDate(String date) {
@@ -54,4 +70,6 @@ public class Utils {
         return date.substring(0,4);
 
     }
+
+
 }

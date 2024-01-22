@@ -42,6 +42,9 @@ public class KbartListener {
     @Value("${sudoc.login}")
     private String loginSudoc;
 
+    @Value("${sudoc.signalDb}")
+    private String signalDb;
+
     private final UtilsMapper mapper;
 
 
@@ -219,8 +222,7 @@ public class KbartListener {
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
             SudocService service = new SudocService();
-            service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
-            service.authenticateBaseSignal();
+            service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
             NoticeConcrete notice = mapper.map(lignesKbart.value(), NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
@@ -249,7 +251,8 @@ public class KbartListener {
         String packageName = CheckFiles.getPackageFromFilename(filename);
         SudocService service = new SudocService();
         try {
-            service.authenticateBaseSignal();
+            //authentification sur la base maitre du sudoc pour récupérer la notice imprimée
+            service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
             kbartAndImprimeDto.setKbart(mapper.map(lignesKbart.value(), LigneKbartImprime.class));
             kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(lignesKbart.value().getPpn().toString()));
@@ -261,6 +264,8 @@ public class KbartListener {
                 for (Zone zone : zones214)
                     zone.addSubLabel("c", providerDisplay);
             }
+            //authentification sur la base signal pour création de la notice
+            service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
             service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
             service.creerNotice(noticeElec);
             log.debug("Création notice à partir de l'imprimée terminée");
