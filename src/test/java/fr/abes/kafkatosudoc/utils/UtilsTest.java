@@ -75,4 +75,30 @@ public class UtilsTest {
         Assertions.assertEquals("", Utils.getYearFromDate(null));
         Assertions.assertEquals("", Utils.getYearFromDate(""));
     }
+
+    @Test
+    void addHyphensToIsbn() {
+        String isbn = "978-2-7073-1326-3";
+        Assertions.assertEquals(isbn, Utils.addHyphensToIsbn(isbn));
+        isbn = "88-500-0152-5";
+        Assertions.assertEquals(isbn, Utils.addHyphensToIsbn(isbn));
+        isbn = "8850001525";
+        Assertions.assertEquals("88-500-0152-5", Utils.addHyphensToIsbn(isbn));
+        isbn = "9782707313263";
+        Assertions.assertEquals("978-2-7073-1326-3", Utils.addHyphensToIsbn(isbn));
+    }
+
+    @Test
+    void getIsbnType() {
+        String isbn = "978-2-7073-1326-3";
+        Assertions.assertEquals(ISBN_TYPE.ISBN13, Utils.getIsbnType(isbn));
+        isbn = "88-500-0152-5";
+        Assertions.assertEquals(ISBN_TYPE.ISBN10, Utils.getIsbnType(isbn));
+        isbn = "8850001525";
+        Assertions.assertEquals(ISBN_TYPE.ISBN10, Utils.getIsbnType(isbn));
+        isbn = "9782707313263";
+        Assertions.assertEquals(ISBN_TYPE.ISBN13, Utils.getIsbnType(isbn));
+        isbn = "654654";
+        Assertions.assertEquals(ISBN_TYPE.OTHER, Utils.getIsbnType(isbn));
+    }
 }
