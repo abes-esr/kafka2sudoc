@@ -41,10 +41,10 @@ public class NoticeMapper {
                 noticeBiblio.addZone("008", "$a", "Oax3");
                 //ajout ISBN
                 if (!kbart.getONLINEIDENTIFIER().isEmpty()) {
-                    if ((Utils.extractOnlineIdentifier(kbart.getONLINEIDENTIFIER().toString()).length() == 10)) {
-                        noticeBiblio.addZone("010", "$a", kbart.getONLINEIDENTIFIER().toString());
+                    if ((Utils.getIsbnType(kbart.getONLINEIDENTIFIER().toString()).equals(ISBN_TYPE.ISBN10))) {
+                        noticeBiblio.addZone("010", "$a", Utils.addHyphensToIsbn(kbart.getONLINEIDENTIFIER().toString()));
                     } else {
-                        noticeBiblio.addZone("010", "$A", kbart.getONLINEIDENTIFIER().toString());
+                        noticeBiblio.addZone("010", "$A", Utils.addHyphensToIsbn(kbart.getONLINEIDENTIFIER().toString()));
                     }
                 }
 
@@ -139,10 +139,10 @@ public class NoticeMapper {
 
                 Biblio noticeElec = new Biblio();
                 noticeElec.addZone("008", "$a", "Oax3");
-                if ((Utils.extractOnlineIdentifier(kbart.getOnlineIdentifier().toString()).length() == 10)) {
-                    noticeElec.addZone("010", "$a", kbart.getOnlineIdentifier().toString());
+                if ((Utils.getIsbnType(kbart.getOnlineIdentifier().toString()).equals(ISBN_TYPE.ISBN10))) {
+                    noticeElec.addZone("010", "$a", Utils.addHyphensToIsbn(kbart.getOnlineIdentifier().toString()));
                 } else {
-                    noticeElec.addZone("010", "$A", kbart.getOnlineIdentifier().toString());
+                    noticeElec.addZone("010", "$A", Utils.addHyphensToIsbn(kbart.getOnlineIdentifier().toString()));
                 }
 
                 //DOI

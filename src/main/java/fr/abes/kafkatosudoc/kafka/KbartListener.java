@@ -42,6 +42,9 @@ public class KbartListener {
     @Value("${sudoc.login}")
     private String loginSudoc;
 
+    @Value("${sudoc.signalDb}")
+    private String signalDb;
+
     private final UtilsMapper mapper;
 
 
@@ -213,21 +216,21 @@ public class KbartListener {
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
+        log.debug("Entrée dans création ex nihilo");
         String filename = lignesKbart.key();
         try {
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
             SudocService service = new SudocService();
-            service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
             NoticeConcrete notice = mapper.map(lignesKbart.value(), NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
             if (providerDisplay != null) {
                 notice.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
             }
+            service.addLibelleNoticeBouquetInPpn(notice.getNoticeBiblio(), provider + "_" + packageName);
             service.creerNotice(notice);
-            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-            service.addNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
             log.debug("Ajout notice exNihilo effectué");
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
@@ -242,11 +245,13 @@ public class KbartListener {
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.imprime}"}, groupId = "${topic.groupid.source.imprime}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaImprime(ConsumerRecord<String, LigneKbartImprime> lignesKbart) {
+        log.debug("entree dans création from imprimé et kbart");
         String filename = lignesKbart.key();
         String provider = CheckFiles.getProviderFromFilename(filename);
         String packageName = CheckFiles.getPackageFromFilename(filename);
         SudocService service = new SudocService();
         try {
+            //authentification sur la base maitre du sudoc pour récupérer la notice imprimée
             service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
             kbartAndImprimeDto.setKbart(mapper.map(lignesKbart.value(), LigneKbartImprime.class));
@@ -259,8 +264,9 @@ public class KbartListener {
                 for (Zone zone : zones214)
                     zone.addSubLabel("c", providerDisplay);
             }
-            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-            service.addNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), ppnNoticeBouquet);
+            //authentification sur la base signal pour création de la notice
+            service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
+            service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
             service.creerNotice(noticeElec);
             log.debug("Création notice à partir de l'imprimée terminée");
         } catch (CBSException | ZoneException e) {

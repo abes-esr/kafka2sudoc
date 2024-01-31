@@ -22,7 +22,7 @@ public class NoticeMapperTest {
     @DisplayName("Test création notice from Kbart cas 1")
     void testMapperNoticeFromKbartCas1() {
         LigneKbartConnect kbart = new LigneKbartConnect();
-        kbart.setONLINEIDENTIFIER("978-0-415-11262-8");
+        kbart.setONLINEIDENTIFIER("9780415112628");
         kbart.setDATEMONOGRAPHPUBLISHEDONLIN("2023-01-01");
         kbart.setPUBLICATIONTITLE("Test title");
         kbart.setPUBLISHERNAME("Test publisher");
@@ -37,7 +37,7 @@ public class NoticeMapperTest {
         //controle type de document
         Assertions.assertEquals("Oax3", biblio.findZones("008").get(0).findSubLabel("$a"));
         //controle ISBN
-        Assertions.assertEquals("978-0-415-11262-8", biblio.findZones("010").get(0).findSubLabel("$A"));
+        Assertions.assertEquals("978-0-4151-1262-8", biblio.findZones("010").get(0).findSubLabel("$A"));
         //controle DOI
         Assertions.assertEquals("10.1484/M.BM-EB.5.113206", biblio.findZones("017").get(0).findSubLabel("$a"));
         Assertions.assertEquals('7', biblio.findZones("017").get(0).getIndicateurs()[0]);
