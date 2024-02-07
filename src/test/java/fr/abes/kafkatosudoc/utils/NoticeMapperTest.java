@@ -172,7 +172,7 @@ public class NoticeMapperTest {
         Assertions.assertEquals(15, biblio.getListeZones().size());
         Assertions.assertEquals("Oax3", biblio.findZone("008", 0).findSubLabel("$a"));
         Assertions.assertEquals("0-415-11262-8", biblio.findZone("010", 0).findSubLabel("$a"));
-        Assertions.assertEquals("2019", biblio.findZone("100", 0).findSubLabel("$a"));
+        Assertions.assertEquals("20XX", biblio.findZone("100", 0).findSubLabel("$a"));
         Assertions.assertEquals("fre", biblio.findZone("101", 0).findSubLabel("$a"));
         Assertions.assertEquals("XX", biblio.findZone("102", 0).findSubLabel("$a"));
         Assertions.assertEquals("r", biblio.findZone("135", 0).findSubLabel("$b"));
@@ -183,13 +183,27 @@ public class NoticeMapperTest {
         Assertions.assertEquals("01", biblio.findZone("183", 0).findSubLabel("$P"));
         Assertions.assertEquals("ceb", biblio.findZone("183", 0).findSubLabel("$a"));
         Assertions.assertEquals("Titre notice", biblio.findZone("200", 0).findSubLabel("$a"));
-        Assertions.assertEquals("Lieu de diffusion inconnu", biblio.findZone("214", 0).findSubLabel("$a"));
+        Assertions.assertEquals("[Lieu de publication inconnu]", biblio.findZone("214", 0).findSubLabel("$a"));
         Assertions.assertEquals("Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", biblio.findZone("371", 0).findSubLabel("$a"));
         Assertions.assertEquals("123456789", biblio.findZone("452", 0).findSubLabel("$0"));
         Assertions.assertEquals("http://www.test.com/", biblio.findZone("859", 0).findSubLabel("$u"));
-
     }
 
+    @Test
+    @DisplayName("Test création notice from Kbart & notice imprimée cas 0 : ajout isbn ")
+    void testMapperNoticeFromKbartAndImprimeCas0() throws ZoneException {
+        KbartAndImprimeDto kbartAndImprimeDto = getKbartAndImprimeDto();
+
+        NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+        Biblio biblio = noticeResult.getNoticeBiblio();
+        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals("0-415-11262-8", biblio.findZone("010", 0).findSubLabel("$a"));
+
+        kbartAndImprimeDto.getKbart().setOnlineIdentifier(null);
+        noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+        biblio = noticeResult.getNoticeBiblio();
+        Assertions.assertEquals(14, biblio.getListeZones().size());
+    }
 
     @Test
     @DisplayName("Test création notice from Kbart & notice imprimée cas 1 : ajout doi ")
@@ -268,10 +282,10 @@ public class NoticeMapperTest {
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
         Assertions.assertEquals(15, biblio.getListeZones().size());
-        Assertions.assertEquals("Lieu de diffusion inconnu", biblio.findZone("214", 0).findSubLabel("$a"));
+        Assertions.assertEquals("[Lieu de publication inconnu]", biblio.findZone("214", 0).findSubLabel("$a"));
         Assertions.assertEquals("publisher", biblio.findZone("214", 0).findSubLabel("$c"));
 
-        //cas d'une 214 avec les bons indicateurs
+        //cas d'une 214 avec les bons indicateurs #0
         kbartAndImprimeDto.getNotice().getNoticeBiblio().addZone("214", "$a", "Lieu de publication test", new char[]{'#', '0'});
         kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("214", "$c", "Nom Editeur");
         kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("214", "$d", "2019");
@@ -281,6 +295,39 @@ public class NoticeMapperTest {
         Assertions.assertEquals("Lieu de publication test", biblio.findZone("214", 0).findSubLabel("$a"));
         Assertions.assertEquals("Nom Editeur", biblio.findZone("214", 0).findSubLabel("$c"));
         Assertions.assertNull(biblio.findZone("214", 0).findSubLabel("$d"));
+
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().deleteZone("214");
+
+        //cas d'une 214 avec les bons indicateurs #2
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addZone("214", "$a", "Lieu de publication test 2", new char[]{'#', '2'});
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("214", "$c", "Nom Editeur 2");
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("214", "$d", "2020");
+        noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+        biblio = noticeResult.getNoticeBiblio();
+        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals("[Lieu de publication inconnu]", biblio.findZone("214", 0).findSubLabel("$a"));
+        Assertions.assertEquals("publisher", biblio.findZone("214", 0).findSubLabel("$c"));
+        Assertions.assertEquals("[Lieu de diffusion inconnu]", biblio.findZone("214", 1).findSubLabel("$a"));
+        Assertions.assertEquals("[20..]", biblio.findZone("214", 1).findSubLabel("$d"));
+
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().deleteZone("214");
+
+        //cas d'une 214 #0 avec plusieurs $a / $c
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addZone("214", "$a", "Lieu de publication test", new char[]{'#', '0'});
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("214", "$c", "Nom Editeur");
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("214", "$d", "2019");
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("214", "$a", "Lieu de publication test 2");
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("214", "$c", "Nom Editeur 2");
+
+        noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+        biblio = noticeResult.getNoticeBiblio();
+
+        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals("Lieu de publication test", biblio.findZone("214", 0).getSubLabelList().get("$a").get(0));
+        Assertions.assertEquals("Nom Editeur", biblio.findZone("214", 0).getSubLabelList().get("$c").get(0));
+
+        Assertions.assertEquals("Lieu de publication test 2", biblio.findZone("214", 0).getSubLabelList().get("$a").get(1));
+        Assertions.assertEquals("Nom Editeur 2", biblio.findZone("214", 0).getSubLabelList().get("$c").get(1));
     }
 
     @Test
