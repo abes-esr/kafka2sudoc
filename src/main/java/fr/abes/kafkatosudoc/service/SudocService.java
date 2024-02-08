@@ -191,5 +191,9 @@ public class SudocService {
 	public void voirNotice(int pos) throws CBSException {
 		this.cbs.view(String.valueOf(pos), false, "UNM");
 	}
+
+	public void disconnect() throws CBSException {
+		this.cbs.disconnect();
+	}
 }
 

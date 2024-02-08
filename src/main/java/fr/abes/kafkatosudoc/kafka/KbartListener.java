@@ -96,6 +96,7 @@ public class KbartListener {
         PackageKbartDto packageKbartDto = new PackageKbartDto();
         List<String> newBestPpn = new ArrayList<>();
         List<String> deletedBestPpn = new ArrayList<>();
+        SudocService service = new SudocService();
         try {
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
@@ -103,7 +104,6 @@ public class KbartListener {
             packageKbartDto = new PackageKbartDto(packageName, dateFromFile, provider);
 
             ProviderPackage lastPackage = baconService.findLastVersionOfPackage(packageKbartDto);
-            SudocService service = new SudocService();
             service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             String ppnNoticeBouquet = service.getNoticeBouquet(packageKbartDto.getProvider(), packageKbartDto.getPackageName());
             //cas ou on a une version antérieure de package
@@ -136,6 +136,12 @@ public class KbartListener {
         } catch (IllegalDateException e) {
             log.error("Erreur lors du traitement du package dans le Sudoc : format de date incorrect", e.getCause());
             emailService.sendErrorMailDate(filename, packageKbartDto, e);
+        } finally {
+            try {
+                service.disconnect();
+            } catch (CBSException e) {
+                log.warn("Erreur de déconnexion du Sudoc");
+            }
         }
     }
 
@@ -178,8 +184,8 @@ public class KbartListener {
     public void listenKbartToDeleteFromKafka(ConsumerRecord<String, GenericRecord> providerPackageDeleted) {
         String provider = providerPackageDeleted.value().get("PROVIDER").toString();
         String packageName = providerPackageDeleted.value().get("PACKAGE").toString();
+        SudocService service = new SudocService();
         try {
-            SudocService service = new SudocService();
             service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             //recherche de la notice bouquet
             String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
@@ -207,6 +213,12 @@ public class KbartListener {
         } catch (CBSException e) {
             log.error(e.getMessage(), e.getCause());
             emailService.sendErrorMailSuppressionPackage(packageName, provider, e);
+        } finally {
+            try {
+                service.disconnect();
+            } catch (CBSException e) {
+                log.warn("Erreur de déconnexion du Sudoc");
+            }
         }
 
     }
@@ -218,10 +230,10 @@ public class KbartListener {
     public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
         log.debug("Entrée dans création ex nihilo");
         String filename = lignesKbart.key();
+        SudocService service = new SudocService();
         try {
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
-            SudocService service = new SudocService();
             service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
             NoticeConcrete notice = mapper.map(lignesKbart.value(), NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
@@ -235,6 +247,12 @@ public class KbartListener {
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
             emailService.sendErrorMailConnect(filename, lignesKbart.value(), e);
+        } finally {
+            try {
+                service.disconnect();
+            } catch (CBSException e) {
+                log.warn("Erreur de déconnexion du Sudoc");
+            }
         }
     }
 
@@ -264,14 +282,18 @@ public class KbartListener {
                 for (Zone zone : zones214)
                     zone.addSubLabel("c", providerDisplay);
             }
-            //authentification sur la base signal pour création de la notice
-            service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
             service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
             service.creerNotice(noticeElec);
             log.debug("Création notice à partir de l'imprimée terminée");
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
             emailService.sendErrorMailImprime(filename, lignesKbart.value(), e);
+        } finally {
+            try {
+                service.disconnect();
+            } catch (CBSException e) {
+                log.warn("Erreur de déconnexion du Sudoc");
+            }
         }
     }
 }

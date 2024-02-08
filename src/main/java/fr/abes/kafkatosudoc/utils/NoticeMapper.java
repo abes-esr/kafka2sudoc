@@ -2,6 +2,7 @@ package fr.abes.kafkatosudoc.utils;
 
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
+import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.notices.TYPE_NOTICE;
@@ -19,6 +20,7 @@ import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Component
@@ -50,7 +52,7 @@ public class NoticeMapper {
 
                 //DOI
                 String doi = Utils.extractDoiFromConnect(kbart);
-                if (!doi.equals("")) {
+                if (!doi.isEmpty()) {
                     noticeBiblio.addZone("017", "$a", doi, new char[]{'7', '0'});
                     noticeBiblio.addSousZone("017", "$2", "DOI");
                 }
@@ -86,7 +88,7 @@ public class NoticeMapper {
 
 
                 noticeBiblio.addZone("214", "$a", "[Lieu de diffusion inconnu]", new char[]{'#', '2'});
-                if (kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null) {
+                if (kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null && !kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString().isEmpty()) {
                     noticeBiblio.addSousZone("214", "$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), 1);
                 } else {
                     noticeBiblio.addSousZone("214", "$d", "[20..]");
@@ -94,7 +96,7 @@ public class NoticeMapper {
                 noticeBiblio.addZone("309", "$a", "Notice générée automatiquement à partir des métadonnées de BACON. SUPPRIMER LA PRESENTE NOTE 309 APRES MISE A JOUR");
 
                 //Note sur les conditions d'accès
-                if (kbart.getACCESSTYPE().equals("F"))
+                if (kbart.getACCESSTYPE().toString().equals("F"))
                     noticeBiblio.addZone("371", "$a", "Ressource en accès libre", new char[]{'0', '#'});
                 else
                     noticeBiblio.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", new char[]{'0', '#'});
@@ -118,10 +120,12 @@ public class NoticeMapper {
                 }
 
                 //url d'accès
-                if (kbart.getACCESSTYPE().equals("F")) {
-                    noticeBiblio.addZone("856", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
-                } else {
-                    noticeBiblio.addZone("859", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
+                if (!kbart.getTITLEURL().isEmpty()) {
+                    if (kbart.getACCESSTYPE().toString().equals("F")) {
+                        noticeBiblio.addZone("856", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
+                    } else {
+                        noticeBiblio.addZone("859", "$u", kbart.getTITLEURL().toString(), new char[]{'4', '#'});
+                    }
                 }
                 return new NoticeConcrete(noticeBiblio);
             }
@@ -139,10 +143,12 @@ public class NoticeMapper {
 
                 Biblio noticeElec = new Biblio();
                 noticeElec.addZone("008", "$a", "Oax3");
-                if ((Utils.getIsbnType(kbart.getOnlineIdentifier().toString()).equals(ISBN_TYPE.ISBN10))) {
-                    noticeElec.addZone("010", "$a", Utils.addHyphensToIsbn(kbart.getOnlineIdentifier().toString()));
-                } else {
-                    noticeElec.addZone("010", "$A", Utils.addHyphensToIsbn(kbart.getOnlineIdentifier().toString()));
+                if (kbart.getOnlineIdentifier() != null) {
+                    if ((Utils.getIsbnType(kbart.getOnlineIdentifier().toString()).equals(ISBN_TYPE.ISBN10))) {
+                        noticeElec.addZone("010", "$a", Utils.addHyphensToIsbn(kbart.getOnlineIdentifier().toString()));
+                    } else {
+                        noticeElec.addZone("010", "$A", Utils.addHyphensToIsbn(kbart.getOnlineIdentifier().toString()));
+                    }
                 }
 
                 //DOI
@@ -153,10 +159,10 @@ public class NoticeMapper {
                 }
 
                 //Date de publication
-                if (kbart.getDateMonographPublishedOnline() != null)
+                if (kbart.getDateMonographPublishedOnline() != null && !kbart.getDateMonographPublishedOnline().isEmpty())
                     noticeElec.addZone("100", "$a", Utils.getYearFromDate(kbart.getDateMonographPublishedOnline().toString()), new char[]{'0', '#'});
                 else
-                    noticeElec.addZone(noticeImprimee.getNoticeBiblio().findZone("100", 0));
+                    noticeElec.addZone("100", "$a", "20XX");
 
                 //langue de publication
                 noticeElec.addZone("101", "$a", noticeImprimee.getNoticeBiblio().findZone("101", 0).findSubLabel("$a"), new char[]{'0', '#'});
@@ -197,33 +203,35 @@ public class NoticeMapper {
                 //Mention  de publication
                 List<Zone> listZone214 = noticeImprimee.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 0]")).toList();
                 if (listZone214.isEmpty()) {
-                    noticeElec.addZone("214", "$a", "Lieu de diffusion inconnu", new char[]{'#', '0'});
+                    noticeElec.addZone("214", "$a", "[Lieu de publication inconnu]", new char[]{'#', '0'});
                     if (kbart.getPublisherName() != null)
                         noticeElec.addSousZone("214", "$c", kbart.getPublisherName().toString());
                 }
+
                 for (Zone zone214 : listZone214) {
                     Zone zone214Elec = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, zone214.getIndicateurs());
-                    String lieuPublication = zone214.findSubLabel("$a");
-                    String nomEditeur = zone214.findSubLabel("$c");
-                    if (lieuPublication != null) {
-                        zone214Elec.addSubLabel("$a", lieuPublication);
-                        if (nomEditeur != null)
-                            zone214Elec.addSubLabel("$c", nomEditeur);
-                        else {
-                            if (kbart.getPublisherName() != null)
-                                zone214Elec.addSubLabel("$c", kbart.getPublisherName().toString());
+                    zone214.getSubLabelTable().rowMap().values().forEach(sousZones -> {
+                        for (Map.Entry<String, String> entry : sousZones.entrySet()) {
+                            String label = entry.getKey();
+                            String value = entry.getValue();
+                            if (label.equals("$a") || label.equals("$c")) {
+                                try {
+                                    zone214Elec.addSubLabel(label, value);
+                                } catch (ZoneException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
                         }
-                    } else {
+                    });
+                    if (zone214Elec.findSubLabel("$a") == null) {
                         zone214Elec.addSubLabel("$a", "[Lieu de publication inconnu]");
-                        if (nomEditeur != null)
-                            zone214Elec.addSubLabel("$c", nomEditeur);
-                        else {
-                            if (kbart.getPublisherName() != null)
-                                zone214Elec.addSubLabel("$c", kbart.getPublisherName().toString());
-                        }
+                    }
+                    if (zone214Elec.findSubLabel("$c") == null) {
+                        zone214Elec.addSubLabel("$c", kbart.getPublisherName().toString());
                     }
                     noticeElec.addZone(zone214Elec);
                 }
+
                 Zone zone214 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '2'});
                 zone214.addSubLabel("$a", "[Lieu de diffusion inconnu]");
                 if (kbart.getDateMonographPublishedOnline() != null) {
@@ -258,7 +266,7 @@ public class NoticeMapper {
                 }
 
                 //Note sur les conditions d'accès
-                if (kbart.getAccessType().equals("F"))
+                if (kbart.getAccessType().toString().equals("F"))
                     noticeElec.addZone("371", "$a", "Ressource en accès libre", new char[]{'0', '#'});
                 else
                     noticeElec.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", new char[]{'0', '#'});
@@ -285,7 +293,7 @@ public class NoticeMapper {
 
                 //url d'accès
                 if (kbart.getTitleUrl() != null)
-                    if (kbart.getAccessType().equals("F"))
+                    if (kbart.getAccessType().toString().equals("F"))
                         noticeElec.addZone("856", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
                     else
                         noticeElec.addZone("859", "$u", kbart.getTitleUrl().toString(), new char[]{'4', '#'});
