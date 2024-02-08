@@ -282,10 +282,6 @@ public class KbartListener {
                 for (Zone zone : zones214)
                     zone.addSubLabel("c", providerDisplay);
             }
-            //on se déconnecte du CBS pour se connecter sur la base signal
-            service.disconnect();
-            //authentification sur la base signal pour création de la notice
-            service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
             service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
             service.creerNotice(noticeElec);
             log.debug("Création notice à partir de l'imprimée terminée");
