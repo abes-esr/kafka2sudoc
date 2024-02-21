@@ -78,7 +78,7 @@ public class NoticeMapper {
                 noticeBiblio.addSousZone("183", "$a", "ceb");
                 //Titre
 
-                noticeBiblio.addZone("200", "$a", kbart.getPUBLICATIONTITLE().toString(), new char[]{'1', '#'});
+                noticeBiblio.addZone("200", "$a", "@" + kbart.getPUBLICATIONTITLE(), new char[]{'1', '#'});
                 if (!kbart.getFIRSTAUTHOR().isEmpty())
                     noticeBiblio.addSousZone("200", "$f", kbart.getFIRSTAUTHOR().toString());
                 //Mention de publication / diffusion
