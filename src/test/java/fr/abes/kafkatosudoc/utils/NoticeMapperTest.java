@@ -5,6 +5,8 @@ import fr.abes.LigneKbartImprime;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.NoticeConcrete;
+import fr.abes.cbs.notices.TYPE_NOTICE;
+import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Assertions;
@@ -62,7 +64,7 @@ public class NoticeMapperTest {
         Assertions.assertEquals("ceb", biblio.findZones("183").get(0).findSubLabel("$a"));
 
         //controle titre
-        Assertions.assertEquals("@Test title", biblio.findZones("200").get(0).findSubLabel("$a"));
+        Assertions.assertEquals("Test title", biblio.findZones("200").get(0).findSubLabel("$a"));
         Assertions.assertEquals('1', biblio.findZones("200").get(0).getIndicateurs()[0]);
         Assertions.assertEquals('#', biblio.findZones("200").get(0).getIndicateurs()[1]);
 
@@ -174,6 +176,7 @@ public class NoticeMapperTest {
         Assertions.assertEquals("0-415-11262-8", biblio.findZone("010", 0).findSubLabel("$a"));
         Assertions.assertEquals("20XX", biblio.findZone("100", 0).findSubLabel("$a"));
         Assertions.assertEquals("fre", biblio.findZone("101", 0).findSubLabel("$a"));
+        Assertions.assertEquals("eng", biblio.findZone("101", 0).findSubLabel("$c"));
         Assertions.assertEquals("XX", biblio.findZone("102", 0).findSubLabel("$a"));
         Assertions.assertEquals("r", biblio.findZone("135", 0).findSubLabel("$b"));
         Assertions.assertEquals("01", biblio.findZone("181", 0).findSubLabel("$P"));
@@ -458,7 +461,11 @@ public class NoticeMapperTest {
 
         Biblio noticeImprimee = new Biblio();
         noticeImprimee.addZone("100", "$a", "2019");
-        noticeImprimee.addZone("101", "$a", "fre");
+        Zone zone101 = new Zone("101", TYPE_NOTICE.BIBLIOGRAPHIQUE);
+        zone101.addSubLabel("$a", "fre");
+        zone101.addSubLabel("$a", "ger");
+        zone101.addSubLabel("$c", "eng");
+        noticeImprimee.addZone(zone101);
         noticeImprimee.addZone("200", "$a", "Titre notice");
         NoticeConcrete notice = new NoticeConcrete(noticeImprimee, null, Lists.newArrayList());
 
