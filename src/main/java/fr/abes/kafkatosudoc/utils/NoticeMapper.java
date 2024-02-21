@@ -165,7 +165,7 @@ public class NoticeMapper {
                 if (kbart.getDateMonographPublishedOnline() != null && !kbart.getDateMonographPublishedOnline().isEmpty())
                     noticeElec.addZone("100", "$a", Utils.getYearFromDate(kbart.getDateMonographPublishedOnline().toString()), new char[]{'0', '#'});
                 else
-                    noticeElec.addZone("100", "$a", "20XX");
+                    noticeElec.addZone("100", "$a", "20XX", new char[]{'0', '#'});
 
                 //langue de publication
                 Zone zone101 = noticeImprimee.getNoticeBiblio().findZone("101", 0);
