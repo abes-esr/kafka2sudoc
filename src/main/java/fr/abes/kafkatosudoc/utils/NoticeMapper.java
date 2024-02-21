@@ -168,7 +168,8 @@ public class NoticeMapper {
                     noticeElec.addZone("100", "$a", "20XX");
 
                 //langue de publication
-                noticeElec.addZone("101", "$a", noticeImprimee.getNoticeBiblio().findZone("101", 0).findSubLabel("$a"), new char[]{'0', '#'});
+                Zone zone101 = noticeImprimee.getNoticeBiblio().findZone("101", 0);
+                noticeElec.addZone(zone101);
                 //Pays de publication
                 noticeElec.addZone("102", "$a", "XX");
                 //Données générales de traitement
