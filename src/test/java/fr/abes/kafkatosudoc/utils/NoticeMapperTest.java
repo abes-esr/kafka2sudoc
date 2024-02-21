@@ -62,7 +62,7 @@ public class NoticeMapperTest {
         Assertions.assertEquals("ceb", biblio.findZones("183").get(0).findSubLabel("$a"));
 
         //controle titre
-        Assertions.assertEquals("@Test title", biblio.findZones("200").get(0).findSubLabel("$a"));
+        Assertions.assertEquals("Test title", biblio.findZones("200").get(0).findSubLabel("$a"));
         Assertions.assertEquals('1', biblio.findZones("200").get(0).getIndicateurs()[0]);
         Assertions.assertEquals('#', biblio.findZones("200").get(0).getIndicateurs()[1]);
 

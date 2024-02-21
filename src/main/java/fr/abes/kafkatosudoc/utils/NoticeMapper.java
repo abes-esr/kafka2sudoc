@@ -78,21 +78,24 @@ public class NoticeMapper {
                 noticeBiblio.addSousZone("183", "$a", "ceb");
                 //Titre
 
-                noticeBiblio.addZone("200", "$a", "@" + kbart.getPUBLICATIONTITLE(), new char[]{'1', '#'});
+                noticeBiblio.addZone("200", "$a", kbart.getPUBLICATIONTITLE().toString(), new char[]{'1', '#'});
                 if (!kbart.getFIRSTAUTHOR().isEmpty())
                     noticeBiblio.addSousZone("200", "$f", kbart.getFIRSTAUTHOR().toString());
                 //Mention de publication / diffusion
-                noticeBiblio.addZone("214", "$a", "[Lieu de publication inconnu]", new char[]{'#', '0'});
+                Zone zone214diese0 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '0'});
+                zone214diese0.addSubLabel("$a", "[Lieu de publication inconnu]");
                 if (kbart.getPUBLISHERNAME() != null)
-                    noticeBiblio.addSousZone("214", "$c", kbart.getPUBLISHERNAME().toString());
+                    zone214diese0.addSubLabel( "$c", kbart.getPUBLISHERNAME().toString());
+                noticeBiblio.addZone(zone214diese0);
 
-
-                noticeBiblio.addZone("214", "$a", "[Lieu de diffusion inconnu]", new char[]{'#', '2'});
+                Zone zone214diese2 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '2'});
+                zone214diese2.addSubLabel("$a", "[Lieu de diffusion inconnu]");
                 if (kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null && !kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString().isEmpty()) {
-                    noticeBiblio.addSousZone("214", "$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()), 1);
+                    zone214diese2.addSubLabel( "$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()));
                 } else {
-                    noticeBiblio.addSousZone("214", "$d", "[20..]");
+                    zone214diese2.addSubLabel( "$d", "[20..]");
                 }
+                noticeBiblio.addZone(zone214diese2);
                 noticeBiblio.addZone("309", "$a", "Notice générée automatiquement à partir des métadonnées de BACON. SUPPRIMER LA PRESENTE NOTE 309 APRES MISE A JOUR");
 
                 //Note sur les conditions d'accès
@@ -153,7 +156,7 @@ public class NoticeMapper {
 
                 //DOI
                 String doi = Utils.extractDoiFromImprime(kbart);
-                if (!doi.equals("")) {
+                if (!doi.isEmpty()) {
                     noticeElec.addZone("017", "$a", doi, new char[]{'7', '0'});
                     noticeElec.addSousZone("017", "$2", "DOI");
                 }
@@ -234,7 +237,7 @@ public class NoticeMapper {
 
                 Zone zone214 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '2'});
                 zone214.addSubLabel("$a", "[Lieu de diffusion inconnu]");
-                if (kbart.getDateMonographPublishedOnline() != null) {
+                if (kbart.getDateMonographPublishedOnline() != null && !kbart.getDateMonographPublishedOnline().isEmpty()) {
                     zone214.addSubLabel("$d", kbart.getDateMonographPublishedOnline().toString());
                 } else {
                     zone214.addSubLabel("$d", "[20..]");
