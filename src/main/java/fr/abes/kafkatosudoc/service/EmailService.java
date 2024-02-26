@@ -21,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -47,29 +48,37 @@ public class EmailService {
         log.info("L'email a été correctement envoyé.");
     }
 
-    public void sendErrorMailDate(String filename, PackageKbartDto packageKbartDto, IllegalDateException e) {
-        String body = "Une erreur s'est produite lors du traitement du package dans le Sudoc. Provider : " + packageKbartDto.getProvider() +
-                " Package : " + packageKbartDto.getPackageName() +
-                " Date : " + packageKbartDto.getDatePackage() +
-                " Format de date incorrect. Message : " + e.getMessage();
+    public void sendErrorsMessage(List<String> listErrorsMessages, String filename) {
         //  Création du mail
-        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, String.valueOf(listErrorsMessages));
         //  Envoi du message par mail
         sendMail(requestJson);
         log.info("L'email a été correctement envoyé.");
     }
 
-    public void sendErrorMailAuthentification(String filename, PackageKbartDto packageKbartDto, CBSException e) {
-        String body = "Une erreur s'est produite lors de l'authentification sur le CBS. Provider : " + packageKbartDto.getProvider() +
-                " Package : " + packageKbartDto.getPackageName() +
-                " Date : " + packageKbartDto.getDatePackage() +
-                " Message : " + e.getMessage();
-        //  Création du mail
-        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
-        //  Envoi du message par mail
-        sendMail(requestJson);
-        log.info("L'email a été correctement envoyé.");
-    }
+//    public void sendErrorMailDate(String filename, PackageKbartDto packageKbartDto, IllegalDateException e) {
+//        String body = "Une erreur s'est produite lors du traitement du package dans le Sudoc. Provider : " + packageKbartDto.getProvider() +
+//                " Package : " + packageKbartDto.getPackageName() +
+//                " Date : " + packageKbartDto.getDatePackage() +
+//                " Format de date incorrect. Message : " + e.getMessage();
+//        //  Création du mail
+//        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
+//        //  Envoi du message par mail
+//        sendMail(requestJson);
+//        log.info("L'email a été correctement envoyé.");
+//    }
+//
+//    public void sendErrorMailAuthentification(String filename, PackageKbartDto packageKbartDto, CBSException e) {
+//        String body = "Une erreur s'est produite lors de l'authentification sur le CBS. Provider : " + packageKbartDto.getProvider() +
+//                " Package : " + packageKbartDto.getPackageName() +
+//                " Date : " + packageKbartDto.getDatePackage() +
+//                " Message : " + e.getMessage();
+//        //  Création du mail
+//        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
+//        //  Envoi du message par mail
+//        sendMail(requestJson);
+//        log.info("L'email a été correctement envoyé.");
+//    }
 
     public void sendErrorMailImprime(String filename, LigneKbartImprime kbart, Exception e) {
         StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la création de la notice électronique à partir de l'imprimé n°");

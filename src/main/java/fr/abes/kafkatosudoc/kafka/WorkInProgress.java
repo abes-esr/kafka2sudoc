@@ -17,10 +17,13 @@ public class WorkInProgress {
 
     private Integer nbLinesTotal;
 
+    private List<String> listErrorMessages;
+
     public WorkInProgress() {
         this.listeNotices = new ArrayList<>();
         this.currentNbLines = 0;
         this.nbLinesTotal = -1;
+        this.listErrorMessages = new ArrayList<>();
     }
 
     public void addNotice(LigneKbartConnect notice) {
@@ -29,5 +32,9 @@ public class WorkInProgress {
 
     public void incrementCurrentNbLignes() {
         this.currentNbLines++;
+    }
+
+    public void addErrorMessage(String errorMessage) {
+        this.listErrorMessages.add(errorMessage);
     }
 }

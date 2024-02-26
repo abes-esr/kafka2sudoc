@@ -87,6 +87,8 @@ public class KbartListener {
         if (this.workInProgressMap.get(filename).getCurrentNbLines().equals(this.workInProgressMap.get(filename).getNbLinesTotal())) {
             log.debug("Traitement des notices existantes dans le Sudoc");
             traiterPackageDansSudoc(this.workInProgressMap.get(filename).getListeNotices(), filename);
+            // TODO traiter l'envoi du mail contenant les erreurs relevées
+            emailService.sendErrorsMessage(this.workInProgressMap.get(filename).getListErrorMessages(), filename);
             this.workInProgressMap.remove(filename);
         }
 
@@ -132,10 +134,19 @@ public class KbartListener {
             }
         } catch (CBSException e) {
             log.error(e.getMessage(), e.getCause());
-            emailService.sendErrorMailAuthentification(filename, packageKbartDto, e);
+            this.workInProgressMap.get(filename).addErrorMessage("Une erreur s'est produite lors de l'authentification sur le CBS. Provider : " + packageKbartDto.getProvider() +
+                    " Package : " + packageKbartDto.getPackageName() +
+                    " Date : " + packageKbartDto.getDatePackage() + " Message : " + e.getMessage());
+            // TODO supprimer ce code mort
+//            emailService.sendErrorMailAuthentification(filename, packageKbartDto, e);
         } catch (IllegalDateException e) {
             log.error("Erreur lors du traitement du package dans le Sudoc : format de date incorrect", e.getCause());
-            emailService.sendErrorMailDate(filename, packageKbartDto, e);
+            this.workInProgressMap.get(filename).addErrorMessage("Une erreur s'est produite lors du traitement du package dans le Sudoc. Provider : " + packageKbartDto.getProvider() +
+                    " Package : " + packageKbartDto.getPackageName() +
+                    " Date : " + packageKbartDto.getDatePackage() +
+                    " Format de date incorrect. Message : " + e.getMessage());
+            // TODO supprimer ce code mort
+//            emailService.sendErrorMailDate(filename, packageKbartDto, e);
         } finally {
             try {
                 service.disconnect();
