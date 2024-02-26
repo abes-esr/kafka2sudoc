@@ -224,18 +224,18 @@ public class KbartListener {
     }
 
     /**
-     * @param lignesKbart : enregistrement dans Kafka
+     * @param ligneKbart : enregistrement dans Kafka
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
+    public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> ligneKbart) {
         log.debug("Entrée dans création ex nihilo");
-        String filename = lignesKbart.key();
+        String filename = ligneKbart.key();
         SudocService service = new SudocService();
         try {
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
             service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
-            NoticeConcrete notice = mapper.map(lignesKbart.value(), NoticeConcrete.class);
+            NoticeConcrete notice = mapper.map(ligneKbart.value(), NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
             if (providerDisplay != null) {
@@ -246,7 +246,7 @@ public class KbartListener {
             log.debug("Ajout notice exNihilo effectué");
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
-            emailService.sendErrorMailConnect(filename, lignesKbart.value(), e);
+            emailService.sendErrorMailConnect(filename, ligneKbart.value(), e);
         } finally {
             try {
                 service.disconnect();
