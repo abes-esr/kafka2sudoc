@@ -2,12 +2,7 @@ package fr.abes.kafkatosudoc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.abes.LigneKbartConnect;
-import fr.abes.LigneKbartImprime;
-import fr.abes.cbs.exception.CBSException;
-import fr.abes.kafkatosudoc.dto.PackageKbartDto;
 import fr.abes.kafkatosudoc.dto.mail.MailDto;
-import fr.abes.kafkatosudoc.exception.IllegalDateException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -36,57 +31,9 @@ public class EmailService {
     @Value("${spring.profiles.active}")
     private String env;
 
-    public void sendErrorMailConnect(String filename, LigneKbartConnect kbart, Exception e) {
-        StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la modification de la notice ");
-        body.append(kbart.getBESTPPN());
-        buildBody(filename, kbart, e, body);
-
+    public void sendErrorsMessage(String listErrorsMessages, String filename) {
         //  Création du mail
-        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la modification de la notice " + kbart.getBESTPPN(), body.toString());
-        //  Envoi du message par mail
-        sendMail(requestJson);
-        log.info("L'email a été correctement envoyé.");
-    }
-
-    public void sendErrorsMessage(List<String> listErrorsMessages, String filename) {
-        //  Création du mail
-        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, String.valueOf(listErrorsMessages));
-        //  Envoi du message par mail
-        sendMail(requestJson);
-        log.info("L'email a été correctement envoyé.");
-    }
-
-//    public void sendErrorMailDate(String filename, PackageKbartDto packageKbartDto, IllegalDateException e) {
-//        String body = "Une erreur s'est produite lors du traitement du package dans le Sudoc. Provider : " + packageKbartDto.getProvider() +
-//                " Package : " + packageKbartDto.getPackageName() +
-//                " Date : " + packageKbartDto.getDatePackage() +
-//                " Format de date incorrect. Message : " + e.getMessage();
-//        //  Création du mail
-//        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
-//        //  Envoi du message par mail
-//        sendMail(requestJson);
-//        log.info("L'email a été correctement envoyé.");
-//    }
-//
-//    public void sendErrorMailAuthentification(String filename, PackageKbartDto packageKbartDto, CBSException e) {
-//        String body = "Une erreur s'est produite lors de l'authentification sur le CBS. Provider : " + packageKbartDto.getProvider() +
-//                " Package : " + packageKbartDto.getPackageName() +
-//                " Date : " + packageKbartDto.getDatePackage() +
-//                " Message : " + e.getMessage();
-//        //  Création du mail
-//        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors du traitement sur le fichier " + filename, body);
-//        //  Envoi du message par mail
-//        sendMail(requestJson);
-//        log.info("L'email a été correctement envoyé.");
-//    }
-
-    public void sendErrorMailImprime(String filename, LigneKbartImprime kbart, Exception e) {
-        StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la création de la notice électronique à partir de l'imprimé n°");
-        body.append(kbart.getPpn());
-        buildBody(filename, kbart, e, body);
-
-        //  Création du mail
-        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la création de la notice électronique à partir de l'imprimé " + kbart.getPpn(), body.toString());
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreurs lors du traitement sur le fichier " + filename, listErrorsMessages);
         //  Envoi du message par mail
         sendMail(requestJson);
         log.info("L'email a été correctement envoyé.");
@@ -107,28 +54,12 @@ public class EmailService {
         log.info("L'email a été correctement envoyé.");
     }
 
-    public void sendErrorMailSuppression469(String ppn, String ppnNoticeBouquet, Exception e) {
-        StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la suppression du lien vers la notice bouquet " + ppnNoticeBouquet + " dans la notice " + ppn);
-        body.append(" avec l'erreur suivante : <br />");
-        body.append(e.getMessage());
-
+    public void sendErrorMailProviderPackageDeleted(List<String> listError) {
         //  Création du mail
-        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la suppression du lien vers la notice bouquet", body.toString());
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la suppression des liens vers les notices bouquet", String.valueOf(listError));
         //  Envoi du message par mail
         sendMail(requestJson);
         log.info("L'email a été correctement envoyé.");
-    }
-
-    private static void buildBody(String filename, org.apache.avro.specific.SpecificRecord kbart, Exception e, StringBuilder body) {
-        body.append(" lors du traitement du fichier ");
-        body.append(filename);
-        body.append("<br /><br />");
-        body.append("pour la ligne Kbart : ");
-        body.append("<br>");
-        body.append(kbart);
-        body.append("<br /><br />");
-        body.append("Le message d'erreur est le suivant : ");
-        body.append(e.getMessage());
     }
 
     protected void sendMail(String requestJson) {
