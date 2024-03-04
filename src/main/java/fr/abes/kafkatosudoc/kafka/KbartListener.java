@@ -98,7 +98,7 @@ public class KbartListener {
     }
 
     private void traiterPackageDansSudoc(List<LigneKbartConnect> listeNotices, String filename) {
-        PackageKbartDto packageKbartDto = new PackageKbartDto();
+        PackageKbartDto packageKbartDto;
         List<String> newBestPpn = new ArrayList<>();
         List<String> deletedBestPpn = new ArrayList<>();
         SudocService service = new SudocService();
@@ -138,17 +138,11 @@ public class KbartListener {
         } catch (CBSException e) {
             log.error(e.getMessage(), e.getCause());
             this.workInProgressMap.get(filename).addErrorMessagesConnectionCbs(
-                    "Provider : " + packageKbartDto.getProvider() +
-                    " - Package : " + packageKbartDto.getPackageName() +
-                    " - Date : " + packageKbartDto.getDatePackage() +
-                    " - Erreur : " + e.getMessage());
+                    "Erreur : " + e.getMessage());
         } catch (IllegalDateException e) {
             log.error("Erreur lors du traitement du package dans le Sudoc : format de date incorrect", e.getCause());
             this.workInProgressMap.get(filename).addErrorMessagesDateFormat(
-                    "Provider : " + packageKbartDto.getProvider() +
-                    " - Package : " + packageKbartDto.getPackageName() +
-                    " - Date : " + packageKbartDto.getDatePackage() +
-                    " - Erreur : " + e.getMessage());
+                    "Erreur : " + e.getMessage());
         } finally {
             try {
                 service.disconnect();

@@ -3,13 +3,11 @@ package fr.abes.kafkatosudoc.kafka;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class WorkInProgressTest {
 
     @Test
     void getAllErrorMessages() {
-        String messageReference = "[fichier_test " + System.lineSeparator() +
+        String messageReference = "[Provider : FICHIER - Package : TEST_TEST-SANS-OBJET - Date : 2024-01-01 " + System.lineSeparator() +
                 ", 2 erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets) : [connectionCBS_1, connectionCBS_2]" + System.lineSeparator() +
                 ", 2 erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets) : [Date_1, Date_2]" + System.lineSeparator() +
                 ", 2 erreur(s) d'ajout de 469 : [Add_469_1, Add_469_2]" + System.lineSeparator() +
@@ -37,7 +35,7 @@ class WorkInProgressTest {
         workInProgress.addErrorMessagesImprime("Imprime_1");
         workInProgress.addErrorMessagesImprime("Imprime_1");
 
-        Assertions.assertEquals(messageReference,workInProgress.getAllErrorMessages("fichier_test"));
+        Assertions.assertEquals(messageReference,workInProgress.getAllErrorMessages("FICHIER_TEST_TEST-SANS-OBJET_2024-01-01.tsv"));
     }
 
     @Test

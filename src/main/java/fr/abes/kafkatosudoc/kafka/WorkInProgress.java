@@ -2,11 +2,14 @@ package fr.abes.kafkatosudoc.kafka;
 
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
+import fr.abes.kafkatosudoc.utils.CheckFiles;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @Getter
@@ -81,7 +84,17 @@ public class WorkInProgress {
 
     public String getAllErrorMessages(String filename) {
         List<String> listErrors = new ArrayList<>();
-        listErrors.add(filename + " " + System.lineSeparator());
+
+        String provider = CheckFiles.getProviderFromFilename(filename);
+        String packageName = CheckFiles.getPackageFromFilename(filename);
+        String date = "";
+
+        Matcher matcher = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})", Pattern.CASE_INSENSITIVE).matcher(filename);
+        if(matcher.find()){
+            date = matcher.group(1);
+        }
+
+        listErrors.add("Provider : " + provider + " - Package : " + packageName + " - Date : " + date + " " + System.lineSeparator());
         if (this.listErrorMessagesConnectionCbs != null && !this.listErrorMessagesConnectionCbs.isEmpty()) listErrors.add(this.listErrorMessagesConnectionCbs.size() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets) : " + this.listErrorMessagesConnectionCbs + System.lineSeparator());
         if (this.listErrorMessagesDateFormat != null && !this.listErrorMessagesDateFormat.isEmpty()) listErrors.add(this.listErrorMessagesDateFormat.size() + " erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets) : " + this.listErrorMessagesDateFormat + System.lineSeparator());
         if (this.listErrorMessagesAdd469 != null && !this.listErrorMessagesAdd469.isEmpty()) listErrors.add(this.listErrorMessagesAdd469.size() + " erreur(s) d'ajout de 469 : " + this.listErrorMessagesAdd469 + System.lineSeparator());
