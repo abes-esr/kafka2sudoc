@@ -74,7 +74,7 @@ public class KbartListener {
      * @param lignesKbart : ligne trouvée dans kafka
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
+    public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws JsonProcessingException {
         log.debug("Entrée dans création à partir du kbart");
         String filename = lignesKbart.key();
         if (!this.workInProgressMap.containsKey(filename))
@@ -85,7 +85,6 @@ public class KbartListener {
             this.workInProgressMap.get(filename).addNotice(lignesKbart.value());
         }
         this.workInProgressMap.get(filename).incrementCurrentNbLignes();
-        log.debug(this.workInProgressMap.get(filename).getCurrentNbLines().toString());
         lignesKbart.headers().forEach(header -> {
             if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
                 this.workInProgressMap.get(filename).setNbLinesTotal(Integer.parseInt(new String(header.value()))); //on indique le nb total de lignes du fichier
@@ -95,8 +94,8 @@ public class KbartListener {
         if (this.workInProgressMap.get(filename).getCurrentNbLines().equals(this.workInProgressMap.get(filename).getNbLinesTotal())) {
             log.debug("Traitement des notices existantes dans le Sudoc à partir du kbart");
             traiterPackageDansSudoc(this.workInProgressMap.get(filename).getListeNotices(), filename);
-//            if (!this.workInProgressMap.get(filename).isErrorFree()) emailService.sendErrorsMessage(this.workInProgressMap.get(filename).getAllErrorMessages(filename), filename);
-//            this.workInProgressMap.remove(filename);
+            if (!this.workInProgressMap.get(filename).isErrorFree()) emailService.sendErrorsMessage(this.workInProgressMap.get(filename).getAllErrorMessages(filename), filename);
+            this.workInProgressMap.remove(filename);
         }
 
     }
@@ -168,9 +167,7 @@ public class KbartListener {
         } finally {
             try {
                 service.disconnect();
-                if (!this.workInProgressMap.get(filename).isErrorFree()) emailService.sendErrorsMessage(this.workInProgressMap.get(filename).getAllErrorMessages(filename), filename);
-                this.workInProgressMap.remove(filename);
-            } catch (CBSException | JsonProcessingException e) {
+            } catch (CBSException e) {
                 log.warn("Erreur de déconnexion du Sudoc");
             }
         }
@@ -192,10 +189,8 @@ public class KbartListener {
             String message = "PPN : " + ppn + " : " + e.getMessage();
             log.error(message, e.getCause());
             if (notice != null) {
-                // TODO répéter ce principe de mise en forme pour toutes les erreurs des listeners
-                this.workInProgressMap.get(filename).addErrorMessagesAdd469WithNotice(ppn, ligneKbart, notice.getNoticeBiblio().toString(),e.getMessage());
+                this.workInProgressMap.get(filename).addErrorMessagesAdd469WithNotice(ppn, ligneKbart, notice.getNoticeBiblio().toString(), e.getMessage());
             } else {
-                this.workInProgressMap.get(filename).addErrorMessagesAdd469WithoutNotice(ppn, ligneKbart, e.getMessage());
                 this.workInProgressMap.get(filename).addErrorMessagesAdd469WithoutNotice(ppn, ligneKbart, e.getMessage());
             }
         }
@@ -318,7 +313,7 @@ public class KbartListener {
 
             } catch (CBSException | ZoneException e) {
                 log.error(e.getMessage());
-                this.workInProgressMapExNihilo.get(filename).addErrorMessageExNihilo("BestPpn : " + ligneKbart.value().getBESTPPN() + " - erreur : " + e.getMessage());
+                this.workInProgressMapExNihilo.get(filename).addErrorMessageExNihilo(ligneKbart.value().getBESTPPN().toString(), e.getMessage());
             } finally {
                 try {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
@@ -378,24 +373,24 @@ public class KbartListener {
                         kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(ligneKbartImprime.getPpn().toString()));
                         noticeElec = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
                         //Ajout provider display name en 214 $c 2è occurrence
-                        String providerDisplay = baconService.getProviderDisplayName(provider);
-                        if (providerDisplay != null) {
-                            List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 2]")).toList();
-                            for (Zone zone : zones214)
-                                zone.addSubLabel("c", providerDisplay);
+                        if (noticeElec != null) {
+                            String providerDisplay = baconService.getProviderDisplayName(provider);
+                            if (providerDisplay != null) {
+                                List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 2]")).toList();
+                                for (Zone zone : zones214)
+                                    zone.addSubLabel("c", providerDisplay);
+                            }
+                            service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
+                            service.creerNotice(noticeElec);
+                            log.debug("Création notice à partir de l'imprimée terminée");
+                        } else {
+                            // TODO un traitement (message d'erreur) en cas de notice null
                         }
-                        service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
-                        service.creerNotice(noticeElec);
-                        log.debug("Création notice à partir de l'imprimée terminée");
                     }
                 }
             } catch (CBSException | ZoneException e) {
                 log.error(e.getMessage());
-                assert noticeElec != null;
-                this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(
-                        "BestPpn : " + lignesKbart.value().getPpn() +
-                                " - Notice : " + noticeElec.getNoticeBiblio().toString() +
-                                " - erreur : " + e.getMessage());
+                this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(lignesKbart.value().getPpn().toString(), noticeElec != null ? noticeElec.getNoticeBiblio().toString() : "pas de notice trouvée" , e.getMessage());
             } finally {
                 try {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
