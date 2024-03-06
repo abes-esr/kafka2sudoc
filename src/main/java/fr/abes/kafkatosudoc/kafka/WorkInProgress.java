@@ -1,16 +1,18 @@
 package fr.abes.kafkatosudoc.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
 import fr.abes.kafkatosudoc.utils.CheckFiles;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 @Getter
 @Setter
@@ -27,9 +29,9 @@ public class WorkInProgress {
 
     private List<String> listErrorMessagesDateFormat;
 
-    private List<String> listErrorMessagesAdd469;
+    private List<List<String>> listErrorMessagesAdd469;
 
-    private List<String> listErrorMessagesDelete469;
+    private List<List<String>> listErrorMessagesDelete469;
 
     private List<String> listErrorMessageExNihilo;
 
@@ -66,12 +68,31 @@ public class WorkInProgress {
         this.listErrorMessagesDateFormat.add(message);
     }
 
-    public void addErrorMessagesAdd469(String message) {
-        this.listErrorMessagesAdd469.add(message);
+    public void addErrorMessagesAdd469WithNotice(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur) {
+        // TODO répéter ce principe de mise en forme pour toutes les erreurs des listeners qui le nécessite
+        List<String> erreurToAdd = new ArrayList<>();
+        erreurToAdd.add("PPN : " + ppn);
+        erreurToAdd.add("Ligne Kbart : " + ligneKbart);
+        erreurToAdd.add("Notice : " + notice);
+        erreurToAdd.add("Erreur : " + erreur);
+        this.listErrorMessagesAdd469.add(erreurToAdd);
     }
 
-    public void addErrorMessagesDelete469(String message) {
-        this.listErrorMessagesDelete469.add(message);
+    public void addErrorMessagesAdd469WithoutNotice(String ppn, LigneKbartConnect ligneKbart, String erreur) {
+        List<String> erreurToAdd = new ArrayList<>();
+        erreurToAdd.add("PPN : " + ppn);
+        erreurToAdd.add("Ligne Kbart : " + ligneKbart);
+        erreurToAdd.add("Erreur : " + erreur);
+        this.listErrorMessagesAdd469.add(erreurToAdd);
+    }
+
+    public void addErrorMessagesDelete469(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur) {
+        List<String> erreurToAdd = new ArrayList<>();
+        erreurToAdd.add("PPN : " + ppn);
+        erreurToAdd.add("Ligne Kbart : " + ligneKbart);
+        erreurToAdd.add("Notice : " + notice);
+        erreurToAdd.add("Erreur : " + erreur);
+        this.listErrorMessagesDelete469.add(erreurToAdd);
     }
 
     public void addErrorMessageExNihilo(String message) { this.listErrorMessageExNihilo.add(message); }
@@ -82,7 +103,7 @@ public class WorkInProgress {
         return this.listErrorMessagesConnectionCbs.isEmpty() && this.listErrorMessagesDateFormat.isEmpty() && this.listErrorMessagesAdd469.isEmpty() && this.listErrorMessagesDelete469.isEmpty() && this.listErrorMessageExNihilo.isEmpty() && this.listErrorMessagesImprime.isEmpty();
     }
 
-    public String getAllErrorMessages(String filename) {
+    public String getAllErrorMessages(String filename) throws JsonProcessingException {
         List<String> listErrors = new ArrayList<>();
 
         String provider = CheckFiles.getProviderFromFilename(filename);
@@ -94,13 +115,16 @@ public class WorkInProgress {
             date = matcher.group(1);
         }
 
-        listErrors.add("Provider : " + provider + " - Package : " + packageName + " - Date : " + date + " " + System.lineSeparator());
+        listErrors.add("Provider : " + provider);
+        listErrors.add("Package : " + packageName);
+        listErrors.add("Date : " + date);
         if (this.listErrorMessagesConnectionCbs != null && !this.listErrorMessagesConnectionCbs.isEmpty()) listErrors.add(this.listErrorMessagesConnectionCbs.size() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets) : " + this.listErrorMessagesConnectionCbs + System.lineSeparator());
         if (this.listErrorMessagesDateFormat != null && !this.listErrorMessagesDateFormat.isEmpty()) listErrors.add(this.listErrorMessagesDateFormat.size() + " erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets) : " + this.listErrorMessagesDateFormat + System.lineSeparator());
-        if (this.listErrorMessagesAdd469 != null && !this.listErrorMessagesAdd469.isEmpty()) listErrors.add(this.listErrorMessagesAdd469.size() + " erreur(s) d'ajout de 469 : " + this.listErrorMessagesAdd469 + System.lineSeparator());
+        if (this.listErrorMessagesAdd469 != null && !this.listErrorMessagesAdd469.isEmpty()) listErrors.add(this.listErrorMessagesAdd469.size() + " erreur(s) d'ajout de 469 : " + this.listErrorMessagesAdd469);
         if (this.listErrorMessagesDelete469 != null && !this.listErrorMessagesDelete469.isEmpty()) listErrors.add(this.listErrorMessagesDelete469.size() + " erreur(s) de suppression de 469 : " + this.listErrorMessagesDelete469 + System.lineSeparator());
         if (this.listErrorMessageExNihilo != null && !this.listErrorMessageExNihilo.isEmpty()) listErrors.add(this.listErrorMessageExNihilo.size() + " erreur(s) lors de la création de notice(s) ExNihilo : " + this.listErrorMessageExNihilo + System.lineSeparator());
         if (this.listErrorMessagesImprime != null && !this.listErrorMessagesImprime.isEmpty()) listErrors.add(this.listErrorMessagesImprime.size() + " erreur(s) lors de la création de notice(s) électronique(s) à partir d'un imprimé : " + this.listErrorMessagesImprime);
-        return String.valueOf(listErrors);
+
+        return new ObjectMapper().writeValueAsString(listErrors);
     }
 }
