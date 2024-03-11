@@ -46,4 +46,12 @@ public class CheckFiles {
             throw new IllegalDateException(e);
         }
     }
+
+    public static String extractDateString(String filename) {
+        Matcher matcher = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})", Pattern.CASE_INSENSITIVE).matcher(filename);
+        if(matcher.find()){
+            return matcher.group(1);
+        }
+        return "";
+    }
 }

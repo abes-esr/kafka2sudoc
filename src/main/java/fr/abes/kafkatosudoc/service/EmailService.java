@@ -2,6 +2,7 @@ package fr.abes.kafkatosudoc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.abes.kafkatosudoc.dto.ERROR_TYPE;
 import fr.abes.kafkatosudoc.dto.mail.MailDto;
 import fr.abes.kafkatosudoc.kafka.WorkInProgress;
 import fr.abes.kafkatosudoc.utils.CheckFiles;
@@ -21,8 +22,6 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -38,35 +37,33 @@ public class EmailService {
     private String env;
 
     public void sendErrorsMessageCreateFromKafka(String filename, WorkInProgress workInProgress) throws JsonProcessingException {
-        JsonObject errorMessagesDelete469 = getListErrorMessagesDelete469(filename, workInProgress);
         JsonObject listErrors = Json.createObjectBuilder()
                 .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getListErrorMessagesConnectionCbs().size() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets)", workInProgress.getListErrorMessagesConnectionCbs().toString())
-                .add(workInProgress.getListErrorMessagesDateFormat().size() + " erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets)", workInProgress.getListErrorMessagesDateFormat().toString())
-                .add(workInProgress.getListErrorMessagesAdd469().size() + " erreur(s) d'ajout de 469", workInProgress.getListErrorMessagesAdd469().toString())
-                .add(workInProgress.getListErrorMessagesDelete469().size() + " erreur(s) de suppression de 469", errorMessagesDelete469)
-//                .add(workInProgress.getListErrorMessagesDelete469().size() + " erreur(s) de suppression de 469", workInProgress.getListErrorMessagesDelete469().toString())
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).count() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets)", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).toList().toString())
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).count() + " erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets)", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).toList().toString())
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).count() + " erreur(s) d'ajout de 469", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).toList().toString())
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).count() + " erreur(s) de suppression de 469", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).toList().toString())
                 .build();
         sendErrorsMessage(filename, listErrors);
     }
 
-    public void getErrorMessagesExNihilo(String filename, WorkInProgress workInProgress) throws JsonProcessingException {
+    public void sendErrorMessagesExNihilo(String filename, WorkInProgress workInProgress) throws JsonProcessingException {
         JsonObject listErrors = Json.createObjectBuilder()
                 .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getListErrorMessageExNihilo().size() + " erreur(s) lors de la création de notice(s) ExNihilo", workInProgress.getListErrorMessageExNihilo().toString())
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO)).count() + " erreur(s) lors de la création de notice(s) ExNihilo", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO)).toList().toString())
                 .build();
         sendErrorsMessage(filename, listErrors);
     }
 
-    public void getErrorMessagesImprime(String filename, WorkInProgress workInProgress) throws JsonProcessingException {
+    public void sendErrorMessagesImprime(String filename, WorkInProgress workInProgress) throws JsonProcessingException {
         JsonObject listErrors = Json.createObjectBuilder()
                 .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getListErrorMessagesImprime().size() + " erreur(s) lors de la création de notice(s) électronique(s) à partir d'un imprimé", workInProgress.getListErrorMessagesImprime().toString())
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME)).count() + " erreur(s) lors de la création de notice(s) électronique(s) à partir d'un imprimé",workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME)).toList().toString())
                 .build();
         sendErrorsMessage(filename, listErrors);
     }
 
-    public void sendErrorsMessage(String filename, JsonObject listErrors) throws JsonProcessingException {
+    public void sendErrorsMessage(String filename, JsonObject listErrors) {
         //  Création du mail
         String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreurs lors du traitement sur le fichier " + filename, String.valueOf(listErrors));
         //  Envoi du message par mail
@@ -75,15 +72,14 @@ public class EmailService {
     }
 
     public void sendErrorMailSuppressionPackage(String packageName, String provider, Exception e) {
-        StringBuilder body =  new StringBuilder("Une erreur s'est produite lors de la recherche de la notice bouquet : ");
-        body.append(packageName);
-        body.append(" / ");
-        body.append(provider);
-        body.append("<br /><br />Avec le message d'erreur suivant : ");
-        body.append(e.getMessage());
+        String body = "Une erreur s'est produite lors de la recherche de la notice bouquet : " + packageName +
+                " / " +
+                provider +
+                "<br /><br />Avec le message d'erreur suivant : " +
+                e.getMessage();
 
         //  Création du mail
-        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la suppression du package " + packageName + " / " + provider, body.toString());
+        String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreur lors de la suppression du package " + packageName + " / " + provider, body);
         //  Envoi du message par mail
         sendMail(requestJson);
         log.info("L'email a été correctement envoyé.");
@@ -143,29 +139,11 @@ public class EmailService {
     public JsonObject getKbartInfo(String filename) {
         String provider = CheckFiles.getProviderFromFilename(filename);
         String packageName = CheckFiles.getPackageFromFilename(filename);
-        String date = "";
 
-        Matcher matcher = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})", Pattern.CASE_INSENSITIVE).matcher(filename);
-        if(matcher.find()){
-            date = matcher.group(1);
-        }
-
-        JsonObject kbartInfo = Json.createObjectBuilder()
+        return Json.createObjectBuilder()
                 .add("Provider", provider)
                 .add("Package", packageName)
-                .add("Date", date)
+                .add("Date", CheckFiles.extractDateString(filename))
                 .build();
-
-        return kbartInfo;
     }
-
-    public JsonObject getListErrorMessagesDelete469(String filename, WorkInProgress workInProgress) {
-        JsonObject allErrorMessagesDelete469 = null;
-        for (JsonObject errorMsg : workInProgress.getListErrorMessagesDelete469()) {
-            allErrorMessagesDelete469.put(String.valueOf(errorMsg.get("Ppn")), errorMsg);
-        }
-
-        return allErrorMessagesDelete469;
-    }
-
 }

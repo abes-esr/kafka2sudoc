@@ -1,8 +1,9 @@
 package fr.abes.kafkatosudoc.kafka;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
+import fr.abes.kafkatosudoc.dto.ERROR_TYPE;
+import fr.abes.kafkatosudoc.dto.ErrorMessage;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import lombok.Getter;
@@ -22,30 +23,14 @@ public class WorkInProgress {
 
     private Integer nbLinesTotal;
 
-    private List<String> listErrorMessagesConnectionCbs;
-
-    private List<String> listErrorMessagesDateFormat;
-
-    private List<String> listErrorMessagesAdd469;
-
-    private List<JsonObject> listErrorMessagesDelete469;
-//    private List<String> listErrorMessagesDelete469;
-
-    private List<String> listErrorMessageExNihilo;
-
-    private List<String> listErrorMessagesImprime;
+    private List<ErrorMessage> errorMessages;
 
     public WorkInProgress() {
         this.listeNotices = new ArrayList<>();
         this.listeNoticesImprime = new ArrayList<>();
         this.currentNbLines = 0;
         this.nbLinesTotal = -1;
-        this.listErrorMessagesConnectionCbs = new ArrayList<>();
-        this.listErrorMessagesDateFormat = new ArrayList<>();
-        this.listErrorMessagesAdd469 = new ArrayList<>();
-        this.listErrorMessagesDelete469 = new ArrayList<>();
-        this.listErrorMessageExNihilo = new ArrayList<>();
-        this.listErrorMessagesImprime = new ArrayList<>();
+        this.errorMessages = new ArrayList<>();
     }
 
     public void addNotice(LigneKbartConnect notice) {
@@ -59,15 +44,22 @@ public class WorkInProgress {
     }
 
     public void addErrorMessagesConnectionCbs(String message) {
-        this.listErrorMessagesConnectionCbs.add(message);
+        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.CONNEXION, message));
     }
 
     public void addErrorMessagesDateFormat(String message) {
-        this.listErrorMessagesDateFormat.add(message);
+        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.DATE_FORMAT, message));
     }
 
     public void addErrorMessagesAdd469WithNotice(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur) {
-        this.listErrorMessagesAdd469.add("{Ppn : " + ppn + ", Ligne Kbart : " + ligneKbart.toString() + ", Notice : " + notice + ", Erreur : " + erreur + "}");
+        // TODO trouver comment convertir une ligneKbart en json exploitable (trop de \ ) (peut-être remapper l'objet via une méthode faite main)
+        JsonObject erreurToAdd = Json.createObjectBuilder()
+                .add("PPN", ppn)
+                .add("Ligne Kbart", ligneKbart.toString())
+                .add("Notice", notice)
+                .add("Erreur", erreur)
+                .build();
+        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.ADD469, erreurToAdd.toString()));
     }
 
     public void addErrorMessagesDelete469(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur) {
@@ -77,28 +69,15 @@ public class WorkInProgress {
                 .add("Notice", notice)
                 .add("Erreur", erreur)
                 .build();
-        this.listErrorMessagesDelete469.add(errorMessage);
-//        this.listErrorMessagesDelete469.add("{Ppn : " + ppn + ", Ligne Kbart : " + ligneKbart.toString() + ", Notice : " + notice + ", Erreur : " + erreur + "}");
+        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.SUPP469, errorMessage.toString()));
     }
-
-    public void addErrorMessageExNihilo(String ppn, String erreur) throws JsonProcessingException {
-        this.listErrorMessageExNihilo.add("{ppn : " + ppn + ", erreur : " + erreur + "}");
+    public void addErrorMessageExNihilo(String ppn, String erreur) {
+        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.EXNIHILO, "{ppn : " + ppn + ", erreur : " + erreur + "}"));
 
     }
 
     public void addErrorMessagesImprime(String ppn, String notice, String erreur) {
-        this.listErrorMessagesImprime.add("{Ppn : " + ppn + ", Notice : " + notice + ", Erreur : " + erreur + "}");
+        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.FROMIMPRIME, "{Ppn : " + ppn + ", Notice : " + notice + ", Erreur : " + erreur + "}"));
     }
 
-    public boolean isCreateFromKbartErrorFree() {
-        return this.listErrorMessagesConnectionCbs.isEmpty() && this.listErrorMessagesDateFormat.isEmpty() && this.listErrorMessagesAdd469.isEmpty() && this.listErrorMessagesDelete469.isEmpty();
-    }
-
-    public boolean isFromKafkaExNihiloErrorFree() {
-        return this.listErrorMessageExNihilo.isEmpty();
-    }
-
-    public boolean isFromKafkaToImprimeErrorFree() {
-        return this.listErrorMessagesImprime.isEmpty();
-    }
 }

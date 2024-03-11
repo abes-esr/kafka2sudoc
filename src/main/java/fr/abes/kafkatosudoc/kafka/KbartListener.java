@@ -94,7 +94,8 @@ public class KbartListener {
         if (this.workInProgressMap.get(filename).getCurrentNbLines().equals(this.workInProgressMap.get(filename).getNbLinesTotal())) {
             log.debug("Traitement des notices existantes dans le Sudoc à partir du kbart");
             traiterPackageDansSudoc(this.workInProgressMap.get(filename).getListeNotices(), filename);
-            if (!this.workInProgressMap.get(filename).isCreateFromKbartErrorFree()) emailService.sendErrorsMessageCreateFromKafka(filename, this.workInProgressMap.get(filename));
+            if (!this.workInProgressMap.get(filename).getErrorMessages().isEmpty())
+                emailService.sendErrorsMessageCreateFromKafka(filename, this.workInProgressMap.get(filename));
             this.workInProgressMap.remove(filename);
         }
 
@@ -143,7 +144,7 @@ public class KbartListener {
                         listPpnsFromListeNotices.add(ligneKbartConnect);
                     }
                 }
-                if (listPpnsFromListeNotices.size() > 0) {
+                if (!listPpnsFromListeNotices.isEmpty()) {
                     ajout469(ppnNoticeBouquet, ppn, listPpnsFromListeNotices.get(0), filename, service);
                 }
             }
@@ -154,7 +155,7 @@ public class KbartListener {
                         listPpnsFromListeNotices.add(ligneKbart);
                     }
                 }
-                if (listPpnsFromListeNotices.size() > 0) {
+                if (!listPpnsFromListeNotices.isEmpty()) {
                     suppression469(ppnNoticeBouquet, ppn, mapper.map(listPpnsFromListeNotices.get(0), LigneKbartConnect.class), filename, service);
                 }
             }
@@ -247,7 +248,7 @@ public class KbartListener {
                 }
             }
             if (!listError.isEmpty()) {
-                listError.add(0, listError.size() +  " erreur(s) lors de la suppression de lien(s) vers une notice bouquet : " + System.lineSeparator());
+                listError.add(0, listError.size() + " erreur(s) lors de la suppression de lien(s) vers une notice bouquet : " + System.lineSeparator());
                 emailService.sendErrorMailProviderPackageDeleted(listError);
             }
         } catch (CBSException e) {
@@ -315,7 +316,8 @@ public class KbartListener {
                 try {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
                     service.disconnect();
-                    if (!this.workInProgressMapExNihilo.get(filename).isFromKafkaExNihiloErrorFree()) emailService.getErrorMessagesExNihilo(filename, this.workInProgressMapExNihilo.get(filename));
+                    if (!this.workInProgressMapExNihilo.get(filename).getErrorMessages().isEmpty())
+                        emailService.sendErrorMessagesExNihilo(filename, this.workInProgressMap.get(filename));
                     this.workInProgressMapExNihilo.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
@@ -370,28 +372,26 @@ public class KbartListener {
                         kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(ligneKbartImprime.getPpn().toString()));
                         noticeElec = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
                         //Ajout provider display name en 214 $c 2è occurrence
-                        if (noticeElec != null) { // TODO doit-on garder ce contrôle ou catcher l'erreur NPE ?
-                            String providerDisplay = baconService.getProviderDisplayName(provider);
-                            if (providerDisplay != null) {
-                                List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 2]")).toList();
-                                for (Zone zone : zones214)
-                                    zone.addSubLabel("c", providerDisplay);
-                            }
-                            service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
-                            service.creerNotice(noticeElec);
-                            log.debug("Création notice à partir de l'imprimée terminée");
-                        }  // TODO si on garde ce contrôle, que fait-on en cas de null ?
+                        String providerDisplay = baconService.getProviderDisplayName(provider);
+                        if (providerDisplay != null) {
+                            List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 2]")).toList();
+                            for (Zone zone : zones214)
+                                zone.addSubLabel("c", providerDisplay);
+                        }
+                        service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
+                        service.creerNotice(noticeElec);
+                        log.debug("Création notice à partir de l'imprimée terminée");
                     }
                 }
             } catch (CBSException | ZoneException e) {
                 log.error(e.getMessage());
-                this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(lignesKbart.value().getPpn().toString(), noticeElec != null ? noticeElec.getNoticeBiblio().toString() : "pas de notice trouvée" , e.getMessage());
+                this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(lignesKbart.value().getPpn().toString(), noticeElec != null ? noticeElec.getNoticeBiblio().toString() : "pas de notice trouvée", e.getMessage());
             } finally {
                 try {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
                     service.disconnect();
-                    if (!this.workInProgressMapImprime.get(filename).isFromKafkaToImprimeErrorFree())
-                        emailService.getErrorMessagesImprime(filename, this.workInProgressMapImprime.get(filename));
+                    if (!this.workInProgressMapImprime.get(filename).getErrorMessages().isEmpty())
+                        emailService.sendErrorMessagesImprime(filename, this.workInProgressMap.get(filename));
                     this.workInProgressMapImprime.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
