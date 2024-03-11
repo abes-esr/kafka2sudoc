@@ -1,7 +1,6 @@
 package fr.abes.kafkatosudoc.kafka;
 
 import fr.abes.LigneKbartConnect;
-import fr.abes.LigneKbartImprime;
 import fr.abes.kafkatosudoc.dto.ERROR_TYPE;
 import fr.abes.kafkatosudoc.dto.ErrorMessage;
 import jakarta.json.Json;
@@ -14,10 +13,8 @@ import java.util.List;
 
 @Getter
 @Setter
-public class WorkInProgress {
-    private final List<LigneKbartConnect> listeNotices;
-
-    private final List<LigneKbartImprime> listeNoticesImprime;
+public class WorkInProgress<T> {
+    private final List<T> listeNotices;
 
     private Integer currentNbLines;
 
@@ -27,17 +24,14 @@ public class WorkInProgress {
 
     public WorkInProgress() {
         this.listeNotices = new ArrayList<>();
-        this.listeNoticesImprime = new ArrayList<>();
         this.currentNbLines = 0;
         this.nbLinesTotal = -1;
         this.errorMessages = new ArrayList<>();
     }
 
-    public void addNotice(LigneKbartConnect notice) {
+    public void addNotice(T notice) {
         this.listeNotices.add(notice);
     }
-
-    public void addNoticeImprime(LigneKbartImprime notice) { this.listeNoticesImprime.add(notice); }
 
     public void incrementCurrentNbLignes() {
         this.currentNbLines++;
