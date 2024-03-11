@@ -94,7 +94,7 @@ public class KbartListener {
         if (this.workInProgressMap.get(filename).getCurrentNbLines().equals(this.workInProgressMap.get(filename).getNbLinesTotal())) {
             log.debug("Traitement des notices existantes dans le Sudoc à partir du kbart");
             traiterPackageDansSudoc(this.workInProgressMap.get(filename).getListeNotices(), filename);
-            if (!this.workInProgressMap.get(filename).isErrorFree()) emailService.sendErrorsMessage(this.workInProgressMap.get(filename).getAllErrorMessages(filename), filename);
+            if (!this.workInProgressMap.get(filename).isCreateFromKbartErrorFree()) emailService.sendErrorsMessageCreateFromKafka(filename, this.workInProgressMap.get(filename));
             this.workInProgressMap.remove(filename);
         }
 
@@ -178,21 +178,17 @@ public class KbartListener {
         NoticeConcrete notice = null;
         try {
             notice = service.getNoticeFromPpn(ppn);
-            if (notice.getNoticeBiblio() != null) {
+            if (notice.getNoticeBiblio() != null) { // TODO doit-on garder ce contrôle ou catcher l'erreur NPE ?
                 if (!service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
                     service.addNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
                     service.modifierNotice(notice, 1);
                     log.debug("Ajout 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
                 }
-            }
+            } // TODO si on garde ce contrôle, que fait-on en cas de null ?
         } catch (CBSException | ZoneException e) {
             String message = "PPN : " + ppn + " : " + e.getMessage();
             log.error(message, e.getCause());
-            if (notice != null) {
-                this.workInProgressMap.get(filename).addErrorMessagesAdd469WithNotice(ppn, ligneKbart, notice.getNoticeBiblio().toString(), e.getMessage());
-            } else {
-                this.workInProgressMap.get(filename).addErrorMessagesAdd469WithoutNotice(ppn, ligneKbart, e.getMessage());
-            }
+            this.workInProgressMap.get(filename).addErrorMessagesAdd469WithNotice(ppn, ligneKbart, notice != null ? notice.getNoticeBiblio().toString() : "pas de notice trouvée", e.getMessage());
         }
     }
 
@@ -200,16 +196,17 @@ public class KbartListener {
         NoticeConcrete notice = null;
         try {
             notice = service.getNoticeFromPpn(ppn);
-            if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
-                service.supprimeNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
-                service.modifierNotice(notice, 1);
-                log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
-            }
+            if (notice.getNoticeBiblio() != null) { // TODO doit-on garder ce contrôle ou catcher l'erreur NPE ?
+                if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
+                    service.supprimeNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
+                    service.modifierNotice(notice, 1);
+                    log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
+                }
+            } // TODO si on garde ce contrôle, que fait-on en cas de null ?
         } catch (CBSException | ZoneException e) {
             String message = "PPN : " + ppn + " : " + e.getMessage();
             log.error(message, e.getCause());
-            assert notice != null;
-            this.workInProgressMap.get(filename).addErrorMessagesDelete469(ppn, ligneKbart, notice.getNoticeBiblio().toString(), e.getMessage());
+            this.workInProgressMap.get(filename).addErrorMessagesDelete469(ppn, ligneKbart, notice != null ? notice.getNoticeBiblio().toString() : "pas de notice trouvée", e.getMessage());
         }
     }
 
@@ -223,6 +220,7 @@ public class KbartListener {
         String provider = providerPackageDeleted.value().get("PROVIDER").toString();
         String packageName = providerPackageDeleted.value().get("PACKAGE").toString();
         SudocService service = new SudocService();
+        List<String> listError = new ArrayList<>();
         try {
             service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             //recherche de la notice bouquet
@@ -230,7 +228,6 @@ public class KbartListener {
             //affichage des notices liées
             //boucle sur les notices liées à partir de la seconde (la première étant la notice bouquet elle-même)
             int nbNoticesLiees = service.getNoticesLiees();
-            List<String> listError = new ArrayList<>();
             for (int i = 2; i <= nbNoticesLiees; i++) {
                 String ppnCourant = "";
                 try {
@@ -270,7 +267,7 @@ public class KbartListener {
      * @param ligneKbart : enregistrement dans Kafka
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> ligneKbart) {
+    public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> ligneKbart) throws JsonProcessingException {
         log.debug("Entrée dans création ex nihilo");
         String filename = ligneKbart.key();
 
@@ -318,7 +315,7 @@ public class KbartListener {
                 try {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
                     service.disconnect();
-                    if (!this.workInProgressMapExNihilo.get(filename).isErrorFree()) emailService.sendErrorsMessage(this.workInProgressMapExNihilo.get(filename).getAllErrorMessages(filename), filename);
+                    if (!this.workInProgressMapExNihilo.get(filename).isFromKafkaExNihiloErrorFree()) emailService.getErrorMessagesExNihilo(filename, this.workInProgressMapExNihilo.get(filename));
                     this.workInProgressMapExNihilo.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
@@ -373,7 +370,7 @@ public class KbartListener {
                         kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(ligneKbartImprime.getPpn().toString()));
                         noticeElec = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
                         //Ajout provider display name en 214 $c 2è occurrence
-                        if (noticeElec != null) {
+                        if (noticeElec != null) { // TODO doit-on garder ce contrôle ou catcher l'erreur NPE ?
                             String providerDisplay = baconService.getProviderDisplayName(provider);
                             if (providerDisplay != null) {
                                 List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 2]")).toList();
@@ -383,9 +380,7 @@ public class KbartListener {
                             service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
                             service.creerNotice(noticeElec);
                             log.debug("Création notice à partir de l'imprimée terminée");
-                        } else {
-                            // TODO un traitement (message d'erreur) en cas de notice null
-                        }
+                        }  // TODO si on garde ce contrôle, que fait-on en cas de null ?
                     }
                 }
             } catch (CBSException | ZoneException e) {
@@ -395,8 +390,8 @@ public class KbartListener {
                 try {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
                     service.disconnect();
-                    if (!this.workInProgressMapImprime.get(filename).isErrorFree())
-                        emailService.sendErrorsMessage(this.workInProgressMapImprime.get(filename).getAllErrorMessages(filename), filename);
+                    if (!this.workInProgressMapImprime.get(filename).isFromKafkaToImprimeErrorFree())
+                        emailService.getErrorMessagesImprime(filename, this.workInProgressMapImprime.get(filename));
                     this.workInProgressMapImprime.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");

@@ -5,65 +5,37 @@ import fr.abes.LigneKbartConnect;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-
 class WorkInProgressTest {
 
     @Test
-    void getAllErrorMessages() throws IOException {
-        // TODO adapter les TU
-//        String messageReference = "{\"Provider\":\"FICHIER\",\"Package\":\"TEST_TEST-SANS-OBJET\",\"Date\":"2024-01-01","2 erreur(s) de connection CBS lors d'une mise � jour des zones 469 de liens vers les notices bouquets) : ":"[connectionCBS_1, connectionCBS_2]","2 erreur(s) de format de date lors d'une mise � jour des zones 469 ou de liens vers les notices bouquets) : ":"[Date_1, Date_2]","2 erreur(s) d'ajout de 469 : ":"[{\"PPN\":\"ppn\",\"Ligne Kbart\":\"{\\\"PUBLICATION_TITLE\\\": null, \\\"PRINT_IDENTIFIER\\\": null, \\\"ONLINE_IDENTIFIER\\\": null, \\\"DATE_FIRST_ISSUE_ONLINE\\\": null, \\\"NUM_FIRST_VOL_ONLINE\\\": null, \\\"NUM_FIRST_ISSUE_ONLINE\\\": null, \\\"DATE_LAST_ISSUE_ONLINE\\\": null, \\\"NUM_LAST_VOL_ONLINE\\\": null, \\\"NUM_LAST_ISSUE_ONLINE\\\": null, \\\"TITLE_URL\\\": null, \\\"FIRST_AUTHOR\\\": null, \\\"TITLE_ID\\\": null, \\\"EMBARGO_INFO\\\": null, \\\"COVERAGE_DEPTH\\\": null, \\\"NOTES\\\": null, \\\"PUBLISHER_NAME\\\": null, \\\"PUBLICATION_TYPE\\\": null, \\\"DATE_MONOGRAPH_PUBLISHED_PRINT\\\": null, \\\"DATE_MONOGRAPH_PUBLISHED_ONLIN\\\": null, \\\"MONOGRAPH_VOLUME\\\": null, \\\"MONOGRAPH_EDITION\\\": null, \\\"FIRST_EDITOR\\\": null, \\\"PARENT_PUBLICATION_TITLE_ID\\\": null, \\\"PRECEDING_PUBLICATION_TITLE_ID\\\": null, \\\"ACCESS_TYPE\\\": null, \\\"PROVIDER_PACKAGE_PACKAGE\\\": null, \\\"PROVIDER_PACKAGE_DATE_P\\\": null, \\\"PROVIDER_PACKAGE_IDT_PROVIDER\\\": 0, \\\"ID_PROVIDER_PACKAGE\\\": 0, \\\"BEST_PPN\\\": null}\",\"Erreur\":\"erreur\"}, {\"PPN\":\"ppn\",\"Ligne Kbart\":\"{\\\"PUBLICATION_TITLE\\\": null, \\\"PRINT_IDENTIFIER\\\": null, \\\"ONLINE_IDENTIFIER\\\": null, \\\"DATE_FIRST_ISSUE_ONLINE\\\": null, \\\"NUM_FIRST_VOL_ONLINE\\\": null, \\\"NUM_FIRST_ISSUE_ONLINE\\\": null, \\\"DATE_LAST_ISSUE_ONLINE\\\": null, \\\"NUM_LAST_VOL_ONLINE\\\": null, \\\"NUM_LAST_ISSUE_ONLINE\\\": null, \\\"TITLE_URL\\\": null, \\\"FIRST_AUTHOR\\\": null, \\\"TITLE_ID\\\": null, \\\"EMBARGO_INFO\\\": null, \\\"COVERAGE_DEPTH\\\": null, \\\"NOTES\\\": null, \\\"PUBLISHER_NAME\\\": null, \\\"PUBLICATION_TYPE\\\": null, \\\"DATE_MONOGRAPH_PUBLISHED_PRINT\\\": null, \\\"DATE_MONOGRAPH_PUBLISHED_ONLIN\\\": null, \\\"MONOGRAPH_VOLUME\\\": null, \\\"MONOGRAPH_EDITION\\\": null, \\\"FIRST_EDITOR\\\": null, \\\"PARENT_PUBLICATION_TITLE_ID\\\": null, \\\"PRECEDING_PUBLICATION_TITLE_ID\\\": null, \\\"ACCESS_TYPE\\\": null, \\\"PROVIDER_PACKAGE_PACKAGE\\\": null, \\\"PROVIDER_PACKAGE_DATE_P\\\": null, \\\"PROVIDER_PACKAGE_IDT_PROVIDER\\\": 0, \\\"ID_PROVIDER_PACKAGE\\\": 0, \\\"BEST_PPN\\\": null}\",\"Erreur\":\"erreur\"}]","2 erreur(s) de suppression de 469 : ":"[{\"PPN : \":\"ppn\",\"Ligne Kbart : \":\"{\\\"PUBLICATION_TITLE\\\": null, \\\"PRINT_IDENTIFIER\\\": null, \\\"ONLINE_IDENTIFIER\\\": null, \\\"DATE_FIRST_ISSUE_ONLINE\\\": null, \\\"NUM_FIRST_VOL_ONLINE\\\": null, \\\"NUM_FIRST_ISSUE_ONLINE\\\": null, \\\"DATE_LAST_ISSUE_ONLINE\\\": null, \\\"NUM_LAST_VOL_ONLINE\\\": null, \\\"NUM_LAST_ISSUE_ONLINE\\\": null, \\\"TITLE_URL\\\": null, \\\"FIRST_AUTHOR\\\": null, \\\"TITLE_ID\\\": null, \\\"EMBARGO_INFO\\\": null, \\\"COVERAGE_DEPTH\\\": null, \\\"NOTES\\\": null, \\\"PUBLISHER_NAME\\\": null, \\\"PUBLICATION_TYPE\\\": null, \\\"DATE_MONOGRAPH_PUBLISHED_PRINT\\\": null, \\\"DATE_MONOGRAPH_PUBLISHED_ONLIN\\\": null, \\\"MONOGRAPH_VOLUME\\\": null, \\\"MONOGRAPH_EDITION\\\": null, \\\"FIRST_EDITOR\\\": null, \\\"PARENT_PUBLICATION_TITLE_ID\\\": null, \\\"PRECEDING_PUBLICATION_TITLE_ID\\\": null, \\\"ACCESS_TYPE\\\": null, \\\"PROVIDER_PACKAGE_PACKAGE\\\": null, \\\"PROVIDER_PACKAGE_DATE_P\\\": null, \\\"PROVIDER_PACKAGE_IDT_PROVIDER\\\": 0, \\\"ID_PROVIDER_PACKAGE\\\": 0, \\\"BEST_PPN\\\": null}\",\"Notice : \":\"notice\",\"Erreur : \":\"erreur\"}, {\"PPN : \":\"ppn\",\"Ligne Kbart : \":\"{\\\"PUBLICATION_TITLE\\\": null, \\\"PRINT_IDENTIFIER\\\": null, \\\"ONLINE_IDENTIFIER\\\": null, \\\"DATE_FIRST_ISSUE_ONLINE\\\": null, \\\"NUM_FIRST_VOL_ONLINE\\\": null, \\\"NUM_FIRST_ISSUE_ONLINE\\\": null, \\\"DATE_LAST_ISSUE_ONLINE\\\": null, \\\"NUM_LAST_VOL_ONLINE\\\": null, \\\"NUM_LAST_ISSUE_ONLINE\\\": null, \\\"TITLE_URL\\\": null, \\\"FIRST_AUTHOR\\\": null, \\\"TITLE_ID\\\": null, \\\"EMBARGO_INFO\\\": null, \\\"COVERAGE_DEPTH\\\": null, \\\"NOTES\\\": null, \\\"PUBLISHER_NAME\\\": null, \\\"PUBLICATION_TYPE\\\": null, \\\"DATE_MONOGRAPH_PUBLISHED_PRINT\\\": null, \\\"DATE_MONOGRAPH_PUBLISHED_ONLIN\\\": null, \\\"MONOGRAPH_VOLUME\\\": null, \\\"MONOGRAPH_EDITION\\\": null, \\\"FIRST_EDITOR\\\": null, \\\"PARENT_PUBLICATION_TITLE_ID\\\": null, \\\"PRECEDING_PUBLICATION_TITLE_ID\\\": null, \\\"ACCESS_TYPE\\\": null, \\\"PROVIDER_PACKAGE_PACKAGE\\\": null, \\\"PROVIDER_PACKAGE_DATE_P\\\": null, \\\"PROVIDER_PACKAGE_IDT_PROVIDER\\\": 0, \\\"ID_PROVIDER_PACKAGE\\\": 0, \\\"BEST_PPN\\\": null}\",\"Notice : \":\"notice\",\"Erreur : \":\"erreur\"}]","2 erreur(s) lors de la cr�ation de notice(s) ExNihilo : ":"[{\"PPN : \":\"ppn\",\"Erreur : \":\"erreur\"}, {\"PPN : \":\"ppn\",\"Erreur : \":\"erreur\"}]","2 erreur(s) lors de la cr�ation de notice(s) �lectronique(s) � partir d'un imprim� : ":"[{\"PPN : \":\"ppn\",\"Notice : \":\"notice\",\"Erreur : \":\"erreur\"}, {\"PPN : \":\"ppn\",\"Notice : \":\"notice\",\"Erreur : \":\"erreur\"}]"}"";
-//
-//        WorkInProgress workInProgress = new WorkInProgress();
-//
-//        workInProgress.addErrorMessagesConnectionCbs("connectionCBS_1");
-//        workInProgress.addErrorMessagesConnectionCbs("connectionCBS_2");
-//
-//        workInProgress.addErrorMessagesDateFormat("Date_1");
-//        workInProgress.addErrorMessagesDateFormat("Date_2");
-//
-//        workInProgress.addErrorMessagesAdd469WithoutNotice("ppn", new LigneKbartConnect(), "erreur");
-//        workInProgress.addErrorMessagesAdd469WithoutNotice("ppn", new LigneKbartConnect(), "erreur");
-//
-//        workInProgress.addErrorMessagesDelete469("ppn", new LigneKbartConnect(), "notice", "erreur");
-//        workInProgress.addErrorMessagesDelete469("ppn", new LigneKbartConnect(), "notice", "erreur");
-//
-//        workInProgress.addErrorMessageExNihilo("ppn", "erreur");
-//        workInProgress.addErrorMessageExNihilo("ppn", "erreur");
-//
-//        workInProgress.addErrorMessagesImprime("ppn", "notice", "erreur");
-//        workInProgress.addErrorMessagesImprime("ppn", "notice", "erreur");
-//
-//        Assertions.assertEquals(messageReference,workInProgress.getAllErrorMessages("FICHIER_TEST_TEST-SANS-OBJET_2024-01-01.tsv"));
-    }
-
-    @Test
-    void isErrorFree() {
+    void isErrorFree() throws JsonProcessingException {
         WorkInProgress workInProgress = new WorkInProgress();
-        Assertions.assertTrue(workInProgress.isErrorFree());
+        Assertions.assertTrue(workInProgress.isCreateFromKbartErrorFree());
 
         WorkInProgress workInProgress1 = new WorkInProgress();
-        workInProgress1.addErrorMessagesConnectionCbs("test");
-        Assertions.assertFalse(workInProgress1.isErrorFree());
+        Assertions.assertTrue(workInProgress1.isFromKafkaExNihiloErrorFree());
 
         WorkInProgress workInProgress2 = new WorkInProgress();
-        workInProgress2.addErrorMessagesDateFormat("test");
-        Assertions.assertFalse(workInProgress2.isErrorFree());
+        Assertions.assertTrue(workInProgress2.isFromKafkaToImprimeErrorFree());
 
         WorkInProgress workInProgress3 = new WorkInProgress();
-        workInProgress3.addErrorMessagesAdd469WithoutNotice("ppn", new LigneKbartConnect(), "erreur");
-        Assertions.assertFalse(workInProgress3.isErrorFree());
+        workInProgress3.addErrorMessagesConnectionCbs("test");
+        Assertions.assertFalse(workInProgress3.isCreateFromKbartErrorFree());
 
         WorkInProgress workInProgress4 = new WorkInProgress();
-        workInProgress4.addErrorMessagesDelete469("ppn", new LigneKbartConnect(), "notice", "erreur");
-        Assertions.assertFalse(workInProgress4.isErrorFree());
-
-        WorkInProgress workInProgress5 = new WorkInProgress();
-        workInProgress5.addErrorMessageExNihilo("ppn", "erreur");
-        Assertions.assertFalse(workInProgress5.isErrorFree());
+        workInProgress4.addErrorMessagesDateFormat("test");
+        Assertions.assertFalse(workInProgress4.isCreateFromKbartErrorFree());
 
         WorkInProgress workInProgress6 = new WorkInProgress();
-        workInProgress6.addErrorMessagesImprime("ppn", "notice", "erreur");
-        Assertions.assertFalse(workInProgress6.isErrorFree());
+        workInProgress6.addErrorMessagesDelete469("ppn", new LigneKbartConnect(), "notice", "erreur");
+        Assertions.assertFalse(workInProgress6.isCreateFromKbartErrorFree());
+
+        WorkInProgress workInProgress7 = new WorkInProgress();
+        workInProgress7.addErrorMessageExNihilo("ppn", "erreur");
+        Assertions.assertFalse(workInProgress7.isFromKafkaExNihiloErrorFree());
+
+        WorkInProgress workInProgress8 = new WorkInProgress();
+        workInProgress8.addErrorMessagesImprime("ppn", "notice", "erreur");
+        Assertions.assertFalse(workInProgress8.isFromKafkaToImprimeErrorFree());
     }
 }

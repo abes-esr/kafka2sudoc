@@ -3,7 +3,6 @@ package fr.abes.kafkatosudoc.kafka;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
-import fr.abes.kafkatosudoc.utils.CheckFiles;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import lombok.Getter;
@@ -11,8 +10,6 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Getter
 @Setter
@@ -31,7 +28,8 @@ public class WorkInProgress {
 
     private List<String> listErrorMessagesAdd469;
 
-    private List<String> listErrorMessagesDelete469;
+    private List<JsonObject> listErrorMessagesDelete469;
+//    private List<String> listErrorMessagesDelete469;
 
     private List<String> listErrorMessageExNihilo;
 
@@ -69,80 +67,38 @@ public class WorkInProgress {
     }
 
     public void addErrorMessagesAdd469WithNotice(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur) {
-        // TODO trouver comment convertir une ligneKbart en json exploitable (trop de \ ) (peut-être remapper l'objet via une méthode faite main)
-        JsonObject erreurToAdd = Json.createObjectBuilder()
-                .add("PPN", ppn)
+        this.listErrorMessagesAdd469.add("{Ppn : " + ppn + ", Ligne Kbart : " + ligneKbart.toString() + ", Notice : " + notice + ", Erreur : " + erreur + "}");
+    }
+
+    public void addErrorMessagesDelete469(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur) {
+        JsonObject errorMessage = Json.createObjectBuilder()
+                .add("Ppn", ppn)
                 .add("Ligne Kbart", ligneKbart.toString())
                 .add("Notice", notice)
                 .add("Erreur", erreur)
                 .build();
-        this.listErrorMessagesAdd469.add(erreurToAdd.toString());
+        this.listErrorMessagesDelete469.add(errorMessage);
+//        this.listErrorMessagesDelete469.add("{Ppn : " + ppn + ", Ligne Kbart : " + ligneKbart.toString() + ", Notice : " + notice + ", Erreur : " + erreur + "}");
     }
 
-    public void addErrorMessagesAdd469WithoutNotice(String ppn, LigneKbartConnect ligneKbart, String erreur) {
-        // TODO trouver comment convertir une ligneKbart en json exploitable (trop de \ ) (peut-être remapper l'objet via une méthode faite main)
-        JsonObject erreurToAdd = Json.createObjectBuilder()
-                .add("PPN", ppn)
-                .add("Ligne Kbart", ligneKbart.toString())
-                .add("Erreur", erreur)
-                .build();
-        this.listErrorMessagesAdd469.add(erreurToAdd.toString());
-    }
+    public void addErrorMessageExNihilo(String ppn, String erreur) throws JsonProcessingException {
+        this.listErrorMessageExNihilo.add("{ppn : " + ppn + ", erreur : " + erreur + "}");
 
-    public void addErrorMessagesDelete469(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur) {
-        // TODO trouver comment convertir une ligneKbart en json exploitable (trop de \ ) (peut-être remapper l'objet via une méthode faite main)
-        JsonObject erreurToAdd = Json.createObjectBuilder()
-            .add("PPN : ", ppn)
-            .add("Ligne Kbart : ", ligneKbart.toString())
-            .add("Notice : ", notice)
-            .add("Erreur : ", erreur)
-            .build();
-        this.listErrorMessagesDelete469.add(erreurToAdd.toString());
-    }
-
-    public void addErrorMessageExNihilo(String ppn, String erreur) {
-        JsonObject erreurToAdd = Json.createObjectBuilder()
-            .add("PPN : ", ppn)
-            .add("Erreur : ", erreur)
-            .build();
-        this.listErrorMessageExNihilo.add(erreurToAdd.toString());
     }
 
     public void addErrorMessagesImprime(String ppn, String notice, String erreur) {
-        JsonObject erreurToAdd = Json.createObjectBuilder()
-            .add("PPN : ", ppn)
-            .add("Notice : ", notice)
-            .add("Erreur : ", erreur)
-            .build();
-        this.listErrorMessagesImprime.add(erreurToAdd.toString());
+        this.listErrorMessagesImprime.add("{Ppn : " + ppn + ", Notice : " + notice + ", Erreur : " + erreur + "}");
     }
 
-    public boolean isErrorFree() {
-        return this.listErrorMessagesConnectionCbs.isEmpty() && this.listErrorMessagesDateFormat.isEmpty() && this.listErrorMessagesAdd469.isEmpty() && this.listErrorMessagesDelete469.isEmpty() && this.listErrorMessageExNihilo.isEmpty() && this.listErrorMessagesImprime.isEmpty();
+    public boolean isCreateFromKbartErrorFree() {
+        return this.listErrorMessagesConnectionCbs.isEmpty() && this.listErrorMessagesDateFormat.isEmpty() && this.listErrorMessagesAdd469.isEmpty() && this.listErrorMessagesDelete469.isEmpty();
     }
 
-    public String getAllErrorMessages(String filename) throws JsonProcessingException {
-        String provider = CheckFiles.getProviderFromFilename(filename);
-        String packageName = CheckFiles.getPackageFromFilename(filename);
-        String date = "";
+    public boolean isFromKafkaExNihiloErrorFree() {
+        return this.listErrorMessageExNihilo.isEmpty();
+    }
 
-        Matcher matcher = Pattern.compile("(\\d{4}-\\d{2}-\\d{2})", Pattern.CASE_INSENSITIVE).matcher(filename);
-        if(matcher.find()){
-            date = matcher.group(1);
-        }
-
-        JsonObject listErrors = Json.createObjectBuilder()
-                        .add("Provider", provider)
-                        .add("Package", packageName)
-                        .add("Date", date)
-                        .add(this.listErrorMessagesConnectionCbs.size() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets) : ", this.listErrorMessagesConnectionCbs.toString())
-                        .add(this.listErrorMessagesDateFormat.size() + " erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets) : ", this.listErrorMessagesDateFormat.toString())
-                        .add(this.listErrorMessagesAdd469.size() + " erreur(s) d'ajout de 469 : ", this.listErrorMessagesAdd469.toString())
-                        .add(this.listErrorMessagesDelete469.size() + " erreur(s) de suppression de 469 : ", this.listErrorMessagesDelete469.toString())
-                        .add(this.listErrorMessageExNihilo.size() + " erreur(s) lors de la création de notice(s) ExNihilo : ", this.listErrorMessageExNihilo.toString())
-                        .add(this.listErrorMessagesImprime.size() + " erreur(s) lors de la création de notice(s) électronique(s) à partir d'un imprimé : ", this.listErrorMessagesImprime.toString())
-                        .build();
-
-        return listErrors.toString();
+    public boolean isFromKafkaToImprimeErrorFree() {
+        return this.listErrorMessagesImprime.isEmpty();
     }
 }
