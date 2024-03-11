@@ -11,4 +11,9 @@ public class ErrorMessage {
         this.type = errorType;
         this.message = message;
     }
+
+    @Override
+    public String toString() {
+        return this.message.replace("\"", "");
+    }
 }

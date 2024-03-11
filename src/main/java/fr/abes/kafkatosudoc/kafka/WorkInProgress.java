@@ -51,26 +51,16 @@ public class WorkInProgress {
         this.errorMessages.add(new ErrorMessage(ERROR_TYPE.DATE_FORMAT, message));
     }
 
-    public void addErrorMessagesAdd469WithNotice(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur) {
-        // TODO trouver comment convertir une ligneKbart en json exploitable (trop de \ ) (peut-être remapper l'objet via une méthode faite main)
+    public void addErrorMessages469(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur, ERROR_TYPE errortype) {
         JsonObject erreurToAdd = Json.createObjectBuilder()
                 .add("PPN", ppn)
-                .add("Ligne Kbart", ligneKbart.toString())
+                .add("Ligne Kbart", ligneKbart.toString().replace("\"", ""))
                 .add("Notice", notice)
                 .add("Erreur", erreur)
                 .build();
-        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.ADD469, erreurToAdd.toString()));
+        this.errorMessages.add(new ErrorMessage(errortype, erreurToAdd.toString().replace("\"", "")));
     }
 
-    public void addErrorMessagesDelete469(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur) {
-        JsonObject errorMessage = Json.createObjectBuilder()
-                .add("Ppn", ppn)
-                .add("Ligne Kbart", ligneKbart.toString())
-                .add("Notice", notice)
-                .add("Erreur", erreur)
-                .build();
-        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.SUPP469, errorMessage.toString()));
-    }
     public void addErrorMessageExNihilo(String ppn, String erreur) {
         this.errorMessages.add(new ErrorMessage(ERROR_TYPE.EXNIHILO, "{ppn : " + ppn + ", erreur : " + erreur + "}"));
 

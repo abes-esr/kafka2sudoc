@@ -1,12 +1,12 @@
 package fr.abes.kafkatosudoc.kafka;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
 import fr.abes.cbs.exception.CBSException;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.notices.Zone;
+import fr.abes.kafkatosudoc.dto.ERROR_TYPE;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
 import fr.abes.kafkatosudoc.entity.LigneKbart;
@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -74,7 +73,7 @@ public class KbartListener {
      * @param lignesKbart : ligne trouvée dans kafka
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws JsonProcessingException {
+    public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
         log.debug("Entrée dans création à partir du kbart");
         String filename = lignesKbart.key();
         if (!this.workInProgressMap.containsKey(filename))
@@ -179,17 +178,19 @@ public class KbartListener {
         NoticeConcrete notice = null;
         try {
             notice = service.getNoticeFromPpn(ppn);
-            if (notice.getNoticeBiblio() != null) { // TODO doit-on garder ce contrôle ou catcher l'erreur NPE ?
+            if (notice.getNoticeBiblio() != null) {
                 if (!service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
                     service.addNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
                     service.modifierNotice(notice, 1);
                     log.debug("Ajout 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
                 }
-            } // TODO si on garde ce contrôle, que fait-on en cas de null ?
+            } else {
+                this.workInProgressMap.get(filename).addErrorMessages469(ppn, ligneKbart, "","Impossible de trouver la notice", ERROR_TYPE.ADD469);
+            }
         } catch (CBSException | ZoneException e) {
             String message = "PPN : " + ppn + " : " + e.getMessage();
             log.error(message, e.getCause());
-            this.workInProgressMap.get(filename).addErrorMessagesAdd469WithNotice(ppn, ligneKbart, notice != null ? notice.getNoticeBiblio().toString() : "pas de notice trouvée", e.getMessage());
+            this.workInProgressMap.get(filename).addErrorMessages469(ppn, ligneKbart, notice != null ? notice.getNoticeBiblio().toString() : "Impossible d'accéder à la notice", e.getMessage(), ERROR_TYPE.ADD469);
         }
     }
 
@@ -197,17 +198,19 @@ public class KbartListener {
         NoticeConcrete notice = null;
         try {
             notice = service.getNoticeFromPpn(ppn);
-            if (notice.getNoticeBiblio() != null) { // TODO doit-on garder ce contrôle ou catcher l'erreur NPE ?
+            if (notice != null && notice.getNoticeBiblio() != null) {
                 if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
                     service.supprimeNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
                     service.modifierNotice(notice, 1);
                     log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
                 }
-            } // TODO si on garde ce contrôle, que fait-on en cas de null ?
+            } else {
+                this.workInProgressMap.get(filename).addErrorMessages469(ppn, ligneKbart, "","Impossible de trouver la notice", ERROR_TYPE.SUPP469);
+            }
         } catch (CBSException | ZoneException e) {
             String message = "PPN : " + ppn + " : " + e.getMessage();
             log.error(message, e.getCause());
-            this.workInProgressMap.get(filename).addErrorMessagesDelete469(ppn, ligneKbart, notice != null ? notice.getNoticeBiblio().toString() : "pas de notice trouvée", e.getMessage());
+            this.workInProgressMap.get(filename).addErrorMessages469(ppn, ligneKbart, notice != null ? notice.getNoticeBiblio().toString() : "Impossible d'accéder à la notice", e.getMessage(), ERROR_TYPE.SUPP469);
         }
     }
 
@@ -268,7 +271,7 @@ public class KbartListener {
      * @param ligneKbart : enregistrement dans Kafka
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> ligneKbart) throws JsonProcessingException {
+    public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> ligneKbart) {
         log.debug("Entrée dans création ex nihilo");
         String filename = ligneKbart.key();
 
@@ -321,8 +324,6 @@ public class KbartListener {
                     this.workInProgressMapExNihilo.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
-                } catch (IOException e) {
-                    log.warn("Erreur dans la gestion des messages d'erreur liés au traitement dans le Sudoc." + e.getMessage());
                 }
             }
         }
@@ -395,8 +396,6 @@ public class KbartListener {
                     this.workInProgressMapImprime.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
-                } catch (IOException e) {
-                    log.warn("Erreur dans la gestion des messages d'erreur liés au traitement dans le Sudoc." + e.getMessage());
                 }
             }
         }

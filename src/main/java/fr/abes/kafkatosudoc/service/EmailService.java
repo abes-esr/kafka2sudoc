@@ -42,7 +42,7 @@ public class EmailService {
     public void sendErrorsMessageCreateFromKafka(String filename, WorkInProgress workInProgress) {
         JsonObject listErrors = Json.createObjectBuilder()
                 .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).count() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets)", formatListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).toList())
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).count() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets)", formatListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).toList()))
                 .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).count() + " erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets)", formatListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).toList()))
                 .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).count() + " erreur(s) d'ajout de 469", formatListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).toList()))
                 .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).count() + " erreur(s) de suppression de 469", formatListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).toList()))
@@ -76,7 +76,7 @@ public class EmailService {
         sendErrorsMessage(filename, listErrors);
     }
 
-    public void sendErrorsMessage(String filename, JsonObject listErrors) {
+    private void sendErrorsMessage(String filename, JsonObject listErrors) {
         //  Création du mail
         String requestJson = mailToJSON(this.recipient, "[CONVERGENCE]["+env.toUpperCase()+"] Erreurs lors du traitement sur le fichier " + filename, String.valueOf(listErrors));
         //  Envoi du message par mail
@@ -106,7 +106,7 @@ public class EmailService {
         log.info("L'email a été correctement envoyé.");
     }
 
-    protected void sendMail(String requestJson) {
+    private void sendMail(String requestJson) {
         RestTemplate restTemplate = new RestTemplate(); //appel ws qui envoie le mail
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -131,7 +131,7 @@ public class EmailService {
         }
     }
 
-    protected String mailToJSON(String to, String subject, String text) {
+    private String mailToJSON(String to, String subject, String text) {
         String json = "";
         ObjectMapper mapper = new ObjectMapper();
         MailDto mail = new MailDto();
@@ -149,7 +149,7 @@ public class EmailService {
         return json;
     }
 
-    public JsonObject getKbartInfo(String filename) {
+    private JsonObject getKbartInfo(String filename) {
         String provider = CheckFiles.getProviderFromFilename(filename);
         String packageName = CheckFiles.getPackageFromFilename(filename);
 
