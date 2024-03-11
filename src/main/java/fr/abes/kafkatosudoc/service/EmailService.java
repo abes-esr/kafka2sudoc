@@ -3,11 +3,13 @@ package fr.abes.kafkatosudoc.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.abes.kafkatosudoc.dto.ERROR_TYPE;
+import fr.abes.kafkatosudoc.dto.ErrorMessage;
 import fr.abes.kafkatosudoc.dto.mail.MailDto;
 import fr.abes.kafkatosudoc.kafka.WorkInProgress;
 import fr.abes.kafkatosudoc.utils.CheckFiles;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -22,6 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
@@ -36,18 +39,28 @@ public class EmailService {
     @Value("${spring.profiles.active}")
     private String env;
 
-    public void sendErrorsMessageCreateFromKafka(String filename, WorkInProgress workInProgress) throws JsonProcessingException {
+    public void sendErrorsMessageCreateFromKafka(String filename, WorkInProgress workInProgress) {
         JsonObject listErrors = Json.createObjectBuilder()
                 .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).count() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets)", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).toList().toString())
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).count() + " erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets)", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).toList().toString())
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).count() + " erreur(s) d'ajout de 469", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).toList().toString())
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).count() + " erreur(s) de suppression de 469", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).toList().toString())
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).count() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets)", formatListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).toList())
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).count() + " erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets)", formatListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).toList()))
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).count() + " erreur(s) d'ajout de 469", formatListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).toList()))
+                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).count() + " erreur(s) de suppression de 469", formatListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).toList()))
                 .build();
         sendErrorsMessage(filename, listErrors);
     }
 
-    public void sendErrorMessagesExNihilo(String filename, WorkInProgress workInProgress) throws JsonProcessingException {
+    private JsonObjectBuilder formatListToJson(List<ErrorMessage> list) {
+        JsonObjectBuilder jsonObjectBuilder = Json.createObjectBuilder();
+        AtomicInteger i = new AtomicInteger();
+        list.forEach(errorMessage -> {
+            int key = i.getAndIncrement();
+            jsonObjectBuilder.add(String.valueOf(key), errorMessage.getMessage());
+        });
+        return jsonObjectBuilder;
+    }
+
+    public void sendErrorMessagesExNihilo(String filename, WorkInProgress workInProgress) {
         JsonObject listErrors = Json.createObjectBuilder()
                 .add("kbart info : ", getKbartInfo(filename))
                 .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO)).count() + " erreur(s) lors de la création de notice(s) ExNihilo", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO)).toList().toString())
@@ -55,7 +68,7 @@ public class EmailService {
         sendErrorsMessage(filename, listErrors);
     }
 
-    public void sendErrorMessagesImprime(String filename, WorkInProgress workInProgress) throws JsonProcessingException {
+    public void sendErrorMessagesImprime(String filename, WorkInProgress workInProgress) {
         JsonObject listErrors = Json.createObjectBuilder()
                 .add("kbart info : ", getKbartInfo(filename))
                 .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME)).count() + " erreur(s) lors de la création de notice(s) électronique(s) à partir d'un imprimé",workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME)).toList().toString())
