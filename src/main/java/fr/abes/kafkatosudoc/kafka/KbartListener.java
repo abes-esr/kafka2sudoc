@@ -320,7 +320,7 @@ public class KbartListener {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
                     service.disconnect();
                     if (!this.workInProgressMapExNihilo.get(filename).getErrorMessages().isEmpty())
-                        emailService.sendErrorMessagesExNihilo(filename, this.workInProgressMap.get(filename));
+                        emailService.sendErrorMessagesExNihilo(filename, this.workInProgressMapExNihilo.get(filename));
                     this.workInProgressMapExNihilo.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
@@ -392,7 +392,7 @@ public class KbartListener {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
                     service.disconnect();
                     if (!this.workInProgressMapImprime.get(filename).getErrorMessages().isEmpty())
-                        emailService.sendErrorMessagesImprime(filename, this.workInProgressMap.get(filename));
+                        emailService.sendErrorMessagesImprime(filename, this.workInProgressMapImprime.get(filename));
                     this.workInProgressMapImprime.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
