@@ -52,13 +52,13 @@ public class KbartListener {
 
     private final EmailService emailService;
 
-    private final Map<String, WorkInProgress> workInProgressMap;
+    private final Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMap;
 
-    private final Map<String, WorkInProgress> workInProgressMapExNihilo;
+    private final Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMapExNihilo;
 
-    private final Map<String, WorkInProgress> workInProgressMapImprime;
+    private final Map<String, WorkInProgress<LigneKbartImprime>> workInProgressMapImprime;
 
-    public KbartListener(UtilsMapper mapper, BaconService baconService, EmailService emailService, Map<String, WorkInProgress> workInProgressMap, Map<String, WorkInProgress> workInProgressMapExNihilo, Map<String, WorkInProgress> workInProgressMapImprime) {
+    public KbartListener(UtilsMapper mapper, BaconService baconService, EmailService emailService, Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMap, Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMapExNihilo, Map<String, WorkInProgress<LigneKbartImprime>> workInProgressMapImprime) {
         this.mapper = mapper;
         this.baconService = baconService;
         this.emailService = emailService;
@@ -77,7 +77,7 @@ public class KbartListener {
         log.debug("Entrée dans création à partir du kbart");
         String filename = lignesKbart.key();
         if (!this.workInProgressMap.containsKey(filename))
-            this.workInProgressMap.put(lignesKbart.key(), new WorkInProgress());
+            this.workInProgressMap.put(lignesKbart.key(), new WorkInProgress<LigneKbartConnect>());
 
         if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
             //on alimente la liste des notices d'un package qui sera traitée intégralement
@@ -277,7 +277,7 @@ public class KbartListener {
 
         // S'il s'agit d'un premier message d'un fichier kbart, on créé un WorkInProgress avec le nom du fichier et le nombre total de ligne
         if (!this.workInProgressMapExNihilo.containsKey(filename)) {
-            this.workInProgressMapExNihilo.put(filename, new WorkInProgress());
+            this.workInProgressMapExNihilo.put(filename, new WorkInProgress<>());
             ligneKbart.headers().forEach(header -> {
                 if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
                     this.workInProgressMapExNihilo.get(filename).setNbLinesTotal(Integer.parseInt(new String(header.value()))); //on indique le nb total de lignes du fichier
@@ -320,7 +320,7 @@ public class KbartListener {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
                     service.disconnect();
                     if (!this.workInProgressMapExNihilo.get(filename).getErrorMessages().isEmpty())
-                        emailService.sendErrorMessagesExNihilo(filename, this.workInProgressMap.get(filename));
+                        emailService.sendErrorMessagesExNihilo(filename, this.workInProgressMapExNihilo.get(filename));
                     this.workInProgressMapExNihilo.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
@@ -342,7 +342,7 @@ public class KbartListener {
 
         // S'il s'agit d'un premier message d'un fichier kbart, on créé un WorkInProgress avec le nom du fichier et le nombre total de ligne
         if (!this.workInProgressMapImprime.containsKey(filename)) {
-            this.workInProgressMapImprime.put(filename, new WorkInProgress());
+            this.workInProgressMapImprime.put(filename, new WorkInProgress<>());
             lignesKbart.headers().forEach(header -> {
                 if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
                     this.workInProgressMapImprime.get(filename).setNbLinesTotal(Integer.parseInt(new String(header.value()))); //on indique le nb total de lignes du fichier
@@ -352,7 +352,7 @@ public class KbartListener {
 
         // On incrémente le compteur de ligne et on ajoute chaque ligne dans le WorkInProgress associé au nom du fichier kbart
         this.workInProgressMapImprime.get(filename).incrementCurrentNbLignes();
-        this.workInProgressMapImprime.get(filename).addNoticeImprime(lignesKbart.value());
+        this.workInProgressMapImprime.get(filename).addNotice(lignesKbart.value());
 
         //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
         if (this.workInProgressMapImprime.get(filename).getCurrentNbLines().equals(this.workInProgressMapImprime.get(filename).getNbLinesTotal())) {
@@ -366,8 +366,8 @@ public class KbartListener {
                 //authentification sur la base maitre du sudoc pour récupérer la notice imprimée
                 service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
 
-                if (this.workInProgressMapImprime.get(filename).getListeNoticesImprime() != null && !this.workInProgressMapImprime.get(filename).getListeNoticesImprime().isEmpty()) {
-                    for (LigneKbartImprime ligneKbartImprime : this.workInProgressMapImprime.get(filename).getListeNoticesImprime()) {
+                if (this.workInProgressMapImprime.get(filename).getListeNotices() != null && !this.workInProgressMapImprime.get(filename).getListeNotices().isEmpty()) {
+                    for (LigneKbartImprime ligneKbartImprime : this.workInProgressMapImprime.get(filename).getListeNotices()) {
                         KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
                         kbartAndImprimeDto.setKbart(mapper.map(ligneKbartImprime, LigneKbartImprime.class));
                         kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(ligneKbartImprime.getPpn().toString()));
@@ -392,7 +392,7 @@ public class KbartListener {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
                     service.disconnect();
                     if (!this.workInProgressMapImprime.get(filename).getErrorMessages().isEmpty())
-                        emailService.sendErrorMessagesImprime(filename, this.workInProgressMap.get(filename));
+                        emailService.sendErrorMessagesImprime(filename, this.workInProgressMapImprime.get(filename));
                     this.workInProgressMapImprime.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");

@@ -1,5 +1,7 @@
 package fr.abes.kafkatosudoc.configuration;
 
+import fr.abes.LigneKbartConnect;
+import fr.abes.LigneKbartImprime;
 import fr.abes.kafkatosudoc.kafka.WorkInProgress;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
@@ -74,7 +76,17 @@ public class KafkaConfig {
     }
 
     @Bean
-    public Map<String, WorkInProgress> workInProgressMap() {
+    public Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMap() {
+        return Collections.synchronizedMap(new HashMap<>());
+    }
+
+    @Bean
+    public Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMapExNihilo() {
+        return Collections.synchronizedMap(new HashMap<>());
+    }
+
+    @Bean
+    public Map<String, WorkInProgress<LigneKbartImprime>> workInProgressMapImprime() {
         return Collections.synchronizedMap(new HashMap<>());
     }
 }

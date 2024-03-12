@@ -2,6 +2,8 @@ package fr.abes.kafkatosudoc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.abes.LigneKbartConnect;
+import fr.abes.LigneKbartImprime;
 import fr.abes.kafkatosudoc.dto.ERROR_TYPE;
 import fr.abes.kafkatosudoc.dto.ErrorMessage;
 import fr.abes.kafkatosudoc.dto.mail.MailDto;
@@ -39,7 +41,7 @@ public class EmailService {
     @Value("${spring.profiles.active}")
     private String env;
 
-    public void sendErrorsMessageCreateFromKafka(String filename, WorkInProgress workInProgress) {
+    public void sendErrorsMessageCreateFromKafka(String filename, WorkInProgress<LigneKbartConnect> workInProgress) {
         JsonObject listErrors = Json.createObjectBuilder()
                 .add("kbart info : ", getKbartInfo(filename))
                 .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).count() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets)", formatListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).toList()))
@@ -60,7 +62,7 @@ public class EmailService {
         return jsonObjectBuilder;
     }
 
-    public void sendErrorMessagesExNihilo(String filename, WorkInProgress workInProgress) {
+    public void sendErrorMessagesExNihilo(String filename, WorkInProgress<LigneKbartConnect> workInProgress) {
         JsonObject listErrors = Json.createObjectBuilder()
                 .add("kbart info : ", getKbartInfo(filename))
                 .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO)).count() + " erreur(s) lors de la création de notice(s) ExNihilo", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO)).toList().toString())
@@ -68,7 +70,7 @@ public class EmailService {
         sendErrorsMessage(filename, listErrors);
     }
 
-    public void sendErrorMessagesImprime(String filename, WorkInProgress workInProgress) {
+    public void sendErrorMessagesImprime(String filename, WorkInProgress<LigneKbartImprime> workInProgress) {
         JsonObject listErrors = Json.createObjectBuilder()
                 .add("kbart info : ", getKbartInfo(filename))
                 .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME)).count() + " erreur(s) lors de la création de notice(s) électronique(s) à partir d'un imprimé",workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME)).toList().toString())
