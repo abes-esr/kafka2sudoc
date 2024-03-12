@@ -159,7 +159,9 @@ public class SudocService {
 	 * @return la notice après suppresion du lien vers la notice bouquet
 	 */
 	public Biblio supprimeNoticeBouquetInPpn(Biblio notice, String ppnNoticeBouquet) {
-		notice.deleteZoneWithValue("469", "$0", ppnNoticeBouquet);
+		if (notice.findZones("469").stream().anyMatch(zone -> zone.findSubLabel("$0").equals(ppnNoticeBouquet))) {
+			notice.deleteZoneWithValue("469", "$0", ppnNoticeBouquet);
+		}
 		return notice;
 	}
 
