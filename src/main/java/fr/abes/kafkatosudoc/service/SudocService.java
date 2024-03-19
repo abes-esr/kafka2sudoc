@@ -159,7 +159,7 @@ public class SudocService {
 	 * @return la notice après suppresion du lien vers la notice bouquet
 	 */
 	public Biblio supprimeNoticeBouquetInPpn(Biblio notice, String ppnNoticeBouquet) {
-		if (notice.findZones("469").stream().anyMatch(zone -> zone.findSubLabel("$0").equals(ppnNoticeBouquet))) {
+		if (notice.findZones("469").stream().anyMatch(zone -> (zone.findSubLabel("$0") != null && zone.findSubLabel("$0").equals(ppnNoticeBouquet)))) {
 			notice.deleteZoneWithValue("469", "$0", ppnNoticeBouquet);
 		}
 		return notice;
@@ -191,6 +191,7 @@ public class SudocService {
 	 * @throws CBSException erreur sur la commande CBS
 	 */
 	public void voirNotice(int pos) throws CBSException {
+		log.debug("passage notice suivante");
 		this.cbs.view(String.valueOf(pos), false, "UNM");
 	}
 
