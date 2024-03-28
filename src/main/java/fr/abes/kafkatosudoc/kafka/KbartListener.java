@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -73,7 +74,7 @@ public class KbartListener {
      * @param lignesKbart : ligne trouvée dans kafka
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
+    public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws IOException {
         log.debug("Entrée dans création à partir du kbart");
         String filename = lignesKbart.key();
         if (!this.workInProgressMap.containsKey(filename))
@@ -252,11 +253,13 @@ public class KbartListener {
             }
             if (!listError.isEmpty()) {
                 listError.add(0, listError.size() + " erreur(s) lors de la suppression de lien(s) vers une notice bouquet : " + System.lineSeparator());
-                emailService.sendErrorMailProviderPackageDeleted(listError);
+                emailService.sendErrorMailProviderPackageDeleted(listError, provider + "_" + packageName);
             }
         } catch (CBSException e) {
             log.error(e.getMessage(), e.getCause());
             emailService.sendErrorMailSuppressionPackage(packageName, provider, e);
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur lors de l'envoi du mail : " + e);
         } finally {
             try {
                 service.disconnect();
@@ -324,6 +327,8 @@ public class KbartListener {
                     this.workInProgressMapExNihilo.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
+                } catch (IOException e) {
+                    throw new RuntimeException("Erreur lors de l'envoi du mail : " + e);
                 }
             }
         }
@@ -396,6 +401,8 @@ public class KbartListener {
                     this.workInProgressMapImprime.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
+                } catch (IOException e) {
+                    throw new RuntimeException("Erreur lors de l'envoi du mail : " + e);
                 }
             }
         }
