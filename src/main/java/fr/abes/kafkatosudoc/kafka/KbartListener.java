@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.*;
 
 @Service
@@ -73,7 +74,7 @@ public class KbartListener {
      * @param lignesKbart : ligne trouvée dans kafka
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory")
-    public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) {
+    public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws IOException {
         log.debug("Entrée dans création à partir du kbart");
         String filename = lignesKbart.key();
         if (!this.workInProgressMap.containsKey(filename))
@@ -252,11 +253,13 @@ public class KbartListener {
             }
             if (!listError.isEmpty()) {
                 listError.add(0, listError.size() + " erreur(s) lors de la suppression de lien(s) vers une notice bouquet : " + System.lineSeparator());
-                emailService.sendErrorMailProviderPackageDeleted(listError);
+                emailService.sendErrorMailProviderPackageDeleted(listError, provider + "_" + packageName);
             }
         } catch (CBSException e) {
             log.error(e.getMessage(), e.getCause());
             emailService.sendErrorMailSuppressionPackage(packageName, provider, e);
+        } catch (IOException e) {
+            throw new RuntimeException("Erreur lors de l'envoi du mail : " + e);
         } finally {
             try {
                 service.disconnect();
@@ -269,7 +272,8 @@ public class KbartListener {
 
     /**
      * @param ligneKbart : enregistrement dans Kafka
-     */
+     **/
+
     @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> ligneKbart) {
         log.debug("Entrée dans création ex nihilo");
@@ -324,6 +328,8 @@ public class KbartListener {
                     this.workInProgressMapExNihilo.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
+                } catch (IOException e) {
+                    throw new RuntimeException("Erreur lors de l'envoi du mail : " + e);
                 }
             }
         }
@@ -362,15 +368,17 @@ public class KbartListener {
             String packageName = CheckFiles.getPackageFromFilename(filename);
             SudocService service = new SudocService();
             NoticeConcrete noticeElec = null;
+            String ppn = "";
             try {
                 //authentification sur la base maitre du sudoc pour récupérer la notice imprimée
                 service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
 
                 if (this.workInProgressMapImprime.get(filename).getListeNotices() != null && !this.workInProgressMapImprime.get(filename).getListeNotices().isEmpty()) {
                     for (LigneKbartImprime ligneKbartImprime : this.workInProgressMapImprime.get(filename).getListeNotices()) {
+                        ppn = ligneKbartImprime.getPpn().toString();
                         KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
                         kbartAndImprimeDto.setKbart(mapper.map(ligneKbartImprime, LigneKbartImprime.class));
-                        kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(ligneKbartImprime.getPpn().toString()));
+                        kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(ppn));
                         noticeElec = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
                         //Ajout provider display name en 214 $c 2è occurrence
                         String providerDisplay = baconService.getProviderDisplayName(provider);
@@ -386,7 +394,7 @@ public class KbartListener {
                 }
             } catch (CBSException | ZoneException e) {
                 log.error(e.getMessage());
-                this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(lignesKbart.value().getPpn().toString(), noticeElec != null ? noticeElec.getNoticeBiblio().toString() : "pas de notice trouvée", e.getMessage());
+                this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(ppn, noticeElec != null ? noticeElec.getNoticeBiblio().toString() : "pas de notice trouvée", e.getMessage());
             } finally {
                 try {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
@@ -396,6 +404,8 @@ public class KbartListener {
                     this.workInProgressMapImprime.remove(filename);
                 } catch (CBSException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
+                } catch (IOException e) {
+                    throw new RuntimeException("Erreur lors de l'envoi du mail : " + e);
                 }
             }
         }
