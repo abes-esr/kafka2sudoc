@@ -84,8 +84,8 @@ public class EmailService {
     }
 
     private void sendErrorsMessage(String filename, JsonObject listErrors) throws IOException {
-        // Création du chemin d'accès pour le fichier .csv
-        Path jsonFilePath = Path.of("errorsList_" + filename + ".txt");
+        // Création du chemin d'accès pour le fichier .json
+        Path jsonFilePath = Path.of("errorsList_" + filename + ".json");
 
         //  Création du fichier
         createAttachment(listErrors, jsonFilePath);
@@ -120,8 +120,8 @@ public class EmailService {
     }
 
     public void sendErrorMailProviderPackageDeleted(List<String> listError, String filename) throws IOException {
-        // Création du chemin d'accès pour le fichier .csv
-        Path jsonFilePath = Path.of("errorsList_" + filename + ".txt");
+        // Création du chemin d'accès pour le fichier .json
+        Path jsonFilePath = Path.of("errorsList_" + filename + ".json");
 
         // Création de la liste
         JsonObject listErrors = Json.createObjectBuilder()
@@ -240,10 +240,10 @@ public class EmailService {
                 .build();
     }
 
-    protected void createAttachment(JsonObject dataLines, Path csvPath) {
+    protected void createAttachment(JsonObject dataLines, Path path) {
         try {
             //  Création du fichier
-            Writer writer = Files.newBufferedWriter(csvPath);
+            Writer writer = Files.newBufferedWriter(path);
 
             // Inscription des lignes dans le fichier
             writer.write(String.valueOf(dataLines));

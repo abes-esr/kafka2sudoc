@@ -48,15 +48,15 @@ public class WorkInProgress<T> {
     public void addErrorMessages469(String ppn, LigneKbartConnect ligneKbart, String notice, String erreur, ERROR_TYPE errortype) {
         JsonObject erreurToAdd = Json.createObjectBuilder()
                 .add("PPN", ppn)
+                .add("Erreur", erreur)
                 .add("Ligne Kbart", ligneKbart.toString().replace("\"", ""))
                 .add("Notice", notice)
-                .add("Erreur", erreur)
                 .build();
         this.errorMessages.add(new ErrorMessage(errortype, erreurToAdd.toString().replace("\"", "")));
     }
 
     public void addErrorMessageExNihilo(String ppn, String erreur) {
-        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.EXNIHILO, "{ppn : " + ppn + ", erreur : " + erreur + "}"));
+        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.EXNIHILO, "{Ppn : " + ppn + ", Erreur : " + erreur + "}"));
 
     }
 
