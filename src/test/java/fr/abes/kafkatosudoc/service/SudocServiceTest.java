@@ -4,10 +4,13 @@ import fr.abes.cbs.exception.CBSException;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.process.ProcessCBS;
+import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -23,13 +26,13 @@ class SudocServiceTest {
 
     }
     @Test
-    void getNoticeBouquetException() throws CBSException {
-        Mockito.when(cbs.search(Mockito.anyString())).thenThrow(new CBSException("V/VERROR", "Erreur Recherche"));
-        Assertions.assertThrows(CBSException.class, () -> sudocService.getNoticeBouquet("CAIRN", "GLOBAL"));
+    void getNoticeBouquetException() throws IOException {
+        Mockito.when(cbs.search(Mockito.anyString())).thenThrow(new IOException("Erreur Recherche"));
+        Assertions.assertThrows(IOException.class, () -> sudocService.getNoticeBouquet("CAIRN", "GLOBAL"));
     }
 
     @Test
-    void getNoticeBouquetUneNotice() throws CBSException {
+    void getNoticeBouquetUneNotice() throws CBSException, IOException {
         Mockito.when(cbs.search(Mockito.anyString())).thenReturn("test");
         Mockito.when(cbs.getNbNotices()).thenReturn(1);
         Mockito.when(cbs.getPpnEncours()).thenReturn("111111111");
@@ -37,11 +40,11 @@ class SudocServiceTest {
     }
 
     @Test
-    void getNoticeBouquetPlusieursNotices() throws CBSException {
+    void getNoticeBouquetPlusieursNotices() throws IOException {
         Mockito.when(cbs.search(Mockito.anyString())).thenReturn("test");
         Mockito.when(cbs.getNbNotices()).thenReturn(2);
         CBSException result = assertThrows(CBSException.class, () -> sudocService.getNoticeBouquet("CAIRN", "GLOBAL"));
-        Assertions.assertEquals("V/VERROR", result.getCodeErreur());
+        Assertions.assertEquals(Level.WARN, result.getCodeErreur());
         Assertions.assertEquals("Provider : CAIRN / package : GLOBAL : Recherche de la notice bouquet échouée", result.getMessage());
     }
 
