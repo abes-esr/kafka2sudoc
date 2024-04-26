@@ -11,6 +11,7 @@ import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
 import fr.abes.kafkatosudoc.entity.LigneKbart;
 import fr.abes.kafkatosudoc.entity.ProviderPackage;
+import fr.abes.kafkatosudoc.exception.CommException;
 import fr.abes.kafkatosudoc.exception.IllegalDateException;
 import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.EmailService;
@@ -22,6 +23,8 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -78,7 +81,7 @@ public class KbartListener {
         log.debug("Entrée dans création à partir du kbart");
         String filename = lignesKbart.key();
         if (!this.workInProgressMap.containsKey(filename))
-            this.workInProgressMap.put(lignesKbart.key(), new WorkInProgress<LigneKbartConnect>());
+            this.workInProgressMap.put(lignesKbart.key(), new WorkInProgress<>());
 
         if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
             //on alimente la liste des notices d'un package qui sera traitée intégralement
@@ -113,8 +116,7 @@ public class KbartListener {
             packageKbartDto = new PackageKbartDto(packageName, dateFromFile, provider);
 
             ProviderPackage lastPackage = baconService.findLastVersionOfPackage(packageKbartDto);
-            service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
-            String ppnNoticeBouquet = service.getNoticeBouquet(packageKbartDto.getProvider(), packageKbartDto.getPackageName());
+            String ppnNoticeBouquet = getNoticeBouquet(service, provider, packageName);
             //cas ou on a une version antérieure de package
             Set<LigneKbart> ppnLastVersion = new HashSet<>();
             if (lastPackage != null) {
@@ -159,7 +161,8 @@ public class KbartListener {
                     suppression469(ppnNoticeBouquet, ppn, mapper.map(listPpnsFromListeNotices.get(0), LigneKbartConnect.class), filename, service);
                 }
             }
-        } catch (CBSException e) {
+        } catch (CBSException | IOException e) {
+            //erreur à l'authentification
             log.error(e.getMessage(), e.getCause());
             this.workInProgressMap.get(filename).addErrorMessagesConnectionCbs("Erreur : " + e.getMessage());
         } catch (IllegalDateException e) {
@@ -174,8 +177,27 @@ public class KbartListener {
         }
     }
 
-    private void ajout469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename, SudocService service) {
-        log.debug(ligneKbart.toString());
+
+    @Retryable(maxAttempts = 4, retryFor = IOException.class, noRetryFor = CBSException.class, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private String getNoticeBouquet(SudocService service, String provider, String packageName) throws CBSException, IOException {
+        try {
+            service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            return service.getNoticeBouquet(provider, packageName);
+        } catch (IOException e) {
+            //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
+            try {
+                log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
+                service.disconnect();
+                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            } catch (CBSException ex) {
+                log.error(ex.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @Retryable(maxAttempts = 4, retryFor = IOException.class, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private void ajout469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename, SudocService service) throws IOException {
         NoticeConcrete notice = null;
         try {
             notice = service.getNoticeFromPpn(ppn);
@@ -186,16 +208,27 @@ public class KbartListener {
                     log.debug("Ajout 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
                 }
             } else {
-                this.workInProgressMap.get(filename).addErrorMessages469(ppn, ligneKbart, "","Impossible de trouver la notice", ERROR_TYPE.ADD469);
+                this.workInProgressMap.get(filename).addErrorMessages469(ppn, ligneKbart, "", "Impossible de trouver la notice", ERROR_TYPE.ADD469);
             }
         } catch (CBSException | ZoneException e) {
             String message = "PPN : " + ppn + " : " + e.getMessage();
             log.error(message, e.getCause());
             this.workInProgressMap.get(filename).addErrorMessages469(ppn, ligneKbart, notice != null ? notice.getNoticeBiblio().toString() : "Impossible d'accéder à la notice", e.getMessage(), ERROR_TYPE.ADD469);
+        } catch (IOException e) {
+            //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
+            try {
+                log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
+                service.disconnect();
+                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            } catch (CBSException ex) {
+                log.error(ex.getMessage());
+            }
+            throw e;
         }
     }
 
-    private void suppression469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename, SudocService service) {
+    @Retryable(maxAttempts = 4, retryFor = IOException.class, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private void suppression469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename, SudocService service) throws IOException {
         NoticeConcrete notice = null;
         try {
             notice = service.getNoticeFromPpn(ppn);
@@ -206,12 +239,21 @@ public class KbartListener {
                     log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZone("003", 0).getValeur() + " modifiée avec succès");
                 }
             } else {
-                this.workInProgressMap.get(filename).addErrorMessages469(ppn, ligneKbart, "","Impossible de trouver la notice", ERROR_TYPE.SUPP469);
+                this.workInProgressMap.get(filename).addErrorMessages469(ppn, ligneKbart, "", "Impossible de trouver la notice", ERROR_TYPE.SUPP469);
             }
         } catch (CBSException | ZoneException e) {
             String message = "PPN : " + ppn + " : " + e.getMessage();
             log.error(message, e.getCause());
             this.workInProgressMap.get(filename).addErrorMessages469(ppn, ligneKbart, notice != null ? notice.getNoticeBiblio().toString() : "Impossible d'accéder à la notice", e.getMessage(), ERROR_TYPE.SUPP469);
+        } catch (IOException e) {
+            //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
+            try {
+                service.disconnect();
+                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            } catch (CBSException ex) {
+                log.error(ex.getMessage());
+            }
+            throw e;
         }
     }
 
@@ -227,35 +269,12 @@ public class KbartListener {
         SudocService service = new SudocService();
         List<String> listError = new ArrayList<>();
         try {
-            service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
-            //recherche de la notice bouquet
-            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
-            //affichage des notices liées
-            //boucle sur les notices liées à partir de la seconde (la première étant la notice bouquet elle-même)
-            int nbNoticesLiees = service.getNoticesLiees();
-            for (int i = 2; i <= nbNoticesLiees; i++) {
-                String ppnCourant = "";
-                try {
-                    service.voirNotice(i);
-                    NoticeConcrete notice = service.passageEditionNotice(i);
-                    ppnCourant = notice.getNoticeBiblio().findZone("003", 0).getValeur();
-                    log.debug(ppnCourant);
-                    if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
-                        service.supprimeNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
-                        service.modifierNotice(notice, i);
-                        log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZones("003").get(0).getValeur() + " modifiée avec succès");
-                    }
-                } catch (CBSException | ZoneException e) {
-                    log.error(e.getMessage(), e.getCause());
-                    listError.add("Notice bouquet " + ppnNoticeBouquet + " - notice " + ppnCourant + " erreur : " + e.getMessage());
-                    service.retourArriere();
-                }
-            }
+            traiterNoticesADelier(service, provider, packageName, listError);
             if (!listError.isEmpty()) {
                 listError.add(0, listError.size() + " erreur(s) lors de la suppression de lien(s) vers une notice bouquet : " + System.lineSeparator());
                 emailService.sendErrorMailProviderPackageDeleted(listError, provider + "_" + packageName);
             }
-        } catch (CBSException e) {
+        } catch (CBSException | CommException e) {
             log.error(e.getMessage(), e.getCause());
             emailService.sendErrorMailSuppressionPackage(packageName, provider, e);
         } catch (IOException e) {
@@ -267,13 +286,55 @@ public class KbartListener {
                 log.warn("Erreur de déconnexion du Sudoc");
             }
         }
-
     }
+
+    @Retryable(maxAttempts = 4, retryFor = CommException.class, noRetryFor = {CBSException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private void traiterNoticesADelier(SudocService service, String provider, String packageName, List<String> listError) throws CBSException, CommException {
+        try {
+            String ppnNoticeBouquet = getNoticeBouquet(service, provider, packageName);
+            log.debug("récupération notice bouquet ok");
+            //affichage des notices liées
+            //boucle sur les notices liées à partir de la seconde (la première étant la notice bouquet elle-même)
+            int nbNoticesLiees = service.getNoticesLiees();
+            log.debug("nombre de notices liées : " + nbNoticesLiees);
+            for (int i = 2; i <= nbNoticesLiees; i++) {
+                suppressionLien469(service, listError, i, ppnNoticeBouquet);
+            }
+        } catch (CommException | IOException ex) {
+            service.decoRecoCbs(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, ex);
+        }
+    }
+
+    private void suppressionLien469(SudocService service, List<String> listError, int i, String ppnNoticeBouquet) throws CBSException, CommException {
+        String ppnCourant = "";
+        try {
+            service.voirNotice(i);
+            NoticeConcrete notice = service.passageEditionNotice(i);
+            ppnCourant = notice.getNoticeBiblio().findZone("003", 0).getValeur();
+            log.debug(ppnCourant);
+            if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
+                service.supprimeNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
+                service.modifierNotice(notice, i);
+                log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZones("003").get(0).getValeur() + " modifiée avec succès");
+            }
+        } catch (CBSException | ZoneException e) {
+            log.error(e.getMessage(), e.getCause());
+            listError.add("Notice bouquet " + ppnNoticeBouquet + " - notice " + ppnCourant + " erreur : " + e.getMessage());
+            try {
+                service.retourArriere();
+            } catch (IOException ex) {
+                throw new CommException(ex);
+            }
+        } catch (IOException e) {
+            throw new CommException(e);
+        }
+    }
+
+
 
     /**
      * @param ligneKbart : enregistrement dans Kafka
-     **/
-
+     */
     @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> ligneKbart) {
         log.debug("Entrée dans création ex nihilo");
@@ -301,22 +362,13 @@ public class KbartListener {
                 String provider = CheckFiles.getProviderFromFilename(filename);
                 String packageName = CheckFiles.getPackageFromFilename(filename);
                 service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
-
                 if (this.workInProgressMapExNihilo.get(filename).getListeNotices() != null && !this.workInProgressMapExNihilo.get(filename).getListeNotices().isEmpty()) {
                     for (LigneKbartConnect ligneKbartConnect : this.workInProgressMapExNihilo.get(filename).getListeNotices()) {
-                        NoticeConcrete notice = mapper.map(ligneKbartConnect, NoticeConcrete.class);
-                        //Ajout provider display name en 214 $c 2è occurrence
-                        String providerDisplay = baconService.getProviderDisplayName(provider);
-                        if (providerDisplay != null) {
-                            notice.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
-                        }
-                        service.addLibelleNoticeBouquetInPpn(notice.getNoticeBiblio(), provider + "_" + packageName);
-                        service.creerNotice(notice);
-                        log.debug("Ajout notice exNihilo effectué");
+                        creerNoticeExNihilo(ligneKbartConnect, provider, service, packageName);
                     }
                 }
 
-            } catch (CBSException | ZoneException e) {
+            } catch (CBSException | ZoneException | IOException e) {
                 log.error(e.getMessage());
                 this.workInProgressMapExNihilo.get(filename).addErrorMessageExNihilo(ligneKbart.value().getBESTPPN().toString(), e.getMessage());
             } finally {
@@ -326,14 +378,37 @@ public class KbartListener {
                     if (!this.workInProgressMapExNihilo.get(filename).getErrorMessages().isEmpty())
                         emailService.sendErrorMessagesExNihilo(filename, this.workInProgressMapExNihilo.get(filename));
                     this.workInProgressMapExNihilo.remove(filename);
-                } catch (CBSException e) {
+                } catch (CBSException | IOException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
-                } catch (IOException e) {
-                    throw new RuntimeException("Erreur lors de l'envoi du mail : " + e);
                 }
             }
         }
 
+    }
+
+    @Retryable(maxAttempts = 4, retryFor = IOException.class, noRetryFor = {CBSException.class, ZoneException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private void creerNoticeExNihilo(LigneKbartConnect ligneKbartConnect, String provider, SudocService service, String packageName) throws ZoneException, CBSException, IOException {
+        try {
+            NoticeConcrete notice = mapper.map(ligneKbartConnect, NoticeConcrete.class);
+            //Ajout provider display name en 214 $c 2è occurrence
+            String providerDisplay = baconService.getProviderDisplayName(provider);
+            if (providerDisplay != null) {
+                notice.getNoticeBiblio().findZone("214", 1).addSubLabel("$c", providerDisplay);
+            }
+            service.addLibelleNoticeBouquetInPpn(notice.getNoticeBiblio(), provider + "_" + packageName);
+            service.creerNotice(notice);
+        } catch (IOException e) {
+            //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
+            try {
+                log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
+                service.disconnect();
+                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            } catch (CBSException | IOException ex) {
+                log.error(ex.getMessage());
+            }
+            throw e;
+        }
+        log.debug("Ajout notice exNihilo effectué");
     }
 
     /**
@@ -368,33 +443,26 @@ public class KbartListener {
             String packageName = CheckFiles.getPackageFromFilename(filename);
             SudocService service = new SudocService();
             NoticeConcrete noticeElec = null;
-            String ppn = "";
             try {
                 //authentification sur la base maitre du sudoc pour récupérer la notice imprimée
                 service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
-
                 if (this.workInProgressMapImprime.get(filename).getListeNotices() != null && !this.workInProgressMapImprime.get(filename).getListeNotices().isEmpty()) {
                     for (LigneKbartImprime ligneKbartImprime : this.workInProgressMapImprime.get(filename).getListeNotices()) {
-                        ppn = ligneKbartImprime.getPpn().toString();
-                        KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
-                        kbartAndImprimeDto.setKbart(mapper.map(ligneKbartImprime, LigneKbartImprime.class));
-                        kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(ppn));
-                        noticeElec = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
-                        //Ajout provider display name en 214 $c 2è occurrence
-                        String providerDisplay = baconService.getProviderDisplayName(provider);
-                        if (providerDisplay != null) {
-                            List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 2]")).toList();
-                            for (Zone zone : zones214)
-                                zone.addSubLabel("c", providerDisplay);
-                        }
-                        service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
-                        service.creerNotice(noticeElec);
-                        log.debug("Création notice à partir de l'imprimée terminée");
+                        noticeElec = creerNoticeAPartirImprime(ligneKbartImprime, provider, packageName, service);
                     }
                 }
             } catch (CBSException | ZoneException e) {
                 log.error(e.getMessage());
-                this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(ppn, noticeElec != null ? noticeElec.getNoticeBiblio().toString() : "pas de notice trouvée", e.getMessage());
+                this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(lignesKbart.value().getPpn().toString(), noticeElec != null ? noticeElec.getNoticeBiblio().toString() : "pas de notice trouvée", e.getMessage());
+            } catch (IOException e) {
+                //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
+                try {
+                    log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
+                    service.disconnect();
+                    service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+                } catch (CBSException | IOException ex) {
+                    log.error(ex.getMessage());
+                }
             } finally {
                 try {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
@@ -402,13 +470,43 @@ public class KbartListener {
                     if (!this.workInProgressMapImprime.get(filename).getErrorMessages().isEmpty())
                         emailService.sendErrorMessagesImprime(filename, this.workInProgressMapImprime.get(filename));
                     this.workInProgressMapImprime.remove(filename);
-                } catch (CBSException e) {
+                } catch (CBSException | IOException e) {
                     log.warn("Erreur de déconnexion du Sudoc");
-                } catch (IOException e) {
-                    throw new RuntimeException("Erreur lors de l'envoi du mail : " + e);
                 }
             }
         }
 
+    }
+
+    @Retryable(maxAttempts = 4, retryFor = IOException.class, noRetryFor = {CBSException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private NoticeConcrete creerNoticeAPartirImprime(LigneKbartImprime ligneKbartImprime, String provider, String packageName, SudocService service) throws ZoneException, CBSException, IOException {
+        NoticeConcrete noticeElec;
+        KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
+        kbartAndImprimeDto.setKbart(mapper.map(ligneKbartImprime, LigneKbartImprime.class));
+        try {
+            kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(ligneKbartImprime.getPpn().toString()));
+            noticeElec = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+            //Ajout provider display name en 214 $c 2è occurrence
+            String providerDisplay = baconService.getProviderDisplayName(provider);
+            if (providerDisplay != null) {
+                List<Zone> zones214 = noticeElec.getNoticeBiblio().findZones("214").stream().filter(zone -> Arrays.toString(zone.getIndicateurs()).equals("[#, 2]")).toList();
+                for (Zone zone : zones214)
+                    zone.addSubLabel("c", providerDisplay);
+            }
+            service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
+            service.creerNotice(noticeElec);
+            log.debug("Création notice à partir de l'imprimée terminée");
+            return noticeElec;
+        } catch (IOException e) {
+            //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
+            try {
+                log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
+                service.disconnect();
+                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            } catch (CBSException | IOException ex) {
+                log.error(ex.getMessage());
+            }
+            throw e;
+        }
     }
 }
