@@ -11,6 +11,7 @@ import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.dto.PackageKbartDto;
 import fr.abes.kafkatosudoc.entity.LigneKbart;
 import fr.abes.kafkatosudoc.entity.ProviderPackage;
+import fr.abes.kafkatosudoc.exception.CommException;
 import fr.abes.kafkatosudoc.exception.IllegalDateException;
 import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.EmailService;
@@ -197,7 +198,6 @@ public class KbartListener {
 
     @Retryable(maxAttempts = 4, retryFor = IOException.class, backoff = @Backoff(delay = 1000, multiplier = 2))
     private void ajout469(String ppnNoticeBouquet, String ppn, LigneKbartConnect ligneKbart, String filename, SudocService service) throws IOException {
-        log.debug(ligneKbart.toString());
         NoticeConcrete notice = null;
         try {
             notice = service.getNoticeFromPpn(ppn);
@@ -274,7 +274,7 @@ public class KbartListener {
                 listError.add(0, listError.size() + " erreur(s) lors de la suppression de lien(s) vers une notice bouquet : " + System.lineSeparator());
                 emailService.sendErrorMailProviderPackageDeleted(listError, provider + "_" + packageName);
             }
-        } catch (CBSException e) {
+        } catch (CBSException | CommException e) {
             log.error(e.getMessage(), e.getCause());
             emailService.sendErrorMailSuppressionPackage(packageName, provider, e);
         } catch (IOException e) {
@@ -288,18 +288,24 @@ public class KbartListener {
         }
     }
 
-    private void traiterNoticesADelier(SudocService service, String provider, String packageName, List<String> listError) throws CBSException, IOException {
-        String ppnNoticeBouquet = getNoticeBouquet(service, provider, packageName);
-        //affichage des notices liées
-        //boucle sur les notices liées à partir de la seconde (la première étant la notice bouquet elle-même)
-        int nbNoticesLiees = service.getNoticesLiees();
-        for (int i = 2; i <= nbNoticesLiees; i++) {
-            suppressionLien469(service, listError, i, ppnNoticeBouquet);
+    @Retryable(maxAttempts = 4, retryFor = CommException.class, noRetryFor = {CBSException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private void traiterNoticesADelier(SudocService service, String provider, String packageName, List<String> listError) throws CBSException, CommException {
+        try {
+            String ppnNoticeBouquet = getNoticeBouquet(service, provider, packageName);
+            log.debug("récupération notice bouquet ok");
+            //affichage des notices liées
+            //boucle sur les notices liées à partir de la seconde (la première étant la notice bouquet elle-même)
+            int nbNoticesLiees = service.getNoticesLiees();
+            log.debug("nombre de notices liées : " + nbNoticesLiees);
+            for (int i = 2; i <= nbNoticesLiees; i++) {
+                suppressionLien469(service, listError, i, ppnNoticeBouquet);
+            }
+        } catch (CommException | IOException ex) {
+            service.decoRecoCbs(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, ex);
         }
     }
 
-    @Retryable(maxAttempts = 4, retryFor = IOException.class, noRetryFor = {CBSException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
-    private void suppressionLien469(SudocService service, List<String> listError, int i, String ppnNoticeBouquet) throws IOException, CBSException {
+    private void suppressionLien469(SudocService service, List<String> listError, int i, String ppnNoticeBouquet) throws CBSException, CommException {
         String ppnCourant = "";
         try {
             service.voirNotice(i);
@@ -314,19 +320,17 @@ public class KbartListener {
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage(), e.getCause());
             listError.add("Notice bouquet " + ppnNoticeBouquet + " - notice " + ppnCourant + " erreur : " + e.getMessage());
-            service.retourArriere();
-        } catch (IOException e) {
-            //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
             try {
-                log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
-                service.disconnect();
-                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
-            } catch (CBSException ex) {
-                log.error(ex.getMessage());
+                service.retourArriere();
+            } catch (IOException ex) {
+                throw new CommException(ex);
             }
-            throw e;
+        } catch (IOException e) {
+            throw new CommException(e);
         }
     }
+
+
 
     /**
      * @param ligneKbart : enregistrement dans Kafka
