@@ -5,6 +5,7 @@ import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.process.ProcessCBS;
+import fr.abes.kafkatosudoc.exception.CommException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
 import org.springframework.retry.annotation.Backoff;
@@ -225,12 +226,32 @@ public class SudocService {
 	 * @throws CBSException erreur sur la commande CBS
 	 */
 	public void voirNotice(int pos) throws CBSException, IOException {
-		log.debug("passage notice suivante");
 		this.cbs.view(String.valueOf(pos), false, "UNM");
 	}
 
 	public void disconnect() throws CBSException {
 		this.cbs.disconnect();
+	}
+
+	/**
+	 * Méthode de déconnexion / reconnexion au sudoc et requalification de l'IOException
+	 * @param serveurSudoc nom du serveur
+	 * @param portSudoc port de connexion
+	 * @param loginSudoc login d'authentification
+	 * @param passwordSudoc mot de passe
+	 * @param ex IOException à requalifier
+	 * @throws CommException exception requalifiée
+	 */
+	public void decoRecoCbs(String serveurSudoc, String portSudoc, String loginSudoc, String passwordSudoc, Exception ex) throws CommException {
+		try {
+			log.warn("erreur de communication avec le Sudoc, tentative de reconnexion");
+			this.disconnect();
+			this.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+		} catch (CBSException | IOException e) {
+			log.error(e.getMessage());
+		}
+		//on requalifie l'exception pour ne pas qu'elle soit confondue avec l'erreur d'envoi du mail
+		throw new CommException(ex);
 	}
 }
 
