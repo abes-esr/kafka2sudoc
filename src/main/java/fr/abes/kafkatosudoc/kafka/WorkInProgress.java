@@ -61,7 +61,7 @@ public class WorkInProgress<T> {
     }
 
     public void addErrorMessagesImprime(String ppn, String notice, String erreur) {
-        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.FROMIMPRIME, "{Ppn : " + ppn + ", Notice : " + notice + ", Erreur : " + erreur + "}"));
+        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.FROMIMPRIME, "{Ppn : " + ppn + ", Erreur : " + erreur +", Notice : " + notice + "}"));
     }
 
 }
