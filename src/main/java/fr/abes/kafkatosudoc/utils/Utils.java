@@ -18,7 +18,7 @@ public class Utils {
     }
 
     private static String extractDOI(CharSequence titleUrl, CharSequence titleId) {
-        String doiPattern = "10.\\d{0,15}.\\d{0,15}.+";
+        String doiPattern = "10\\.\\d{0,15}.\\d{0,15}.+";
 
         if (titleUrl != null && !titleUrl.isEmpty()){
             return findDoiWithPatternDoi(titleUrl, doiPattern);
