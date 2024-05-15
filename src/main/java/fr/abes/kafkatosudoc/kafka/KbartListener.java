@@ -49,6 +49,9 @@ public class KbartListener {
     @Value("${sudoc.signalDb}")
     private String signalDb;
 
+    @Value("${sudoc.nbNoticesParLot}")
+    private int nbNoticesParLot;
+
     private final UtilsMapper mapper;
 
 
@@ -288,6 +291,15 @@ public class KbartListener {
         }
     }
 
+    /**
+     * Méthode permettant de délier les notices liées à une notice bouquet, cette méthode ne traite qu'un lot de 1000 notices maximum
+     * @param service méthodes permettant d'accéder au cbs
+     * @param provider provider
+     * @param packageName nom du package supprimé
+     * @param listError liste des erreurs éventuelles
+     * @throws CBSException erreur de validation du cbs
+     * @throws CommException erreur de communication avec le cbs
+     */
     @Retryable(maxAttempts = 4, retryFor = CommException.class, noRetryFor = {CBSException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
     private void traiterNoticesADelier(SudocService service, String provider, String packageName, List<String> listError) throws CBSException, CommException {
         try {
@@ -297,8 +309,17 @@ public class KbartListener {
             //boucle sur les notices liées à partir de la seconde (la première étant la notice bouquet elle-même)
             int nbNoticesLiees = service.getNoticesLiees();
             log.debug("nombre de notices liées : " + nbNoticesLiees);
-            for (int i = 2; i <= nbNoticesLiees; i++) {
+            int nbNoticesADelier = (nbNoticesLiees < this.nbNoticesParLot) ? nbNoticesLiees : this.nbNoticesParLot;
+            for (int i = 2; i <= nbNoticesADelier; i++) {
                 suppressionLien469(service, listError, i, ppnNoticeBouquet);
+            }
+            //condition de sortie de la boucle récursive : il reste moins de notices à délier que le nombre plancher
+            if (nbNoticesLiees > this.nbNoticesParLot) {
+                log.debug("lot traité, déco / reco du cbs pour traitement lot suivant");
+                service.disconnect();
+                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+                //l'intégralité du lot n'a pas été traité, on rappelle la méthode en récursif pour traiter le lot suivant
+                traiterNoticesADelier(service, provider, packageName, listError);
             }
         } catch (CommException | IOException ex) {
             service.decoRecoCbs(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, ex);
