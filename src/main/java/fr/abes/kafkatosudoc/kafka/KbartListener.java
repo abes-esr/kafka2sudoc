@@ -54,8 +54,6 @@ public class KbartListener {
     private int nbNoticesParLot;
 
     private final UtilsMapper mapper;
-
-    private AtomicInteger nb = new AtomicInteger(0);
     private final BaconService baconService;
 
     private final EmailService emailService;
@@ -82,7 +80,6 @@ public class KbartListener {
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory", concurrency = "8")
     public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws IOException {
-//        log.debug("Entrée dans création à partir du kbart " + nb.incrementAndGet());
         String filename = lignesKbart.key();
         if (!this.workInProgressMap.containsKey(filename)) {
             this.workInProgressMap.put(filename, new WorkInProgress<>());
@@ -94,13 +91,13 @@ public class KbartListener {
         }
 
 
-        log.debug("(" + nb.incrementAndGet() + ") Current line : " + this.workInProgressMap.get(filename).incrementCurrentNbLignes() + " / total lines : " + this.workInProgressMap.get(filename).getNbLinesTotal());
         if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
             //on alimente la liste des notices d'un package qui sera traitée intégralement
             this.workInProgressMap.get(filename).addNotice(lignesKbart.value());
         }
 
         //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
+        log.debug("Current line : " + this.workInProgressMap.get(filename).incrementCurrentNbLignes() + " / total lines : " + this.workInProgressMap.get(filename).getNbLinesTotal());
         if (this.workInProgressMap.get(filename).getCurrentNbLines().get() == (this.workInProgressMap.get(filename).getNbLinesTotal())) {
             log.debug("Traitement des notices existantes dans le Sudoc à partir du kbart");
             traiterPackageDansSudoc(this.workInProgressMap.get(filename).getListeNotices(), filename);
