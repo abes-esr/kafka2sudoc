@@ -10,13 +10,14 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 @Setter
 public class WorkInProgress<T> {
     private final List<T> listeNotices;
 
-    private Integer currentNbLines;
+    private AtomicInteger currentNbLines;
 
     private Integer nbLinesTotal;
 
@@ -24,7 +25,7 @@ public class WorkInProgress<T> {
 
     public WorkInProgress() {
         this.listeNotices = new ArrayList<>();
-        this.currentNbLines = 0;
+        this.currentNbLines = new AtomicInteger(0);
         this.nbLinesTotal = -1;
         this.errorMessages = new ArrayList<>();
     }
@@ -33,8 +34,8 @@ public class WorkInProgress<T> {
         this.listeNotices.add(notice);
     }
 
-    public void incrementCurrentNbLignes() {
-        this.currentNbLines++;
+    public Integer incrementCurrentNbLignes() {
+        return this.currentNbLines.incrementAndGet();
     }
 
     public void addErrorMessagesConnectionCbs(String message) {
