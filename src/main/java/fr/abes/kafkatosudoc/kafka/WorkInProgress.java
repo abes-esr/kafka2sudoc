@@ -7,6 +7,7 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 @Setter
+@Slf4j
 public class WorkInProgress<T> {
     private final List<T> listeNotices;
 
@@ -35,6 +37,7 @@ public class WorkInProgress<T> {
     }
 
     public Integer incrementCurrentNbLignes() {
+        log.debug("Thread : " + Thread.currentThread().getName() + " / Current line : " + (this.currentNbLines.get() + 1) + " / total lines : " + this.getNbLinesTotal());
         return this.currentNbLines.incrementAndGet();
     }
 

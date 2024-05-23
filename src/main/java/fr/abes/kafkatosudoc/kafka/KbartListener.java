@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Slf4j
@@ -78,7 +77,7 @@ public class KbartListener {
      *
      * @param lignesKbart : ligne trouvée dans kafka
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory", concurrency = "8")
+    @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory", concurrency = "${spring.kafka.concurrency.nbThread}")
     public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws IOException {
         String filename = lignesKbart.key();
         if (!this.workInProgressMap.containsKey(filename)) {
@@ -95,10 +94,8 @@ public class KbartListener {
             //on alimente la liste des notices d'un package qui sera traitée intégralement
             this.workInProgressMap.get(filename).addNotice(lignesKbart.value());
         }
-
         //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
-        log.debug("Current line : " + this.workInProgressMap.get(filename).incrementCurrentNbLignes() + " / total lines : " + this.workInProgressMap.get(filename).getNbLinesTotal());
-        if (this.workInProgressMap.get(filename).getCurrentNbLines().get() == (this.workInProgressMap.get(filename).getNbLinesTotal())) {
+        if (Objects.equals(this.workInProgressMap.get(filename).incrementCurrentNbLignes(), this.workInProgressMap.get(filename).getNbLinesTotal())) {
             log.debug("Traitement des notices existantes dans le Sudoc à partir du kbart");
             traiterPackageDansSudoc(this.workInProgressMap.get(filename).getListeNotices(), filename);
             if (!this.workInProgressMap.get(filename).getErrorMessages().isEmpty())
@@ -266,7 +263,7 @@ public class KbartListener {
      *
      * @param providerPackageDeleted enregistrement dans kafka
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "${topic.groupid.source.delete}", containerFactory = "kafkaDeletePackageListenerContainerFactory", concurrency = "8")
+    @KafkaListener(topics = {"${topic.name.source.kbart.todelete}"}, groupId = "${topic.groupid.source.delete}", containerFactory = "kafkaDeletePackageListenerContainerFactory")
     public void listenKbartToDeleteFromKafka(ConsumerRecord<String, GenericRecord> providerPackageDeleted) {
         String provider = providerPackageDeleted.value().get("PROVIDER").toString();
         String packageName = providerPackageDeleted.value().get("PACKAGE").toString();
@@ -357,7 +354,7 @@ public class KbartListener {
     /**
      * @param ligneKbart : enregistrement dans Kafka
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory", concurrency = "8")
+    @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> ligneKbart) {
         log.debug("Entrée dans création ex nihilo");
         String filename = ligneKbart.key();
@@ -438,7 +435,7 @@ public class KbartListener {
      *
      * @param lignesKbart : ligne kbart + ppn de la notice imprimée
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.imprime}"}, groupId = "${topic.groupid.source.imprime}", containerFactory = "kafkaKbartListenerContainerFactory", concurrency = "8")
+    @KafkaListener(topics = {"${topic.name.source.kbart.imprime}"}, groupId = "${topic.groupid.source.imprime}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaImprime(ConsumerRecord<String, LigneKbartImprime> lignesKbart) {
         String filename = lignesKbart.key();
 
