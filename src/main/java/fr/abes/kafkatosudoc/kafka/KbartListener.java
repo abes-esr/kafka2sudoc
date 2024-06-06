@@ -53,8 +53,6 @@ public class KbartListener {
     private int nbNoticesParLot;
 
     private final UtilsMapper mapper;
-
-
     private final BaconService baconService;
 
     private final EmailService emailService;
@@ -79,25 +77,25 @@ public class KbartListener {
      *
      * @param lignesKbart : ligne trouvée dans kafka
      */
-    @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory")
+    @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory", concurrency = "${spring.kafka.concurrency.nbThread}")
     public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws IOException {
-        log.debug("Entrée dans création à partir du kbart");
         String filename = lignesKbart.key();
-        if (!this.workInProgressMap.containsKey(filename))
-            this.workInProgressMap.put(lignesKbart.key(), new WorkInProgress<>());
+        if (!this.workInProgressMap.containsKey(filename)) {
+            this.workInProgressMap.put(filename, new WorkInProgress<>());
+            lignesKbart.headers().forEach(header -> {
+                if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
+                    this.workInProgressMap.get(filename).setNbLinesTotal(Integer.parseInt(new String(header.value()))); //on indique le nb total de lignes du fichier
+                }
+            });
+        }
+
 
         if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
             //on alimente la liste des notices d'un package qui sera traitée intégralement
             this.workInProgressMap.get(filename).addNotice(lignesKbart.value());
         }
-        this.workInProgressMap.get(filename).incrementCurrentNbLignes();
-        lignesKbart.headers().forEach(header -> {
-            if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
-                this.workInProgressMap.get(filename).setNbLinesTotal(Integer.parseInt(new String(header.value()))); //on indique le nb total de lignes du fichier
-            }
-        });
         //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
-        if (this.workInProgressMap.get(filename).getCurrentNbLines().equals(this.workInProgressMap.get(filename).getNbLinesTotal())) {
+        if (Objects.equals(this.workInProgressMap.get(filename).incrementCurrentNbLignes(), this.workInProgressMap.get(filename).getNbLinesTotal())) {
             log.debug("Traitement des notices existantes dans le Sudoc à partir du kbart");
             traiterPackageDansSudoc(this.workInProgressMap.get(filename).getListeNotices(), filename);
             if (!this.workInProgressMap.get(filename).getErrorMessages().isEmpty())
@@ -293,11 +291,12 @@ public class KbartListener {
 
     /**
      * Méthode permettant de délier les notices liées à une notice bouquet, cette méthode ne traite qu'un lot de 1000 notices maximum
-     * @param service méthodes permettant d'accéder au cbs
-     * @param provider provider
+     *
+     * @param service     méthodes permettant d'accéder au cbs
+     * @param provider    provider
      * @param packageName nom du package supprimé
-     * @param listError liste des erreurs éventuelles
-     * @throws CBSException erreur de validation du cbs
+     * @param listError   liste des erreurs éventuelles
+     * @throws CBSException  erreur de validation du cbs
      * @throws CommException erreur de communication avec le cbs
      */
     @Retryable(maxAttempts = 4, retryFor = CommException.class, noRetryFor = {CBSException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
@@ -350,7 +349,6 @@ public class KbartListener {
             throw new CommException(e);
         }
     }
-
 
 
     /**
@@ -439,7 +437,6 @@ public class KbartListener {
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.imprime}"}, groupId = "${topic.groupid.source.imprime}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaImprime(ConsumerRecord<String, LigneKbartImprime> lignesKbart) {
-        log.debug("entree dans création from imprimé et kbart");
         String filename = lignesKbart.key();
 
         // S'il s'agit d'un premier message d'un fichier kbart, on créé un WorkInProgress avec le nom du fichier et le nombre total de ligne
