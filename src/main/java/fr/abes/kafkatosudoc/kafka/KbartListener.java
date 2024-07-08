@@ -89,13 +89,13 @@ public class KbartListener {
             });
         }
 
-
         if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
             //on alimente la liste des notices d'un package qui sera traitée intégralement
             this.workInProgressMap.get(filename).addNotice(lignesKbart.value());
         }
+        this.workInProgressMap.get(filename).incrementCurrentNbLignes();
         //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
-        if (Objects.equals(this.workInProgressMap.get(filename).incrementCurrentNbLignes(), this.workInProgressMap.get(filename).getNbLinesTotal())) {
+        if (this.workInProgressMap.get(filename).getCurrentNbLines().get() == this.workInProgressMap.get(filename).getNbLinesTotal()) {
             log.debug("Traitement des notices existantes dans le Sudoc à partir du kbart");
             traiterPackageDansSudoc(this.workInProgressMap.get(filename).getListeNotices(), filename);
             if (!this.workInProgressMap.get(filename).getErrorMessages().isEmpty())
@@ -374,7 +374,7 @@ public class KbartListener {
         this.workInProgressMapExNihilo.get(filename).addNotice(ligneKbart.value());
 
         //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
-        if (this.workInProgressMapExNihilo.get(filename).getCurrentNbLines().equals(this.workInProgressMapExNihilo.get(filename).getNbLinesTotal())) {
+        if (this.workInProgressMapExNihilo.get(filename).getCurrentNbLines().get() == this.workInProgressMapExNihilo.get(filename).getNbLinesTotal()) {
             log.debug("Traitement des notices existantes dans le Sudoc à parir de ex nihilo");
             SudocService service = new SudocService();
             try {
@@ -454,7 +454,7 @@ public class KbartListener {
         this.workInProgressMapImprime.get(filename).addNotice(lignesKbart.value());
 
         //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
-        if (this.workInProgressMapImprime.get(filename).getCurrentNbLines().equals(this.workInProgressMapImprime.get(filename).getNbLinesTotal())) {
+        if (this.workInProgressMapImprime.get(filename).getCurrentNbLines().get() == this.workInProgressMapImprime.get(filename).getNbLinesTotal()) {
             log.debug("Traitement des notices existantes dans le Sudoc à partir de imprimé");
 
             String provider = CheckFiles.getProviderFromFilename(filename);
