@@ -79,7 +79,7 @@ public class KbartListener {
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory", concurrency = "${spring.kafka.concurrency.nbThread}")
     public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws IOException {
-        String filename = lignesKbart.key();
+        String filename = extractFilenameFromKey(lignesKbart.key());
         if (!this.workInProgressMap.containsKey(filename)) {
             this.workInProgressMap.put(filename, new WorkInProgress<>());
             lignesKbart.headers().forEach(header -> {
@@ -357,7 +357,7 @@ public class KbartListener {
     @KafkaListener(topics = {"${topic.name.source.kbart.exnihilo}"}, groupId = "${topic.groupid.source.exnihilo}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaExNihilo(ConsumerRecord<String, LigneKbartConnect> ligneKbart) {
         log.debug("Entrée dans création ex nihilo");
-        String filename = ligneKbart.key();
+        String filename = extractFilenameFromKey(ligneKbart.key());
 
         // S'il s'agit d'un premier message d'un fichier kbart, on créé un WorkInProgress avec le nom du fichier et le nombre total de ligne
         if (!this.workInProgressMapExNihilo.containsKey(filename)) {
@@ -437,7 +437,7 @@ public class KbartListener {
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.imprime}"}, groupId = "${topic.groupid.source.imprime}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaImprime(ConsumerRecord<String, LigneKbartImprime> lignesKbart) {
-        String filename = lignesKbart.key();
+        String filename = extractFilenameFromKey(lignesKbart.key());
 
         // S'il s'agit d'un premier message d'un fichier kbart, on créé un WorkInProgress avec le nom du fichier et le nombre total de ligne
         if (!this.workInProgressMapImprime.containsKey(filename)) {
@@ -526,5 +526,9 @@ public class KbartListener {
             }
             throw e;
         }
+    }
+
+    private String extractFilenameFromKey (String key) {
+        return key.substring(0, key.lastIndexOf('_'));
     }
 }
