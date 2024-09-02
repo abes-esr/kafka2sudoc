@@ -24,13 +24,13 @@ import java.util.UUID;
 @Configuration
 @EnableKafka
 public class KafkaConfig {
-    @Value("${spring.kafka.consumer.bootstrap-servers}")
+    @Value("${abes.kafka.bootstrap-servers}")
     private String bootstrapAddress;
 
     @Value("${spring.kafka.consumer.properties.isolation.level}")
     private String isolationLevel;
 
-    @Value("${spring.kafka.registry.url}")
+    @Value("${abes.kafka.registry.url}")
     private String registryUrl;
 
     @Bean
