@@ -16,10 +16,10 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
 @EnableKafka
@@ -77,16 +77,16 @@ public class KafkaConfig {
 
     @Bean
     public Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMap() {
-        return Collections.synchronizedMap(new HashMap<>());
+        return new ConcurrentHashMap<>();
     }
 
     @Bean
     public Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMapExNihilo() {
-        return Collections.synchronizedMap(new HashMap<>());
+        return new ConcurrentHashMap<>();
     }
 
     @Bean
     public Map<String, WorkInProgress<LigneKbartImprime>> workInProgressMapImprime() {
-        return Collections.synchronizedMap(new HashMap<>());
+        return new ConcurrentHashMap<>();
     }
 }
