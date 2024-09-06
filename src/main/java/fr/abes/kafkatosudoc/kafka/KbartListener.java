@@ -29,6 +29,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @Slf4j
@@ -63,6 +65,9 @@ public class KbartListener {
 
     private final Map<String, WorkInProgress<LigneKbartImprime>> workInProgressMapImprime;
 
+    private Lock lock;
+
+
     public KbartListener(UtilsMapper mapper, BaconService baconService, EmailService emailService, Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMap, Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMapExNihilo, Map<String, WorkInProgress<LigneKbartImprime>> workInProgressMapImprime) {
         this.mapper = mapper;
         this.baconService = baconService;
@@ -70,6 +75,7 @@ public class KbartListener {
         this.workInProgressMap = workInProgressMap;
         this.workInProgressMapExNihilo = workInProgressMapExNihilo;
         this.workInProgressMapImprime = workInProgressMapImprime;
+        this.lock = new ReentrantLock();
     }
 
     /**
@@ -80,20 +86,17 @@ public class KbartListener {
     @KafkaListener(topics = {"${topic.name.source.kbart.toload}"}, groupId = "${topic.groupid.source.withppn}", containerFactory = "kafkaKbartListenerContainerFactory", concurrency = "${abes.kafka.concurrency.nbThread}")
     public void listenKbartToCreateFromKafka(ConsumerRecord<String, LigneKbartConnect> lignesKbart) throws IOException {
         String filename = extractFilenameFromKey(lignesKbart.key());
+        lock.lock();
         if (!this.workInProgressMap.containsKey(filename)) {
-            this.workInProgressMap.put(filename, new WorkInProgress<>());
-            lignesKbart.headers().forEach(header -> {
-                if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
-                    this.workInProgressMap.get(filename).setNbLinesTotal(Integer.parseInt(new String(header.value()))); //on indique le nb total de lignes du fichier
-                }
-            });
+            this.workInProgressMap.put(filename, new WorkInProgress<>(lignesKbart.value().getTOTALLINES()));
         }
-
+        lock.unlock();
         if (lignesKbart.value().getBESTPPN() != null && !lignesKbart.value().getBESTPPN().isEmpty()) {
             //on alimente la liste des notices d'un package qui sera traitée intégralement
             this.workInProgressMap.get(filename).addNotice(lignesKbart.value());
         }
         this.workInProgressMap.get(filename).incrementCurrentNbLignes();
+
         //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
         if (this.workInProgressMap.get(filename).getCurrentNbLines().get() == this.workInProgressMap.get(filename).getNbLinesTotal()) {
             log.debug("Traitement des notices existantes dans le Sudoc à partir du kbart");
@@ -361,21 +364,15 @@ public class KbartListener {
 
         // S'il s'agit d'un premier message d'un fichier kbart, on créé un WorkInProgress avec le nom du fichier et le nombre total de ligne
         if (!this.workInProgressMapExNihilo.containsKey(filename)) {
-            this.workInProgressMapExNihilo.put(filename, new WorkInProgress<>());
-            ligneKbart.headers().forEach(header -> {
-                if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
-                    this.workInProgressMapExNihilo.get(filename).setNbLinesTotal(Integer.parseInt(new String(header.value()))); //on indique le nb total de lignes du fichier
-                }
-            });
+            this.workInProgressMapExNihilo.put(filename, new WorkInProgress<>(ligneKbart.value().getTOTALLINES()));
         }
-
         // On incrémente le compteur de ligne et on ajoute chaque ligne dans le WorkInProgress associé au nom du fichier kbart
         this.workInProgressMapExNihilo.get(filename).incrementCurrentNbLignes();
         this.workInProgressMapExNihilo.get(filename).addNotice(ligneKbart.value());
 
         //Si le nombre de lignes traitées est égal au nombre de lignes total du fichier, on est arrivé en fin de fichier, on traite dans le sudoc
         if (this.workInProgressMapExNihilo.get(filename).getCurrentNbLines().get() == this.workInProgressMapExNihilo.get(filename).getNbLinesTotal()) {
-            log.debug("Traitement des notices existantes dans le Sudoc à parir de ex nihilo");
+            log.debug("Traitement des notices existantes dans le Sudoc à partir de ex nihilo");
             SudocService service = new SudocService();
             try {
                 String provider = CheckFiles.getProviderFromFilename(filename);
@@ -437,16 +434,12 @@ public class KbartListener {
      */
     @KafkaListener(topics = {"${topic.name.source.kbart.imprime}"}, groupId = "${topic.groupid.source.imprime}", containerFactory = "kafkaKbartListenerContainerFactory")
     public void listenKbartFromKafkaImprime(ConsumerRecord<String, LigneKbartImprime> lignesKbart) {
+        log.debug("Entrée dans création depuis imprimé");
         String filename = extractFilenameFromKey(lignesKbart.key());
 
         // S'il s'agit d'un premier message d'un fichier kbart, on créé un WorkInProgress avec le nom du fichier et le nombre total de ligne
         if (!this.workInProgressMapImprime.containsKey(filename)) {
-            this.workInProgressMapImprime.put(filename, new WorkInProgress<>());
-            lignesKbart.headers().forEach(header -> {
-                if (header.key().equals("nbLinesTotal")) { //Si on est à la dernière ligne du fichier
-                    this.workInProgressMapImprime.get(filename).setNbLinesTotal(Integer.parseInt(new String(header.value()))); //on indique le nb total de lignes du fichier
-                }
-            });
+            this.workInProgressMapImprime.put(filename, new WorkInProgress<>(lignesKbart.value().getTotalLines()));
         }
 
         // On incrémente le compteur de ligne et on ajoute chaque ligne dans le WorkInProgress associé au nom du fichier kbart
@@ -528,7 +521,7 @@ public class KbartListener {
         }
     }
 
-    private String extractFilenameFromKey (String key) {
+    private String extractFilenameFromKey(String key) {
         return key.substring(0, key.lastIndexOf('_'));
     }
 }

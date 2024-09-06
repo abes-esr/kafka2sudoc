@@ -10,6 +10,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,21 +26,19 @@ public class WorkInProgress<T> {
 
     private List<ErrorMessage> errorMessages;
 
-    public WorkInProgress() {
-        this.listeNotices = new ArrayList<>();
+    public WorkInProgress(int nbLinesTotal) {
+        this.listeNotices = Collections.synchronizedList(new ArrayList<>());
         this.currentNbLines = new AtomicInteger(0);
-        this.nbLinesTotal = -1;
-        this.errorMessages = new ArrayList<>();
+        this.nbLinesTotal = nbLinesTotal;
+        this.errorMessages = Collections.synchronizedList(new ArrayList<>());
     }
 
     public void addNotice(T notice) {
         this.listeNotices.add(notice);
     }
 
-    public Integer incrementCurrentNbLignes() {
-        int cpt = this.currentNbLines.incrementAndGet();
-        log.debug("Thread : " + Thread.currentThread().getName() + " / Current line : " + cpt + " / total lines : " + this.getNbLinesTotal());
-        return cpt;
+    public void incrementCurrentNbLignes() {
+        log.debug("Thread : " + Thread.currentThread().getName() + " | Current line : " + this.currentNbLines.incrementAndGet() + " | total lines : " + this.getNbLinesTotal());
     }
 
     public void addErrorMessagesConnectionCbs(String message) {
