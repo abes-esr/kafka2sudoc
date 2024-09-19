@@ -315,6 +315,8 @@ public class NoticeMapper {
                 LigneKbart ligneKbart = context.getSource();
                 DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
                 return LigneKbartConnect.newBuilder()
+                        .setCURRENTLINE(-1)
+                        .setTOTALLINES(-1)
                         .setPUBLICATIONTITLE(ligneKbart.getPublicationTitle())
                         .setPUBLICATIONTYPE(ligneKbart.getPublicationType())
                         .setPRINTIDENTIFIER(ligneKbart.getPrintIdentifier())
