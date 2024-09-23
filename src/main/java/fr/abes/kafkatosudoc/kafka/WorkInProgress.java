@@ -38,7 +38,7 @@ public class WorkInProgress<T> {
     }
 
     public void incrementCurrentNbLignes() {
-        log.debug("Thread : " + Thread.currentThread().getName() + " | Current line : " + this.currentNbLines.incrementAndGet() + " | total lines : " + this.getNbLinesTotal());
+        log.debug("Current line : " + this.currentNbLines.incrementAndGet() + " | total lines : " + this.getNbLinesTotal());
     }
 
     public void addErrorMessagesConnectionCbs(String message) {
