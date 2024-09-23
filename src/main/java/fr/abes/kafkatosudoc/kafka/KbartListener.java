@@ -65,7 +65,7 @@ public class KbartListener {
 
     private final Map<String, WorkInProgress<LigneKbartImprime>> workInProgressMapImprime;
 
-    private Lock lock;
+    private final Lock lock;
 
 
     public KbartListener(UtilsMapper mapper, BaconService baconService, EmailService emailService, Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMap, Map<String, WorkInProgress<LigneKbartConnect>> workInProgressMapExNihilo, Map<String, WorkInProgress<LigneKbartImprime>> workInProgressMapImprime) {
@@ -451,21 +451,17 @@ public class KbartListener {
             log.debug("Traitement des notices existantes dans le Sudoc à partir de imprimé");
 
             String provider = CheckFiles.getProviderFromFilename(filename);
-            String packageName = CheckFiles.getPackageFromFilename(filename);
             SudocService service = new SudocService();
-            NoticeConcrete noticeElec = null;
             try {
                 //authentification sur la base maitre du sudoc pour récupérer la notice imprimée
                 service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
                 if (this.workInProgressMapImprime.get(filename).getListeNotices() != null && !this.workInProgressMapImprime.get(filename).getListeNotices().isEmpty()) {
                     for (LigneKbartImprime ligneKbartImprime : this.workInProgressMapImprime.get(filename).getListeNotices()) {
-                        noticeElec = creerNoticeAPartirImprime(ligneKbartImprime, provider, packageName, service);
+                        creerNoticeAPartirImprime(ligneKbartImprime, provider, filename, service);
                     }
                 }
-            } catch (CBSException | ZoneException e) {
-                log.error(e.getMessage());
-                this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(lignesKbart.value().getPpn().toString(), noticeElec != null ? noticeElec.getNoticeBiblio().toString() : "pas de notice trouvée", e.getMessage());
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
                 try {
                     log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
@@ -474,6 +470,8 @@ public class KbartListener {
                 } catch (CBSException | IOException ex) {
                     log.error(ex.getMessage());
                 }
+            } catch (CBSException e) {
+                this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(String.valueOf(lignesKbart.value().getPpn()), null, "Erreur d'authentification au Sudoc : " + e.getMessage());
             } finally {
                 try {
                     // On déconnecte du Sudoc, on envoie les messages d'erreurs s'il y a des erreurs et on supprime le WorkInProgress
@@ -489,9 +487,10 @@ public class KbartListener {
 
     }
 
-    @Retryable(maxAttempts = 4, retryFor = IOException.class, noRetryFor = {CBSException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
-    private NoticeConcrete creerNoticeAPartirImprime(LigneKbartImprime ligneKbartImprime, String provider, String packageName, SudocService service) throws ZoneException, CBSException, IOException {
-        NoticeConcrete noticeElec;
+    @Retryable(maxAttempts = 4, retryFor = IOException.class, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private void creerNoticeAPartirImprime(LigneKbartImprime ligneKbartImprime, String provider, String filename, SudocService service) throws IOException {
+        String packageName = CheckFiles.getPackageFromFilename(filename);
+        NoticeConcrete noticeElec = new NoticeConcrete();
         KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
         kbartAndImprimeDto.setKbart(mapper.map(ligneKbartImprime, LigneKbartImprime.class));
         try {
@@ -507,14 +506,16 @@ public class KbartListener {
             service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
             service.creerNotice(noticeElec);
             log.debug("Création notice à partir de l'imprimée terminée");
-            return noticeElec;
-        } catch (IOException e) {
+        } catch (CBSException | ZoneException e) {
+            log.error(e.getMessage());
+            this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(ligneKbartImprime.getPpn().toString(), (noticeElec.getNoticeBiblio() != null) ? noticeElec.getNoticeBiblio().toString() : "Notice non récupérée", e.getMessage());
+        }  catch (IOException e) {
             //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
             try {
                 log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
                 service.disconnect();
                 service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
-            } catch (CBSException | IOException ex) {
+            } catch (CBSException ex) {
                 log.error(ex.getMessage());
             }
             throw e;
