@@ -146,7 +146,7 @@ public class NoticeMapper {
 
                 Biblio noticeElec = new Biblio();
                 noticeElec.addZone("008", "$a", "Oax3");
-                if (kbart.getOnlineIdentifier() != null) {
+                if (kbart.getOnlineIdentifier() != null && !kbart.getOnlineIdentifier().isEmpty()) {
                     if ((Utils.getIsbnType(kbart.getOnlineIdentifier().toString()).equals(ISBN_TYPE.ISBN10))) {
                         noticeElec.addZone("010", "$a", Utils.addHyphensToIsbn(kbart.getOnlineIdentifier().toString()));
                     } else {
