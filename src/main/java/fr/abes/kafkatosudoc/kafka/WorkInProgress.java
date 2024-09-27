@@ -40,7 +40,7 @@ public class WorkInProgress<T> {
     public void incrementCurrentNbLignes() {
         StackTraceElement[] stack = new Throwable().getStackTrace();
         StackTraceElement caller = stack[1];
-        log.debug("Méthode" + caller.getMethodName() + "Current line : " + this.currentNbLines.incrementAndGet() + " | total lines : " + this.getNbLinesTotal());
+        log.debug("Méthode " + caller.getMethodName() + " | Current line : " + this.currentNbLines.incrementAndGet() + " | total lines : " + this.getNbLinesTotal());
     }
 
     public void addErrorMessagesConnectionCbs(String message) {
