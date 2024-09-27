@@ -46,9 +46,9 @@ public class EmailService {
     @Value("${spring.profiles.active}")
     private String env;
 
-    private final String SUBJECT_ERROR_EXNIHILO = "Erreurs lors de la création à partir du kbart";
-    private final String SUBJECT_ERROR_IMPRIME = "Erreurs lors de la création à partir de la notice imprimé";
-    private final String SUBJECT_ERROR_AJOUT_BOUQUET = "Erreurs lors de l'ajout des liens en 469";
+    private final String SUBJECT_ERROR_EXNIHILO = "[KBART2SUDOC :  erreurs créations ex nihilo ]";
+    private final String SUBJECT_ERROR_IMPRIME = "[KBART2SUDOC :  erreurs créations par dérivations]";
+    private final String SUBJECT_ERROR_LIEN_BOUQUET = "[KBART2SUDOC :  erreurs liens 469]";
 
     public void sendErrorsMessageCreateFromKafka(String filename, WorkInProgress<LigneKbartConnect> workInProgress) throws IOException {
         JsonObject listErrors = Json.createObjectBuilder()
@@ -58,7 +58,7 @@ public class EmailService {
                 .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).count() + " erreur(s) d'ajout de 469", formatErrorMessageListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).toList()))
                 .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).count() + " erreur(s) de suppression de 469", formatErrorMessageListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).toList()))
                 .build();
-        sendErrorsMessage(filename, listErrors, SUBJECT_ERROR_AJOUT_BOUQUET);
+        sendErrorsMessage(filename, listErrors, SUBJECT_ERROR_LIEN_BOUQUET);
     }
 
     private JsonObjectBuilder formatErrorMessageListToJson(List<ErrorMessage> list) {
@@ -95,7 +95,7 @@ public class EmailService {
         createAttachment(listErrors, jsonFilePath);
 
         //  Création du mail
-        String requestJson = mailToJSON(this.recipient, getTag() + " " + subject, "Erreurs lors du traitement sur le fichier " + filename);
+        String requestJson = mailToJSON(this.recipient, getTag() + " " + subject + " " + filename, "Erreurs lors du traitement sur le fichier " + filename);
 
         //  Récupération du fichier
         File file = jsonFilePath.toFile();
@@ -136,7 +136,7 @@ public class EmailService {
         createAttachment(listErrors, jsonFilePath);
 
         // Création du mail
-        String requestJson = mailToJSON(this.recipient, getTag() + " Erreur lors de la suppression des liens vers les notices bouquet", "Erreur lors de la suppression des liens vers les notices bouquet");
+        String requestJson = mailToJSON(this.recipient, getTag() + SUBJECT_ERROR_LIEN_BOUQUET + " " + filename, "Erreur lors de la suppression des liens vers les notices bouquet");
 
         //  Récupération du fichier
         File file = jsonFilePath.toFile();
@@ -261,9 +261,9 @@ public class EmailService {
 
     private String getTag(){
         if(env.equalsIgnoreCase("PROD")){
-            return "[CONVERGENCE]";
+            return "";
         } else {
-            return "[CONVERGENCE][" + env.toUpperCase() + "]";
+            return "[" + env.toUpperCase() + "]";
         }
     }
 }
