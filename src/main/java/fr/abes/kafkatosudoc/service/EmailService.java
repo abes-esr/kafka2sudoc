@@ -95,7 +95,7 @@ public class EmailService {
         createAttachment(listErrors, jsonFilePath);
 
         //  Création du mail
-        String requestJson = mailToJSON(this.recipient, getTag() + " " + subject + " " + filename, "Erreurs lors du traitement sur le fichier " + filename);
+        String requestJson = mailToJSON(this.recipient, subject + getTag() + " " + filename, "Erreurs lors du traitement sur le fichier " + filename);
 
         //  Récupération du fichier
         File file = jsonFilePath.toFile();
@@ -136,7 +136,7 @@ public class EmailService {
         createAttachment(listErrors, jsonFilePath);
 
         // Création du mail
-        String requestJson = mailToJSON(this.recipient, getTag() + SUBJECT_ERROR_LIEN_BOUQUET + " " + filename, "Erreur lors de la suppression des liens vers les notices bouquet");
+        String requestJson = mailToJSON(this.recipient,  SUBJECT_ERROR_LIEN_BOUQUET + getTag() + " " + filename, "Erreur lors de la suppression des liens vers les notices bouquet");
 
         //  Récupération du fichier
         File file = jsonFilePath.toFile();
@@ -219,7 +219,7 @@ public class EmailService {
         String json = "";
         ObjectMapper mapper = new ObjectMapper();
         MailDto mail = new MailDto();
-        mail.setApp("kafka2sudoc");
+        mail.setApp("convergence");
         mail.setTo(to.split(";"));
         mail.setCc(new String[]{});
         mail.setCci(new String[]{});
