@@ -38,7 +38,9 @@ public class WorkInProgress<T> {
     }
 
     public void incrementCurrentNbLignes() {
-        log.debug("Current line : " + this.currentNbLines.incrementAndGet() + " | total lines : " + this.getNbLinesTotal());
+        StackTraceElement[] stack = new Throwable().getStackTrace();
+        StackTraceElement caller = stack[1];
+        log.debug("Méthode " + caller.getMethodName() + " | Current line : " + this.currentNbLines.incrementAndGet() + " | total lines : " + this.getNbLinesTotal());
     }
 
     public void addErrorMessagesConnectionCbs(String message) {

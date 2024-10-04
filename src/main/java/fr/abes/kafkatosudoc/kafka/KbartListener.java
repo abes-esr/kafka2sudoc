@@ -221,7 +221,7 @@ public class KbartListener {
         } catch (IOException e) {
             //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
             try {
-                log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
+                log.error("erreur de communication avec le Sudoc, tentative de reconnexion");
                 service.disconnect();
                 service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             } catch (CBSException ex) {
