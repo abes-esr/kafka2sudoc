@@ -523,6 +523,6 @@ public class KbartListener {
     }
 
     private String extractFilenameFromKey(String key) {
-        return key.substring(0, key.lastIndexOf('_'));
+        return key.substring(0, key.lastIndexOf(';'));
     }
 }
