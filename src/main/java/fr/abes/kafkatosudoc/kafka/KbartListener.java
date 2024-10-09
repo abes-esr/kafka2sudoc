@@ -503,7 +503,8 @@ public class KbartListener {
                 for (Zone zone : zones214)
                     zone.addSubLabel("c", providerDisplay);
             }
-            service.addLibelleNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), provider + "_" + packageName);
+            String ppnNoticeBouquet = service.getNoticeBouquet(provider, packageName);
+            service.addNoticeBouquetInPpn(noticeElec.getNoticeBiblio(), ppnNoticeBouquet);
             service.creerNotice(noticeElec);
             log.debug("Création notice à partir de l'imprimée terminée");
         } catch (CBSException | ZoneException e) {
