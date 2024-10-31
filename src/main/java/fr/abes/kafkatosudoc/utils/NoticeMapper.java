@@ -102,7 +102,7 @@ public class NoticeMapper {
                 if (kbart.getACCESSTYPE().toString().equals("F"))
                     noticeBiblio.addZone("371", "$a", "Ressource en accès libre", new char[]{'0', '#'});
                 else
-                    noticeBiblio.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", new char[]{'0', '#'});
+                    noticeBiblio.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques ayant souscrit l'abonnement", new char[]{'0', '#'});
 
                 //1er auteur
                 if (!kbart.getFIRSTAUTHOR().isEmpty()) {
@@ -273,7 +273,7 @@ public class NoticeMapper {
                 if (kbart.getAccessType().toString().equals("F"))
                     noticeElec.addZone("371", "$a", "Ressource en accès libre", new char[]{'0', '#'});
                 else
-                    noticeElec.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques qui en ont fait l'acquisition", new char[]{'0', '#'});
+                    noticeElec.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques ayant souscrit l'abonnement", new char[]{'0', '#'});
 
                 noticeElec.addZone("452", "$0", kbart.getPpn().toString(), new char[]{'#', '#'});
 
