@@ -418,7 +418,7 @@ public class KbartListener {
             try {
                 log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
                 service.disconnect();
-                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+                service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
             } catch (CBSException | IOException ex) {
                 log.error(ex.getMessage());
             }
@@ -454,7 +454,7 @@ public class KbartListener {
             SudocService service = new SudocService();
             try {
                 //authentification sur la base maitre du sudoc pour récupérer la notice imprimée
-                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+                service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
                 if (this.workInProgressMapImprime.get(filename).getListeNotices() != null && !this.workInProgressMapImprime.get(filename).getListeNotices().isEmpty()) {
                     for (LigneKbartImprime ligneKbartImprime : this.workInProgressMapImprime.get(filename).getListeNotices()) {
                         creerNoticeAPartirImprime(ligneKbartImprime, provider, filename, service);
@@ -466,7 +466,7 @@ public class KbartListener {
                 try {
                     log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
                     service.disconnect();
-                    service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+                    service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
                 } catch (CBSException | IOException ex) {
                     log.error(ex.getMessage());
                 }

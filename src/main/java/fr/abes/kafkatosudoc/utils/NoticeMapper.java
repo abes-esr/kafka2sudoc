@@ -275,25 +275,61 @@ public class NoticeMapper {
                 else
                     noticeElec.addZone("371", "$a", "Accès en ligne réservé aux établissements ou bibliothèques ayant souscrit l'abonnement", new char[]{'0', '#'});
 
-                noticeElec.addZone("452", "$0", kbart.getPpn().toString(), new char[]{'#', '#'});
+                noticeElec.addZone("452", "$5", kbart.getPpn().toString(), new char[]{'#', '#'});
 
                 Zone zone454 = noticeImprimee.getNoticeBiblio().findZone("454", 0);
-                if (zone454 != null) {
+                if (zone454 != null && zone454.findSubLabel("$0") == null) {
                     String zone454dollart = zone454.findSubLabel("$t");
                     if (zone454dollart != null)
                         noticeElec.addZone("454", "$t", zone454dollart, new char[]{'#', '#'});
                 }
                 //zone 5XX sauf 579, 512 et 516
                 List<Zone> zones500 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("5")).filter(zone -> (!zone.getLabel().equals("579") && !zone.getLabel().equals("512") && !zone.getLabel().equals("516"))).toList();
+                for (Zone zone1 : zones500) {
+                    if (zone1.findSubLabel("$3") != null) {
+                        zone1.addSubLabel("$5", zone1.findSubLabel("$3"));
+                        zone1.deleteSubLabel("$3");
+                    }
+                }
                 zones500.forEach(noticeElec::addZone);
 
                 List<Zone> zones600 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
+                for (Zone zone1 : zones600) {
+                    if (zone1.findSubLabel("$3") != null) {
+                        zone1.addSubLabel("$5", zone1.findSubLabel("$3"));
+                        zone1.deleteSubLabel("$3");
+                    }
+                }
                 zones600.forEach(noticeElec::addZone);
 
-                noticeImprimee.getNoticeBiblio().findZones("700").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("701").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("710").forEach(noticeElec::addZone);
-                noticeImprimee.getNoticeBiblio().findZones("711").forEach(noticeElec::addZone);
+                for (Zone zone700 : noticeImprimee.getNoticeBiblio().findZones("700")) {
+                    if (zone700.findSubLabel("$3") != null) {
+                        zone700.addSubLabel("$5", zone700.findSubLabel("$3"));
+                        zone700.deleteSubLabel("$3");
+                    }
+                    noticeElec.addZone(zone700);
+                }
+                for (Zone zone701 : noticeImprimee.getNoticeBiblio().findZones("701")) {
+                    if (zone701.findSubLabel("$3") != null) {
+                        zone701.addSubLabel("$5", zone701.findSubLabel("$3"));
+                        zone701.deleteSubLabel("$3");
+                    }
+                    noticeElec.addZone(zone701);
+                }
+                for (Zone zone710 : noticeImprimee.getNoticeBiblio().findZones("710")) {
+                    if (zone710.findSubLabel("$3") != null) {
+                        zone710.addSubLabel("$5", zone710.findSubLabel("$3"));
+                        zone710.deleteSubLabel("$3");
+                    }
+                    noticeElec.addZone(zone710);
+                }
+                for (Zone zone711 : noticeImprimee.getNoticeBiblio().findZones("711")) {
+                    if (zone711.findSubLabel("$3") != null) {
+                        zone711.addSubLabel("$5", zone711.findSubLabel("$3"));
+                        zone711.deleteSubLabel("$3");
+                    }
+                    noticeElec.addZone(zone711);
+                }
 
                 //url d'accès
                 if (kbart.getTitleUrl() != null)
