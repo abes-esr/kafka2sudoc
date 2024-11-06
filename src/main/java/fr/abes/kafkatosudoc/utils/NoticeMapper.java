@@ -18,10 +18,7 @@ import org.springframework.stereotype.Component;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Component
 public class NoticeMapper {
@@ -287,45 +284,52 @@ public class NoticeMapper {
                 List<Zone> zones500 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("5")).filter(zone -> (!zone.getLabel().equals("579") && !zone.getLabel().equals("512") && !zone.getLabel().equals("516"))).toList();
                 for (Zone zone1 : zones500) {
                     if (zone1.findSubLabel("$3") != null) {
-                        zone1.addSubLabel("$5", zone1.findSubLabel("$3"));
+                        zone1.addSubLabel("$5", zone1.findSubLabel("$3").substring(0,9));
                         zone1.deleteSubLabel("$3");
                     }
                 }
                 zones500.forEach(noticeElec::addZone);
 
                 List<Zone> zones600 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
+
                 for (Zone zone1 : zones600) {
+                    List<String> listeSousZones = new ArrayList<>();
                     if (zone1.findSubLabel("$3") != null) {
-                        zone1.addSubLabel("$5", zone1.findSubLabel("$3"));
+                        for (String ssZone : zone1.getSubLabelTable().columnMap().get("$3").values()){
+                            listeSousZones.add(ssZone.substring(0,9));
+                        }
                         zone1.deleteSubLabel("$3");
+                        for (String ssZone : listeSousZones) {
+                            zone1.addSubLabel("$5", ssZone);
+                        }
                     }
                 }
                 zones600.forEach(noticeElec::addZone);
 
                 for (Zone zone700 : noticeImprimee.getNoticeBiblio().findZones("700")) {
                     if (zone700.findSubLabel("$3") != null) {
-                        zone700.addSubLabel("$5", zone700.findSubLabel("$3"));
+                        zone700.addSubLabel("$5", zone700.findSubLabel("$3").substring(0,9));
                         zone700.deleteSubLabel("$3");
                     }
                     noticeElec.addZone(zone700);
                 }
                 for (Zone zone701 : noticeImprimee.getNoticeBiblio().findZones("701")) {
                     if (zone701.findSubLabel("$3") != null) {
-                        zone701.addSubLabel("$5", zone701.findSubLabel("$3"));
+                        zone701.addSubLabel("$5", zone701.findSubLabel("$3").substring(0,9));
                         zone701.deleteSubLabel("$3");
                     }
                     noticeElec.addZone(zone701);
                 }
                 for (Zone zone710 : noticeImprimee.getNoticeBiblio().findZones("710")) {
                     if (zone710.findSubLabel("$3") != null) {
-                        zone710.addSubLabel("$5", zone710.findSubLabel("$3"));
+                        zone710.addSubLabel("$5", zone710.findSubLabel("$3").substring(0,9));
                         zone710.deleteSubLabel("$3");
                     }
                     noticeElec.addZone(zone710);
                 }
                 for (Zone zone711 : noticeImprimee.getNoticeBiblio().findZones("711")) {
                     if (zone711.findSubLabel("$3") != null) {
-                        zone711.addSubLabel("$5", zone711.findSubLabel("$3"));
+                        zone711.addSubLabel("$5", zone711.findSubLabel("$3").substring(0,9));
                         zone711.deleteSubLabel("$3");
                     }
                     noticeElec.addZone(zone711);
