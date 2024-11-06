@@ -188,7 +188,7 @@ public class NoticeMapperTest {
         Assertions.assertEquals("Titre notice", biblio.findZone("200", 0).findSubLabel("$a"));
         Assertions.assertEquals("[Lieu de publication inconnu]", biblio.findZone("214", 0).findSubLabel("$a"));
         Assertions.assertEquals("Accès en ligne réservé aux établissements ou bibliothèques ayant souscrit l'abonnement", biblio.findZone("371", 0).findSubLabel("$a"));
-        Assertions.assertEquals("123456789", biblio.findZone("452", 0).findSubLabel("$0"));
+        Assertions.assertEquals("123456789", biblio.findZone("452", 0).findSubLabel("$5"));
         Assertions.assertEquals("http://www.test.com/", biblio.findZone("859", 0).findSubLabel("$u"));
     }
 
