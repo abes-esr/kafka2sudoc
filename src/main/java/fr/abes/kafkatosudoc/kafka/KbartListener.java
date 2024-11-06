@@ -35,6 +35,8 @@ import java.util.concurrent.locks.ReentrantLock;
 @Service
 @Slf4j
 public class KbartListener {
+    private static final String ERROR_COMM = "erreur de communication avec le Sudoc, tentative de reconnexion";
+    private static final String ERROR_DECO = "Erreur de déconnexion du Sudoc";
 
     @Value("${sudoc.serveur}")
     private String serveurSudoc;
@@ -176,7 +178,7 @@ public class KbartListener {
             try {
                 service.disconnect();
             } catch (CBSException e) {
-                log.warn("Erreur de déconnexion du Sudoc");
+                log.warn("traiterPackageDansSudoc" + ERROR_DECO);
             }
         }
     }
@@ -190,7 +192,7 @@ public class KbartListener {
         } catch (IOException e) {
             //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
             try {
-                log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
+                log.debug("getNoticeBouquet" + ERROR_COMM);
                 service.disconnect();
                 service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             } catch (CBSException ex) {
@@ -221,7 +223,7 @@ public class KbartListener {
         } catch (IOException e) {
             //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
             try {
-                log.error("erreur de communication avec le Sudoc, tentative de reconnexion");
+                log.error("ajout469" + ERROR_COMM);
                 service.disconnect();
                 service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             } catch (CBSException ex) {
@@ -287,7 +289,7 @@ public class KbartListener {
             try {
                 service.disconnect();
             } catch (CBSException e) {
-                log.warn("Erreur de déconnexion du Sudoc");
+                log.warn("listenKbartToDeleteFromKafka" + ERROR_DECO);
             }
         }
     }
@@ -395,7 +397,7 @@ public class KbartListener {
                         emailService.sendErrorMessagesExNihilo(filename, this.workInProgressMapExNihilo.get(filename));
                     this.workInProgressMapExNihilo.remove(filename);
                 } catch (CBSException | IOException e) {
-                    log.warn("Erreur de déconnexion du Sudoc");
+                    log.warn("listenKbartFromKafkaExNihilo" + ERROR_DECO);
                 }
             }
         }
@@ -416,7 +418,7 @@ public class KbartListener {
         } catch (IOException e) {
             //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
             try {
-                log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
+                log.debug("creerNoticeExNihilo" + ERROR_COMM);
                 service.disconnect();
                 service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
             } catch (CBSException | IOException ex) {
@@ -454,17 +456,21 @@ public class KbartListener {
             SudocService service = new SudocService();
             try {
                 //authentification sur la base maitre du sudoc pour récupérer la notice imprimée
-                service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
+                //service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
                 if (this.workInProgressMapImprime.get(filename).getListeNotices() != null && !this.workInProgressMapImprime.get(filename).getListeNotices().isEmpty()) {
+                    Map<String, NoticeConcrete> mapNoticesImprimees = getNoticesImprimeesFromCatalogue(filename, service);
+                    service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
                     for (LigneKbartImprime ligneKbartImprime : this.workInProgressMapImprime.get(filename).getListeNotices()) {
-                        creerNoticeAPartirImprime(ligneKbartImprime, provider, filename, service);
+                        KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
+                        kbartAndImprimeDto.setKbart(mapper.map(ligneKbartImprime, LigneKbartImprime.class));
+                        kbartAndImprimeDto.setNotice(mapNoticesImprimees.get(ligneKbartImprime.getPpn().toString()));
+                        creerNoticeAPartirImprime(kbartAndImprimeDto, provider, filename, ligneKbartImprime.getPpn().toString(), service);
                     }
                 }
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
                 try {
-                    log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
+                    log.debug("listenKbartFromKafkaImprime : " + ERROR_COMM);
                     service.disconnect();
                     service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
                 } catch (CBSException | IOException ex) {
@@ -480,21 +486,63 @@ public class KbartListener {
                         emailService.sendErrorMessagesImprime(filename, this.workInProgressMapImprime.get(filename));
                     this.workInProgressMapImprime.remove(filename);
                 } catch (CBSException | IOException e) {
-                    log.warn("Erreur de déconnexion du Sudoc");
+                    log.warn("listenKbartFromKafkaImprime : " + ERROR_DECO);
                 }
             }
         }
 
     }
 
+   private Map<String, NoticeConcrete> getNoticesImprimeesFromCatalogue(String filename, SudocService service) throws IOException, CBSException {
+        String ppn;
+        try {
+            service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            Map<String, NoticeConcrete> noticeConcreteMap = new HashMap<>();
+            for (LigneKbartImprime ligneKbartImprime : this.workInProgressMapImprime.get(filename).getListeNotices()) {
+                ppn = ligneKbartImprime.getPpn().toString();
+                feedMapWithNotices(ppn, filename, noticeConcreteMap, service);
+            }
+            return noticeConcreteMap;
+        } catch (IOException e) {
+            //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
+            try {
+                log.debug("getNoticesImprimeesFromCatalogue" + ERROR_COMM);
+                service.disconnect();
+                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            } catch (CBSException ex) {
+                log.error(ex.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    @Retryable(maxAttempts = 4, retryFor = IOException.class, noRetryFor = {CBSException.class, ZoneException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private void feedMapWithNotices(String ppn, String filename, Map<String, NoticeConcrete> noticeConcreteMap, SudocService service) throws IOException {
+        try {
+            noticeConcreteMap.put(ppn, service.getNoticeFromPpn(ppn));
+        } catch (IOException e) {
+            //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
+            try {
+                log.debug("feedMapWithNotices" + ERROR_COMM);
+                service.disconnect();
+                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            } catch (CBSException ex) {
+                log.error(ex.getMessage());
+            }
+            throw e;
+        } catch (CBSException | ZoneException e) {
+            log.error("Erreur dans la récupération de la notice imprimée pour le ppn {}", ppn);
+            this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(ppn, e.getMessage());
+        }
+
+    }
+
     @Retryable(maxAttempts = 4, retryFor = IOException.class, backoff = @Backoff(delay = 1000, multiplier = 2))
-    private void creerNoticeAPartirImprime(LigneKbartImprime ligneKbartImprime, String provider, String filename, SudocService service) throws IOException {
+    private void creerNoticeAPartirImprime(KbartAndImprimeDto kbartAndImprimeDto, String provider, String
+            filename, String ppn, SudocService service) throws IOException {
         String packageName = CheckFiles.getPackageFromFilename(filename);
         NoticeConcrete noticeElec = new NoticeConcrete();
-        KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
-        kbartAndImprimeDto.setKbart(mapper.map(ligneKbartImprime, LigneKbartImprime.class));
         try {
-            kbartAndImprimeDto.setNotice(service.getNoticeFromPpn(ligneKbartImprime.getPpn().toString()));
             noticeElec = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
             //Ajout provider display name en 214 $c 2è occurrence
             String providerDisplay = baconService.getProviderDisplayName(provider);
@@ -508,13 +556,13 @@ public class KbartListener {
             log.debug("Création notice à partir de l'imprimée terminée");
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage());
-            this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(ligneKbartImprime.getPpn().toString(), (noticeElec.getNoticeBiblio() != null) ? noticeElec.getNoticeBiblio().toString() : "Notice non récupérée", e.getMessage());
-        }  catch (IOException e) {
+            this.workInProgressMapImprime.get(filename).addErrorMessagesImprime(ppn, (noticeElec.getNoticeBiblio() != null) ? noticeElec.getNoticeBiblio().toString() : "Notice non récupérée", e.getMessage());
+        } catch (IOException e) {
             //cas d'une erreur de communication avec le Sudoc, on se relogge au cbs, et on retry la méthode
             try {
-                log.debug("erreur de communication avec le Sudoc, tentative de reconnexion");
+                log.debug("creerNoticeAPartirImprime" + ERROR_COMM);
                 service.disconnect();
-                service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+                service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
             } catch (CBSException ex) {
                 log.error(ex.getMessage());
             }

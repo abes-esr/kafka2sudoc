@@ -70,4 +70,8 @@ public class WorkInProgress<T> {
         this.errorMessages.add(new ErrorMessage(ERROR_TYPE.FROMIMPRIME, "{Ppn : " + ppn + ", Erreur : " + erreur +", Notice : " + notice + "}"));
     }
 
+    public void addErrorMessagesImprime(String ppn,String erreur) {
+        this.errorMessages.add(new ErrorMessage(ERROR_TYPE.FROMIMPRIME, "{Ppn : " + ppn + ", Erreur : " + erreur + "}"));
+    }
+
 }
