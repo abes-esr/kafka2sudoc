@@ -514,6 +514,9 @@ public class KbartListener {
             }
             throw e;
         }
+        finally {
+            service.disconnect();
+        }
     }
 
     @Retryable(maxAttempts = 4, retryFor = IOException.class, noRetryFor = {CBSException.class, ZoneException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
