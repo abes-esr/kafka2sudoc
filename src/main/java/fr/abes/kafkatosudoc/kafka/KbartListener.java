@@ -17,6 +17,7 @@ import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.EmailService;
 import fr.abes.kafkatosudoc.service.SudocService;
 import fr.abes.kafkatosudoc.utils.CheckFiles;
+import fr.abes.kafkatosudoc.utils.Utils;
 import fr.abes.kafkatosudoc.utils.UtilsMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.generic.GenericRecord;
@@ -382,7 +383,10 @@ public class KbartListener {
                 service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
                 if (this.workInProgressMapExNihilo.get(filename).getListeNotices() != null && !this.workInProgressMapExNihilo.get(filename).getListeNotices().isEmpty()) {
                     for (LigneKbartConnect ligneKbartConnect : this.workInProgressMapExNihilo.get(filename).getListeNotices()) {
-                        creerNoticeExNihilo(ligneKbartConnect, provider, service, packageName);
+                        //on ne crée la notice que s'il existe un onlineId ou un doi
+                        if (ligneKbartConnect.getONLINEIDENTIFIER() != null || !Utils.extractDoiFromConnect(ligneKbartConnect).isEmpty()) {
+                            creerNoticeExNihilo(ligneKbartConnect, provider, service, packageName);
+                        }
                     }
                 }
 
