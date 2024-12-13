@@ -465,10 +465,13 @@ public class KbartListener {
                     Map<String, NoticeConcrete> mapNoticesImprimees = getNoticesImprimeesFromCatalogue(filename, service);
                     service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
                     for (LigneKbartImprime ligneKbartImprime : this.workInProgressMapImprime.get(filename).getListeNotices()) {
-                        KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
-                        kbartAndImprimeDto.setKbart(mapper.map(ligneKbartImprime, LigneKbartImprime.class));
-                        kbartAndImprimeDto.setNotice(mapNoticesImprimees.get(ligneKbartImprime.getPpn().toString()));
-                        creerNoticeAPartirImprime(kbartAndImprimeDto, provider, filename, ligneKbartImprime.getPpn().toString(), service);
+                        NoticeConcrete noticeImprimee = mapNoticesImprimees.get(ligneKbartImprime.getPpn().toString());
+                        if (noticeImprimee != null) {
+                            KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
+                            kbartAndImprimeDto.setKbart(mapper.map(ligneKbartImprime, LigneKbartImprime.class));
+                            kbartAndImprimeDto.setNotice(noticeImprimee);
+                            creerNoticeAPartirImprime(kbartAndImprimeDto, provider, filename, ligneKbartImprime.getPpn().toString(), service);
+                        }
                     }
                 }
             } catch (IOException e) {
