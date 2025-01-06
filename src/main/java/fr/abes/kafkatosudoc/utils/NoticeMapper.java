@@ -1,5 +1,6 @@
 package fr.abes.kafkatosudoc.utils;
 
+import com.google.common.collect.Table;
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
 import fr.abes.cbs.exception.ZoneException;
@@ -18,7 +19,10 @@ import org.springframework.stereotype.Component;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class NoticeMapper {
@@ -82,15 +86,15 @@ public class NoticeMapper {
                 Zone zone214diese0 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '0'});
                 zone214diese0.addSubLabel("$a", "[Lieu de publication inconnu]");
                 if (kbart.getPUBLISHERNAME() != null)
-                    zone214diese0.addSubLabel( "$c", kbart.getPUBLISHERNAME().toString());
+                    zone214diese0.addSubLabel("$c", kbart.getPUBLISHERNAME().toString());
                 noticeBiblio.addZone(zone214diese0);
 
                 Zone zone214diese2 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '2'});
                 zone214diese2.addSubLabel("$a", "[Lieu de diffusion inconnu]");
                 if (kbart.getDATEMONOGRAPHPUBLISHEDONLIN() != null && !kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString().isEmpty()) {
-                    zone214diese2.addSubLabel( "$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()));
+                    zone214diese2.addSubLabel("$d", Utils.getYearFromDate(kbart.getDATEMONOGRAPHPUBLISHEDONLIN().toString()));
                 } else {
-                    zone214diese2.addSubLabel( "$d", "[20..]");
+                    zone214diese2.addSubLabel("$d", "[20..]");
                 }
                 noticeBiblio.addZone(zone214diese2);
                 noticeBiblio.addZone("309", "$a", "Notice générée automatiquement à partir des métadonnées de BACON. SUPPRIMER LA PRESENTE NOTE 309 APRES MISE A JOUR");
@@ -284,7 +288,7 @@ public class NoticeMapper {
                 List<Zone> zones500 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("5")).filter(zone -> (!zone.getLabel().equals("579") && !zone.getLabel().equals("512") && !zone.getLabel().equals("516"))).toList();
                 for (Zone zone1 : zones500) {
                     if (zone1.findSubLabel("$3") != null) {
-                        zone1.addSubLabel("$5", zone1.findSubLabel("$3").substring(0,9));
+                        zone1.addSubLabel("$5", zone1.findSubLabel("$3").substring(0, 9));
                         zone1.deleteSubLabel("$3");
                     }
                 }
@@ -293,43 +297,52 @@ public class NoticeMapper {
                 List<Zone> zones600 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
 
                 for (Zone zone1 : zones600) {
-                    List<String> listeSousZones = new ArrayList<>();
-                    if (zone1.findSubLabel("$3") != null) {
-                        for (String ssZone : zone1.getSubLabelTable().columnMap().get("$3").values()){
-                            listeSousZones.add(ssZone.substring(0,9));
-                        }
-                        zone1.deleteSubLabel("$3");
-                        for (String ssZone : listeSousZones) {
-                            zone1.addSubLabel("$5", ssZone);
-                        }
+                    Zone zoneACreer = new Zone(zone1.getLabel(), zone1.getTypeNotice(), zone1.getIndicateurs());
+                    Table<Integer, String, String> ssZones = zone1.getSubLabelTable();
+                    for (int i = 0; i < ssZones.rowKeySet().size(); i++) {
+                        ssZones.row(i).forEach((key, valeur) -> {
+                            if (key.equals("$3")) {
+                                try {
+                                    zoneACreer.addSubLabel("$5", valeur);
+                                } catch (ZoneException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            } else {
+                                try {
+                                    zoneACreer.addSubLabel(key, valeur);
+                                } catch (ZoneException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        });
                     }
+                    noticeElec.addZone(zoneACreer);
                 }
-                zones600.forEach(noticeElec::addZone);
 
                 for (Zone zone700 : noticeImprimee.getNoticeBiblio().findZones("700")) {
                     if (zone700.findSubLabel("$3") != null) {
-                        zone700.addSubLabel("$5", zone700.findSubLabel("$3").substring(0,9));
+                        zone700.addSubLabel("$5", zone700.findSubLabel("$3").substring(0, 9));
                         zone700.deleteSubLabel("$3");
                     }
                     noticeElec.addZone(zone700);
                 }
                 for (Zone zone701 : noticeImprimee.getNoticeBiblio().findZones("701")) {
                     if (zone701.findSubLabel("$3") != null) {
-                        zone701.addSubLabel("$5", zone701.findSubLabel("$3").substring(0,9));
+                        zone701.addSubLabel("$5", zone701.findSubLabel("$3").substring(0, 9));
                         zone701.deleteSubLabel("$3");
                     }
                     noticeElec.addZone(zone701);
                 }
                 for (Zone zone710 : noticeImprimee.getNoticeBiblio().findZones("710")) {
                     if (zone710.findSubLabel("$3") != null) {
-                        zone710.addSubLabel("$5", zone710.findSubLabel("$3").substring(0,9));
+                        zone710.addSubLabel("$5", zone710.findSubLabel("$3").substring(0, 9));
                         zone710.deleteSubLabel("$3");
                     }
                     noticeElec.addZone(zone710);
                 }
                 for (Zone zone711 : noticeImprimee.getNoticeBiblio().findZones("711")) {
                     if (zone711.findSubLabel("$3") != null) {
-                        zone711.addSubLabel("$5", zone711.findSubLabel("$3").substring(0,9));
+                        zone711.addSubLabel("$5", zone711.findSubLabel("$3").substring(0, 9));
                         zone711.deleteSubLabel("$3");
                     }
                     noticeElec.addZone(zone711);
@@ -393,7 +406,6 @@ public class NoticeMapper {
         };
         mapper.addConverter(myConverter);
     }
-
 
 
 }
