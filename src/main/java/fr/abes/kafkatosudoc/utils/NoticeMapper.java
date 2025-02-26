@@ -8,6 +8,7 @@ import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.notices.TYPE_NOTICE;
 import fr.abes.cbs.notices.Zone;
+import fr.abes.cbs.utilitaire.Utilitaire;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.entity.LigneKbart;
 import lombok.SneakyThrows;
@@ -303,13 +304,13 @@ public class NoticeMapper {
                         ssZones.row(i).forEach((key, valeur) -> {
                             if (key.equals("$3")) {
                                 try {
-                                    zoneACreer.addSubLabel("$5", valeur);
+                                    zoneACreer.addSubLabel("$5", Utilitaire.deleteExpensionFromValue(valeur));
                                 } catch (ZoneException e) {
                                     throw new RuntimeException(e);
                                 }
                             } else {
                                 try {
-                                    zoneACreer.addSubLabel(key, valeur);
+                                    zoneACreer.addSubLabel(key, Utilitaire.deleteExpensionFromValue(valeur));
                                 } catch (ZoneException e) {
                                     throw new RuntimeException(e);
                                 }

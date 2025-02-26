@@ -7,6 +7,7 @@ import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.notices.TYPE_NOTICE;
 import fr.abes.cbs.notices.Zone;
+import fr.abes.cbs.utilitaire.Constants;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Assertions;
@@ -541,5 +542,69 @@ public class NoticeMapperTest {
         kbartAndImprimeDto.setKbart(kbart);
         kbartAndImprimeDto.setNotice(notice);
         return kbartAndImprimeDto;
+    }
+
+    @Test
+    void testMapperErreurZone101() throws ZoneException {
+        String biblioStr = "000 $022,54\r" +
+                "003 201657368\r" +
+                "004 601592101:07-06-17\r" +
+                "005 1999:08-01-20 18:00:12.000\r" +
+                "006 601592101:07-06-17\r" +
+                "008 $aAax3\r" +
+                "00A $00\r" +
+                "00U $0utf8\r" +
+                "010 ##$A978-1-68108-131-1$brel.\r" +
+                "010 ##$a1-68108-131-8$brel.\r" +
+                "034 $aOCoLC$0990181308\r" +
+                "035 ##$aocn967683336\r" +
+                "100 0#$a2015$f2015\r" +
+                "101 0#$aeng\r" +
+                "102 ##$aAE\r" +
+                "104 ##$ak$by$cy$dba$e0$ffre\r" +
+                "105 ##$aa$ba$c0$d0$e1$fy$gy\r" +
+                "106 ##$ar\r" +
+                "181 ##$P01$ctxt\r" +
+                "182 ##$P01$cn\r" +
+                "183 ##$P01$anga\r" +
+                "200 1#$a@Supercooling, crystallization and melting within emulsions and divided systems$emass, heat transfers and stability$fauthored by Danièle Clausse,... & Jean Pierre Dumas,...$g[foreword Johan Sjöblom]\r" +
+                "214 #0$aCharjah$cBentham Science Publishers\r" +
+                "214 #4$dC 2015\r" +
+                "215 ##$a1 vol. (VII-290 p.)$cill. en noir et en coul., graph., fig., couv. ill. en coul.$d25 cm\r" +
+                "320 ##$aBibliogr. en fin de chapitres. Index\r" +
+                "606 ##$3027673235"+ Constants.STR_1B + "I@" +"testest$2rameau\r" +
+                "606 ##$3031067980$2rameau\r" +
+                "606 ##$302783168X$2rameau\r" +
+                "606 ##$3033153604$2rameau\r" +
+                "606 ##$3027831728$2rameau\r" +
+                "606 ##$3027831817$2rameau\r" +
+                "606 ##$3027372332$2rameau\r" +
+                "676 ##$a660.294514$v23\r" +
+                "680 ##$aTP156.E6\r" +
+                "700 #1$3032988230$4070\r" +
+                "701 #1$3059883006$4070\r" +
+                "702 #1$3057101019$4080\r" +
+                "801 #0$bYDX$gAACR2\r" +
+                "801 #1$bYDX$gAACR2\r" +
+                "801 #2$bOCLCQ$gAACR2\r";
+        Biblio biblio = new Biblio(biblioStr);
+        NoticeConcrete notice = new NoticeConcrete(biblio, null, Lists.newArrayList());
+
+        LigneKbartImprime kbart = new LigneKbartImprime();
+        kbart.setOnlineIdentifier("0-415-11262-8");
+        kbart.setPublicationTitle("Test title");
+        kbart.setAccessType("P");
+        kbart.setTitleUrl("http://www.test.com/");
+        kbart.setPpn("123456789");
+
+        KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
+        kbartAndImprimeDto.setKbart(kbart);
+        kbartAndImprimeDto.setNotice(notice);
+
+        NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+        Assertions.assertEquals("101 0#$aeng\r", noticeResult.getNoticeBiblio().findZone("101", 0).toString());
+        Assertions.assertEquals("606 ##$5027673235$2rameau\r", noticeResult.getNoticeBiblio().findZone("606", 0).toString());
+
+
     }
 }
