@@ -4,6 +4,7 @@ package fr.abes.kafkatosudoc.utils;
 
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
+import fr.abes.cbs.utilitaire.Constants;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,5 +72,8 @@ public class Utils {
 
     }
 
+    public static String deleteExpensionFromValue(String value) {
+        return value.contains(Constants.STR_1B) ? value.substring(0, value.indexOf(Constants.STR_1B)) : value;
+    }
 
 }
