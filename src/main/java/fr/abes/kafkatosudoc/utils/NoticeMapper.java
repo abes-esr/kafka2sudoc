@@ -304,13 +304,13 @@ public class NoticeMapper {
                         ssZones.row(i).forEach((key, valeur) -> {
                             if (key.equals("$3")) {
                                 try {
-                                    zoneACreer.addSubLabel("$5", Utilitaire.deleteExpensionFromValue(valeur));
+                                    zoneACreer.addSubLabel("$5", Utils.deleteExpensionFromValue(valeur));
                                 } catch (ZoneException e) {
                                     throw new RuntimeException(e);
                                 }
                             } else {
                                 try {
-                                    zoneACreer.addSubLabel(key, Utilitaire.deleteExpensionFromValue(valeur));
+                                    zoneACreer.addSubLabel(key, Utils.deleteExpensionFromValue(valeur));
                                 } catch (ZoneException e) {
                                     throw new RuntimeException(e);
                                 }
