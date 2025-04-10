@@ -7,10 +7,6 @@ on:
         description: 'Version de la release (semver)'
         required: true
         default: 'x.x.x'
-      snapshotVersion:
-        description: 'Version de la Snapshot (semver)'
-        required: true
-        default: 'x.x.x-SNAPSHOT'
 
 jobs:
   create-release:
