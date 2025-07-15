@@ -228,7 +228,7 @@ public class KbartListener {
                 service.disconnect();
                 service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             } catch (CBSException ex) {
-                log.error(ex.getMessage());
+                log.error("Package {} : Erreur dans l'ajout de la 469 sur PPN {} : {}", filename, ppn, ex.getMessage());
             }
             throw e;
         }
@@ -258,7 +258,7 @@ public class KbartListener {
                 service.disconnect();
                 service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             } catch (CBSException ex) {
-                log.error(ex.getMessage());
+                log.error("Package {} : Erreur dans la suppression de la 469 sur PPN {} : {}", filename, ppn, ex.getMessage());
             }
             throw e;
         }
@@ -341,7 +341,7 @@ public class KbartListener {
             if (service.isNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet)) {
                 service.supprimeNoticeBouquetInPpn(notice.getNoticeBiblio(), ppnNoticeBouquet);
                 service.modifierNotice(notice, i);
-                log.debug("Suppression 469 : Notice " + notice.getNoticeBiblio().findZones("003").get(0).getValeur() + " modifiée avec succès");
+                log.debug("Suppression Lien 469 : Notice " + notice.getNoticeBiblio().findZones("003").get(0).getValeur() + " modifiée avec succès");
             }
         } catch (CBSException | ZoneException e) {
             log.error(e.getMessage(), e.getCause());
@@ -391,7 +391,7 @@ public class KbartListener {
                 }
 
             } catch (CBSException | ZoneException | IOException e) {
-                log.error(e.getMessage());
+                log.error("Package {} : Erreur dans la création de notice ex nihilo sur Kbart {} : {}", ligneKbart.key(), ligneKbart.value().getPUBLICATIONTITLE(), e.getMessage());
                 this.workInProgressMapExNihilo.get(filename).addErrorMessageExNihilo(ligneKbart.value().getBESTPPN().toString(), e.getMessage());
             } finally {
                 try {
@@ -426,7 +426,7 @@ public class KbartListener {
                 service.disconnect();
                 service.authenticateBaseSignal(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, signalDb);
             } catch (CBSException | IOException ex) {
-                log.error(ex.getMessage());
+                log.error("Package {} : Erreur dans la création de notice électronique à partir de l'imprimé sur Kbart {} : {}", packageName, ligneKbartConnect.getPUBLICATIONTITLE(), e.getMessage());
             }
             throw e;
         }
