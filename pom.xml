@@ -231,10 +231,6 @@
             <id>confluent</id>
             <url>https://packages.confluent.io/maven/</url>
         </repository>
-        <repository>
-            <id>maven</id>
-            <url>https://central.sonatype.com/artifact/</url>
-        </repository>
     </repositories>
     <scm>
         <connection>scm:git:https://github.com/abes-esr/kafka2sudoc-api.git</connection>
