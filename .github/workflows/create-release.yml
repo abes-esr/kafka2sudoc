@@ -91,7 +91,7 @@ jobs:
           git push
           
           # switch version to snapshot version
-          for POM_FILE in $(ls */pom.xml)
+          for POM_FILE in $(ls *pom.xml)
           do
             echo -e "setns x=http://maven.apache.org/POM/4.0.0\ncd /x:project/x:version\nset $NEW_SNAPSHOT_TAG\nsave" \
               | xmllint --shell $POM_FILE
