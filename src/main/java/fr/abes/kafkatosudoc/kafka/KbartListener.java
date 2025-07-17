@@ -107,6 +107,7 @@ public class KbartListener {
             if (!this.workInProgressMap.get(filename).getErrorMessages().isEmpty())
                 emailService.sendErrorsMessageCreateFromKafka(filename, this.workInProgressMap.get(filename));
             this.workInProgressMap.remove(filename);
+            log.debug("Traitement terminé, package supprimé de la liste");
         }
 
     }
