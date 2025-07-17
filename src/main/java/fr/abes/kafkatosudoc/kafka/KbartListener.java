@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -114,10 +115,11 @@ public class KbartListener {
 
     private void traiterPackageDansSudoc(List<LigneKbartConnect> listeNotices, String filename) {
         PackageKbartDto packageKbartDto;
-        List<String> newBestPpn = new ArrayList<>();
-        List<String> deletedBestPpn = new ArrayList<>();
         SudocService service = new SudocService();
         try {
+            Set<String> newBestPpn = new HashSet<>();
+            Set<String> deletedBestPpn = new HashSet<>();
+
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
             Date dateFromFile = CheckFiles.extractDate(filename);
@@ -125,25 +127,37 @@ public class KbartListener {
 
             ProviderPackage lastPackage = baconService.findLastVersionOfPackage(packageKbartDto);
             String ppnNoticeBouquet = getNoticeBouquet(service, provider, packageName);
-            //cas ou on a une version antérieure de package
+
+            // Construction d'une map PPN -> LigneKbartConnect pour accès O(1)
+            Map<String, LigneKbartConnect> noticeMap = listeNotices.stream()
+                    .filter(l -> l.getBESTPPN() != null)
+                    .collect(Collectors.toMap(
+                            l -> l.getBESTPPN().toString(),
+                            l -> l,
+                            (a, b) -> a  // en cas de doublons, on garde la première
+                    ));
             Set<LigneKbart> ppnLastVersion = new HashSet<>();
+            //cas ou on a une version antérieure de package
             if (lastPackage != null) {
                 ppnLastVersion = baconService.findAllPpnFromPackage(lastPackage);
-                for (String ppn : ppnLastVersion.stream().map(LigneKbart::getBestPpn).toList()) {
-                    if (!(listeNotices.stream().map(ligneKbartConnect -> ligneKbartConnect.getBESTPPN().toString()).toList().contains(ppn)))
-                        deletedBestPpn.add(ppn);
-                }
-                for (CharSequence ppn : listeNotices.stream().map(LigneKbartConnect::getBESTPPN).toList()) {
-                    if (!ppnLastVersion.stream().map(LigneKbart::getBestPpn).toList().contains(ppn.toString()))
-                        newBestPpn.add(ppn.toString());
-                }
+
+                Set<String> oldSetOfPpn = ppnLastVersion.stream()
+                        .map(LigneKbart::getBestPpn)
+                        .collect(Collectors.toCollection(HashSet::new));
+
+                // Nouveau set de PPN présents dans le fichier actuel
+                Set<String> newSetOfppn = noticeMap.keySet();
+
+                // Calcul PPN à supprimés
+                deletedBestPpn.addAll(oldSetOfPpn);
+                deletedBestPpn.removeAll(newSetOfppn);
+
+                // Calcul PPN à ajouté
+                newBestPpn.addAll(newSetOfppn);
+                newBestPpn.removeAll(oldSetOfPpn);
             } else {
                 //pas de version antérieure, tous les bestPpn sont nouveaux
-                for (LigneKbartConnect ligneKbartConnect : listeNotices) {
-                    if (ligneKbartConnect.getBESTPPN() != null) {
-                        newBestPpn.add(ligneKbartConnect.getBESTPPN().toString());
-                    }
-                }
+                newBestPpn.addAll(noticeMap.keySet());
             }
 
             //traitement des notices dans le cbs : ajout ou suppression de 469 en fonction des cas
