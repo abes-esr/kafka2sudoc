@@ -8,7 +8,6 @@ import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.notices.TYPE_NOTICE;
 import fr.abes.cbs.notices.Zone;
-import fr.abes.cbs.utilitaire.Utilitaire;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.entity.LigneKbart;
 import lombok.SneakyThrows;
@@ -285,6 +284,9 @@ public class NoticeMapper {
                     if (zone454dollart != null)
                         noticeElec.addZone("454", "$t", zone454dollart, new char[]{'#', '#'});
                 }
+                /* TODO : refactoriser pour ne plus utiliser la méthode addsublabel de la classe Zone mais la méthode addSousZone de la classe Notice
+                    A faire sur toutes les constructions de zones ou on utilise addSubLabel (donc 5XX, 6XX, 7XX)
+                 */
                 //zone 5XX sauf 579, 512 et 516
                 List<Zone> zones500 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("5")).filter(zone -> (!zone.getLabel().equals("579") && !zone.getLabel().equals("512") && !zone.getLabel().equals("516"))).toList();
                 for (Zone zone1 : zones500) {
