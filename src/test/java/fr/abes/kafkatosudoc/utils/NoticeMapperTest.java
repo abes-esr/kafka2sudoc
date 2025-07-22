@@ -283,7 +283,7 @@ public class NoticeMapperTest {
         KbartAndImprimeDto kbartAndImprimeDto = getKbartAndImprimeDto();
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals("701 $5123456789$607$7fa$4070 (Auteur)", biblio.findZone("701", 0).toString());
+        Assertions.assertEquals("701 $5123456789$607$7fa$44070 (Auteur)\r", biblio.findZone("701", 0).toString());
     }
 
     @Test
