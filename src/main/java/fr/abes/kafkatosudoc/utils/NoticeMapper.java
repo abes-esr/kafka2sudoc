@@ -286,7 +286,6 @@ public class NoticeMapper {
                 for (Zone zone1 : zones500) {
                     replaceSublabel3With5(noticeElec, zone1);
                 }
-                zones500.forEach(noticeElec::addZone);
 
                 List<Zone> zones600 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
 
