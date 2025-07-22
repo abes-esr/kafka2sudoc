@@ -4,11 +4,7 @@ import com.google.common.collect.Table;
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
 import fr.abes.cbs.exception.ZoneException;
-import fr.abes.cbs.notices.Biblio;
-import fr.abes.cbs.notices.NoticeConcrete;
-import fr.abes.cbs.notices.TYPE_NOTICE;
-import fr.abes.cbs.notices.Zone;
-import fr.abes.cbs.utilitaire.Utilitaire;
+import fr.abes.cbs.notices.*;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.entity.LigneKbart;
 import lombok.SneakyThrows;
@@ -288,12 +284,8 @@ public class NoticeMapper {
                 //zone 5XX sauf 579, 512 et 516
                 List<Zone> zones500 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("5")).filter(zone -> (!zone.getLabel().equals("579") && !zone.getLabel().equals("512") && !zone.getLabel().equals("516"))).toList();
                 for (Zone zone1 : zones500) {
-                    if (zone1.findSubLabel("$3") != null) {
-                        zone1.addSubLabel("$5", zone1.findSubLabel("$3").substring(0, 9));
-                        zone1.deleteSubLabel("$3");
-                    }
+                    replaceSublabel3With5(noticeElec, zone1);
                 }
-                zones500.forEach(noticeElec::addZone);
 
                 List<Zone> zones600 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
 
@@ -321,32 +313,17 @@ public class NoticeMapper {
                 }
 
                 for (Zone zone700 : noticeImprimee.getNoticeBiblio().findZones("700")) {
-                    if (zone700.findSubLabel("$3") != null) {
-                        zone700.addSubLabel("$5", zone700.findSubLabel("$3").substring(0, 9));
-                        zone700.deleteSubLabel("$3");
-                    }
-                    noticeElec.addZone(zone700);
+                    replaceSublabel3With5(noticeElec, zone700);
                 }
                 for (Zone zone701 : noticeImprimee.getNoticeBiblio().findZones("701")) {
-                    if (zone701.findSubLabel("$3") != null) {
-                        zone701.addSubLabel("$5", zone701.findSubLabel("$3").substring(0, 9));
-                        zone701.deleteSubLabel("$3");
-                    }
-                    noticeElec.addZone(zone701);
+                    replaceSublabel3With5(noticeElec, zone701);
                 }
+
                 for (Zone zone710 : noticeImprimee.getNoticeBiblio().findZones("710")) {
-                    if (zone710.findSubLabel("$3") != null) {
-                        zone710.addSubLabel("$5", zone710.findSubLabel("$3").substring(0, 9));
-                        zone710.deleteSubLabel("$3");
-                    }
-                    noticeElec.addZone(zone710);
+                    replaceSublabel3With5(noticeElec, zone710);
                 }
                 for (Zone zone711 : noticeImprimee.getNoticeBiblio().findZones("711")) {
-                    if (zone711.findSubLabel("$3") != null) {
-                        zone711.addSubLabel("$5", zone711.findSubLabel("$3").substring(0, 9));
-                        zone711.deleteSubLabel("$3");
-                    }
-                    noticeElec.addZone(zone711);
+                    replaceSublabel3With5(noticeElec, zone711);
                 }
 
                 //url d'accès
@@ -360,6 +337,24 @@ public class NoticeMapper {
             }
         };
         mapper.addConverter(myConverter);
+    }
+
+    private void replaceSublabel3With5(Biblio noticeElec, Zone zone) throws ZoneException {
+        if (zone.findSubLabel("$3") != null) {
+            Zone newZone = new Zone(zone.getLabel(), zone.getTypeNotice(), zone.getIndicateurs());
+            newZone.addSubLabel("$5", zone.findSubLabel("$3").substring(0, 9));
+            zone.deleteSubLabel("$3");
+            for (Map.Entry<String, String> entry : zone.getSubLabelTable().rowMap().values().stream().flatMap(map -> map.entrySet().stream()).toList()) {
+                try {
+                    newZone.addSubLabel(entry.getKey(), entry.getValue());
+                } catch (ZoneException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            noticeElec.addZone(newZone);
+        } else {
+            noticeElec.addZone(zone);
+        }
     }
 
     @Bean
@@ -407,6 +402,4 @@ public class NoticeMapper {
         };
         mapper.addConverter(myConverter);
     }
-
-
 }
