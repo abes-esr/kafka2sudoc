@@ -172,7 +172,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
         Assertions.assertEquals("Oax3", biblio.findZone("008", 0).findSubLabel("$a"));
         Assertions.assertEquals("0-415-11262-8", biblio.findZone("010", 0).findSubLabel("$a"));
         Assertions.assertEquals("20XX", biblio.findZone("100", 0).findSubLabel("$a"));
@@ -200,13 +200,13 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
         Assertions.assertEquals("0-415-11262-8", biblio.findZone("010", 0).findSubLabel("$a"));
 
         kbartAndImprimeDto.getKbart().setOnlineIdentifier(null);
         noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(14, biblio.getListeZones().size());
+        Assertions.assertEquals(15, biblio.getListeZones().size());
     }
 
     @Test
@@ -220,7 +220,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("0-415-11262-8", biblio.findZone("010", 0).findSubLabel("$a"));
         Assertions.assertEquals("123456789", biblio.findZone("500", 0).findSubLabel("$5"));
         Assertions.assertEquals("testk", biblio.findZone("500", 0).findSubLabel("$k"));
@@ -229,7 +229,7 @@ public class NoticeMapperTest {
         kbartAndImprimeDto.getKbart().setOnlineIdentifier(null);
         noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
     }
 
     @Test
@@ -244,7 +244,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("0-415-11262-8", biblio.findZone("010", 0).findSubLabel("$a"));
         Assertions.assertEquals("600 $5123456789$5987654321$2rameau\r", biblio.findZone("600", 0).toString());
         Assertions.assertNull(biblio.findZone("600", 0).findSubLabel("$3"));
@@ -252,7 +252,7 @@ public class NoticeMapperTest {
         kbartAndImprimeDto.getKbart().setOnlineIdentifier(null);
         noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
     }
 
     @Test
@@ -265,16 +265,25 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("0-415-11262-8", biblio.findZone("010", 0).findSubLabel("$a"));
         Assertions.assertEquals("test", biblio.findZone("454", 0).findSubLabel("$t"));
 
         kbartAndImprimeDto.getNotice().getNoticeBiblio().findZone("454", 0).addSubLabel("$0", "test");
         noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
         Assertions.assertEquals("0-415-11262-8", biblio.findZone("010", 0).findSubLabel("$a"));
         Assertions.assertNull(biblio.findZone("454", 0));
+    }
+
+    @Test
+    @DisplayName("Test création notice from Kbart & notice imprimée cas sous zones translitérées")
+    void testMapperNoticeFromKbartAndImprimeTranslit4() throws ZoneException {
+        KbartAndImprimeDto kbartAndImprimeDto = getKbartAndImprimeDto();
+        NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+        Biblio biblio = noticeResult.getNoticeBiblio();
+        Assertions.assertEquals("701 $5123456789$607$7fa$44070 (Auteur)\r", biblio.findZone("701", 0).toString());
     }
 
     @Test
@@ -286,7 +295,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
         Assertions.assertEquals("10.1038/issn.1476-4687", biblio.findZone("017", 0).findSubLabel("$a"));
         Assertions.assertEquals("DOI", biblio.findZone("017", 0).findSubLabel("$2"));
     }
@@ -299,7 +308,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("test104$a", biblio.findZone("104", 0).findSubLabel("$a"));
     }
 
@@ -311,20 +320,20 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("test105$a", biblio.findZone("105", 0).findSubLabel("$a"));
 
         kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("105", "$b", "r");
         noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("test105$a", biblio.findZone("105", 0).findSubLabel("$a"));
         kbartAndImprimeDto.getNotice().getNoticeBiblio().deleteSousZone("105", "$b");
 
         kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("105", "$b", "m");
         noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("test105$a", biblio.findZone("105", 0).findSubLabel("$a"));
         Assertions.assertEquals("v", biblio.findZone("105", 0).findSubLabel("$b"));
     }
@@ -338,7 +347,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("mention d'édition", biblio.findZone("205", 0).findSubLabel("$a"));
         Assertions.assertEquals("Autre mention d'édition", biblio.findZone("205", 0).findSubLabel("$b"));
     }
@@ -353,7 +362,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
         Assertions.assertEquals("[Lieu de publication inconnu]", biblio.findZone("214", 0).findSubLabel("$a"));
         Assertions.assertEquals("publisher", biblio.findZone("214", 0).findSubLabel("$c"));
 
@@ -363,7 +372,7 @@ public class NoticeMapperTest {
         kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("214", "$d", "2019");
         noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
         Assertions.assertEquals("Lieu de publication test", biblio.findZone("214", 0).findSubLabel("$a"));
         Assertions.assertEquals("Nom Editeur", biblio.findZone("214", 0).findSubLabel("$c"));
         Assertions.assertNull(biblio.findZone("214", 0).findSubLabel("$d"));
@@ -376,7 +385,7 @@ public class NoticeMapperTest {
         kbartAndImprimeDto.getNotice().getNoticeBiblio().addSousZone("214", "$d", "2020");
         noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
         Assertions.assertEquals("[Lieu de publication inconnu]", biblio.findZone("214", 0).findSubLabel("$a"));
         Assertions.assertEquals("publisher", biblio.findZone("214", 0).findSubLabel("$c"));
         Assertions.assertEquals("[Lieu de diffusion inconnu]", biblio.findZone("214", 1).findSubLabel("$a"));
@@ -394,7 +403,7 @@ public class NoticeMapperTest {
         noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         biblio = noticeResult.getNoticeBiblio();
 
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
         Assertions.assertEquals("Lieu de publication test", biblio.findZone("214", 0).getSubLabelList().get("$a").get(0));
         Assertions.assertEquals("Nom Editeur", biblio.findZone("214", 0).getSubLabelList().get("$c").get(0));
 
@@ -411,7 +420,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("note de thèse", biblio.findZone("328", 0).findSubLabel("$a"));
         Assertions.assertEquals("Autre édition de", biblio.findZone("328", 0).findSubLabel("$z"));
     }
@@ -424,7 +433,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
         Assertions.assertEquals("Ressource en accès libre", biblio.findZone("371", 0).findSubLabel("$a"));
         Assertions.assertEquals("http://www.test.com/", biblio.findZone("856", 0).findSubLabel("$u"));
     }
@@ -439,7 +448,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(15, biblio.getListeZones().size());
+        Assertions.assertEquals(16, biblio.getListeZones().size());
     }
 
     @Test
@@ -450,7 +459,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("titre traduit", biblio.findZone("454", 0).findSubLabel("$t"));
     }
 
@@ -465,7 +474,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("test500", biblio.findZone("500", 0).findSubLabel("$a"));
     }
 
@@ -477,7 +486,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(14, biblio.getListeZones().size());
+        Assertions.assertEquals(15, biblio.getListeZones().size());
         Assertions.assertNull(biblio.findZone("859", 0));
     }
 
@@ -492,7 +501,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(17, biblio.getListeZones().size());
+        Assertions.assertEquals(18, biblio.getListeZones().size());
         Assertions.assertEquals("test700", biblio.findZone("700", 0).findSubLabel("$a"));
         Assertions.assertEquals("test710", biblio.findZone("710", 0).findSubLabel("$a"));
     }
@@ -506,7 +515,7 @@ public class NoticeMapperTest {
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("Diffuseur", biblio.findZone("214", 2).findSubLabel("$a"));
         Assertions.assertEquals("provider", biblio.findZone("214", 2).findSubLabel("$c"));
         Assertions.assertEquals("#0", String.valueOf(biblio.findZone("214", 2).getIndicateurs()));
@@ -514,7 +523,7 @@ public class NoticeMapperTest {
         kbartAndImprimeDto.getNotice().getNoticeBiblio().findZone("210", 0).deleteSubLabel("$c");
         noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(16, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("Diffuseur", biblio.findZone("214", 2).findSubLabel("$a"));
         Assertions.assertNull(biblio.findZone("214", 2).findSubLabel("$c"));
         Assertions.assertEquals("#0", String.valueOf(biblio.findZone("214", 2).getIndicateurs()));
@@ -536,6 +545,12 @@ public class NoticeMapperTest {
         zone101.addSubLabel("$c", "eng");
         noticeImprimee.addZone(zone101);
         noticeImprimee.addZone("200", "$a", "Titre notice");
+        Zone zone701 = new Zone("701", TYPE_NOTICE.BIBLIOGRAPHIQUE);
+        zone701.addSubLabel("$3", "123456789");
+        zone701.addSubLabel("$6", "07");
+        zone701.addSubLabel("$7", "fa");
+        zone701.addSubLabel("$4", "4070 (Auteur)");
+        noticeImprimee.addZone(zone701);
         NoticeConcrete notice = new NoticeConcrete(noticeImprimee, null, Lists.newArrayList());
 
         KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
