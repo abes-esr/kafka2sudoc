@@ -290,26 +290,7 @@ public class NoticeMapper {
                 List<Zone> zones600 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
 
                 for (Zone zone1 : zones600) {
-                    Zone zoneACreer = new Zone(zone1.getLabel(), zone1.getTypeNotice(), zone1.getIndicateurs());
-                    Table<Integer, String, String> ssZones = zone1.getSubLabelTable();
-                    for (int i = 0; i < ssZones.rowKeySet().size(); i++) {
-                        ssZones.row(i).forEach((key, valeur) -> {
-                            if (key.equals("$3")) {
-                                try {
-                                    zoneACreer.addSubLabel("$5", Utils.deleteExpensionFromValue(valeur));
-                                } catch (ZoneException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            } else {
-                                try {
-                                    zoneACreer.addSubLabel(key, Utils.deleteExpensionFromValue(valeur));
-                                } catch (ZoneException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                        });
-                    }
-                    noticeElec.addZone(zoneACreer);
+                    replaceSublabel3With5(noticeElec, zone1);
                 }
 
                 for (Zone zone700 : noticeImprimee.getNoticeBiblio().findZones("700")) {
