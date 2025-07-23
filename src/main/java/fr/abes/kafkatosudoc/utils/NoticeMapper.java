@@ -323,7 +323,9 @@ public class NoticeMapper {
     private void replaceSublabel3With5(Biblio noticeElec, Zone zone) throws ZoneException {
         if (zone.findSubLabel("$3") != null) {
             Zone newZone = new Zone(zone.getLabel(), zone.getTypeNotice(), zone.getIndicateurs());
-            newZone.addSubLabel("$5", zone.findSubLabel("$3").substring(0, 9));
+            for (Map.Entry<String, String> entry : zone.getSubLabelList().entries().stream().filter(entry -> entry.getKey().equals("$3")).toList()) {
+                newZone.addSubLabel("$5", entry.getValue().substring(0, 9));
+            }
             zone.deleteSubLabel("$3");
             for (Map.Entry<String, String> entry : zone.getSubLabelTable().rowMap().values().stream().flatMap(map -> map.entrySet().stream()).toList()) {
                 try {
