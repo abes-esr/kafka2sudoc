@@ -290,26 +290,7 @@ public class NoticeMapper {
                 List<Zone> zones600 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
 
                 for (Zone zone1 : zones600) {
-                    Zone zoneACreer = new Zone(zone1.getLabel(), zone1.getTypeNotice(), zone1.getIndicateurs());
-                    Table<Integer, String, String> ssZones = zone1.getSubLabelTable();
-                    for (int i = 0; i < ssZones.rowKeySet().size(); i++) {
-                        ssZones.row(i).forEach((key, valeur) -> {
-                            if (key.equals("$3")) {
-                                try {
-                                    zoneACreer.addSubLabel("$5", Utils.deleteExpensionFromValue(valeur));
-                                } catch (ZoneException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            } else {
-                                try {
-                                    zoneACreer.addSubLabel(key, Utils.deleteExpensionFromValue(valeur));
-                                } catch (ZoneException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                        });
-                    }
-                    noticeElec.addZone(zoneACreer);
+                    replaceSublabel3With5(noticeElec, zone1);
                 }
 
                 for (Zone zone700 : noticeImprimee.getNoticeBiblio().findZones("700")) {
@@ -342,7 +323,9 @@ public class NoticeMapper {
     private void replaceSublabel3With5(Biblio noticeElec, Zone zone) throws ZoneException {
         if (zone.findSubLabel("$3") != null) {
             Zone newZone = new Zone(zone.getLabel(), zone.getTypeNotice(), zone.getIndicateurs());
-            newZone.addSubLabel("$5", zone.findSubLabel("$3").substring(0, 9));
+            for (Map.Entry<String, String> entry : zone.getSubLabelList().entries().stream().filter(entry -> entry.getKey().equals("$3")).toList()) {
+                newZone.addSubLabel("$5", entry.getValue().substring(0, 9));
+            }
             zone.deleteSubLabel("$3");
             for (Map.Entry<String, String> entry : zone.getSubLabelTable().rowMap().values().stream().flatMap(map -> map.entrySet().stream()).toList()) {
                 try {
