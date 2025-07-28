@@ -282,14 +282,14 @@ public class NoticeMapper {
                         noticeElec.addZone("454", "$t", zone454dollart, new char[]{'#', '#'});
                 }
                 //zone 5XX sauf 579, 512 et 516
-                List<Zone> zones500 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("5")).filter(zone -> (!zone.getLabel().equals("579") && !zone.getLabel().equals("512") && !zone.getLabel().equals("516"))).toList();
-                for (Zone zone1 : zones500) {
+                List<Zone> zones5XX = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("5")).filter(zone -> (!zone.getLabel().equals("579") && !zone.getLabel().equals("512") && !zone.getLabel().equals("516"))).toList();
+                for (Zone zone1 : zones5XX) {
                     replaceSublabel3With5(noticeElec, zone1);
                 }
 
-                List<Zone> zones600 = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
+                List<Zone> zones6XX = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("6")).toList();
 
-                for (Zone zone1 : zones600) {
+                for (Zone zone1 : zones6XX) {
                     replaceSublabel3With5(noticeElec, zone1);
                 }
 
