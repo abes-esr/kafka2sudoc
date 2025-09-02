@@ -2,7 +2,6 @@ package fr.abes.kafkatosudoc.utils;
 
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
-import fr.abes.cbs.exception.NoticeException;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.NoticeConcrete;
@@ -11,7 +10,6 @@ import fr.abes.cbs.notices.Zone;
 import fr.abes.cbs.utilitaire.Constants;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import org.assertj.core.util.Lists;
-import org.dom4j.DocumentException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -259,341 +257,23 @@ public class NoticeMapperTest {
 
     @Test
     @DisplayName("Test création notice from Kbart & notice imprimée : gestion zones 600 2")
-    void testMapperNoticeFromKbartAndImprimeZones600part2() throws ZoneException, DocumentException, NoticeException {
+    void testMapperNoticeFromKbartAndImprimeZones600part2() throws ZoneException {
         KbartAndImprimeDto kbartAndImprimeDto = getKbartAndImprimeDto();
-        String xml = "<record>\n" +
-                        "<controlfield tag=\"001\">155771205</controlfield>\n" +
-                        "<controlfield tag=\"002\">4,15,27,45,67,82,104</controlfield>\n" +
-                        "<controlfield tag=\"003\">https://www.sudoc.fr/155771205</controlfield>\n" +
-                        "<controlfield tag=\"004\">20111020</controlfield>\n" +
-                        "<controlfield tag=\"005\">20221213122351.000</controlfield>\n" +
-                        "<controlfield tag=\"006\">4994</controlfield>\n" +
-                        "<controlfield tag=\"007\">384212103</controlfield>\n" +
-                        "<controlfield tag=\"008\">Aax3</controlfield>\n" +
-                        "<datafield tag=\"010\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">978-2-7056-8131-9</subfield>\n" +
-                        "<subfield code=\"b\">vol. 1</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"010\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">978-2-7056-8132-6</subfield>\n" +
-                        "<subfield code=\"b\">vol. 2</subfield>\n" +
-                        "<subfield code=\"b\">br</subfield>\n" +
-                        "<subfield code=\"d\">35 EUR le vol</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"020\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">FR</subfield>\n" +
-                        "<subfield code=\"b\">01151418</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"021\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">FR</subfield>\n" +
-                        "<subfield code=\"b\">DLE-20110914-48106</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"021\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">FR</subfield>\n" +
-                        "<subfield code=\"b\">DLE-20110914-48107</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"033\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">http://catalogue.bnf.fr/ark:/12148/cb425049033</subfield>\n" +
-                        "<subfield code=\"2\">BNF</subfield>\n" +
-                        "<subfield code=\"d\">20180731</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"034\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"a\">OCoLC</subfield>\n" +
-                        "<subfield code=\"0\">800506702</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"035\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">FRBNF425049030000000</subfield>\n" +
-                        "<subfield code=\"z\">FRBNF42504903</subfield>\n" +
-                        "<subfield code=\"d\">20180731</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"035\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">frBN42504911</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"073\" ind1=\"#\" ind2=\"1\">\n" +
-                        "<subfield code=\"a\">9782705681319</subfield>\n" +
-                        "<subfield code=\"b\">vol. 1</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"073\" ind1=\"#\" ind2=\"0\">\n" +
-                        "<subfield code=\"a\">9782705681326</subfield>\n" +
-                        "<subfield code=\"b\">vol. 2</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"100\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">20111020e20111973k  y0frey50      ba</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"101\" ind1=\"0\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">fre</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"102\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">FR</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"104\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">k</subfield>\n" +
-                        "<subfield code=\"b\">y</subfield>\n" +
-                        "<subfield code=\"c\">y</subfield>\n" +
-                        "<subfield code=\"d\">ba</subfield>\n" +
-                        "<subfield code=\"e\">0</subfield>\n" +
-                        "<subfield code=\"f\">fre</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"105\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">y   ||||100yy</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"106\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">r</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"181\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"c\">txt</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"182\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"c\">n</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"183\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">nga</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"200\" ind1=\"1\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">Nietzsche aujourd'hui ?</subfield>\n" +
-                        "<subfield code=\"f\">sous la direction de Maurice de Gandillac &amp; Bernard Pautrat</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"205\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">[Reproduction en fac-similé]</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"210\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">Paris</subfield>\n" +
-                        "<subfield code=\"c\">Hermann</subfield>\n" +
-                        "<subfield code=\"d\">impr. 2011</subfield>\n" +
-                        "<subfield code=\"e\">91-Courtaboeuf</subfield>\n" +
-                        "<subfield code=\"g\">Impr. Acort Europe</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"215\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">2 vol. (440, 443 p.)</subfield>\n" +
-                        "<subfield code=\"c\">couv. ill.</subfield>\n" +
-                        "<subfield code=\"d\">23 cm</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"225\" ind1=\"2\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">Cerisy archives</subfield>\n" +
-                        "<subfield code=\"e\">philosophie</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"314\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">Textes issus d'un colloque qui s'est tenu du 10 au 20 juillet 1972 au Centre culturel international de Cerisy-la-Salle</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"316\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">La bibliothèque ne possède que le Tome 1</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"324\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">Fac-sim. de l'éd. de : Paris : Union générale d'éditions, 1973</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"327\" ind1=\"1\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">Vol. 1, Intensités</subfield>\n" +
-                        "<subfield code=\"a\">Vol. 2, Passions</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"410\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"0\">155644424</subfield>\n" +
-                        "<subfield code=\"t\">Cerisy archives</subfield>\n" +
-                        "<subfield code=\"x\">2118-8890</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"463\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"t\">Intensités</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"463\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"t\">Passions</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"579\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"1\">0499</subfield>\n" +
-                        "<subfield code=\"3\">218101309</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"600\" ind1=\"#\" ind2=\"1\">\n" +
-                        "<subfield code=\"3\">086200038</subfield>\n" +
-                        "<subfield code=\"a\">Nietzsche</subfield>\n" +
-                        "<subfield code=\"b\">Friedrich</subfield>\n" +
-                        "<subfield code=\"f\">1844-1900</subfield>\n" +
-                        "<subfield code=\"2\">rameau</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"608\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"3\">02886431X</subfield>\n" +
-                        "<subfield code=\"a\">Actes de congrès</subfield>\n" +
-                        "<subfield code=\"2\">rameau</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"676\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">193</subfield>\n" +
-                        "<subfield code=\"v\">22</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"686\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">100</subfield>\n" +
-                        "<subfield code=\"2\">Cadre de classement de la Bibliographie nationale française</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"701\" ind1=\"#\" ind2=\"1\">\n" +
-                        "<subfield code=\"3\">028015266</subfield>\n" +
-                        "<subfield code=\"a\">Gandillac</subfield>\n" +
-                        "<subfield code=\"b\">Maurice de</subfield>\n" +
-                        "<subfield code=\"f\">1906-2006</subfield>\n" +
-                        "<subfield code=\"4\">651</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"701\" ind1=\"#\" ind2=\"1\">\n" +
-                        "<subfield code=\"3\">027061124</subfield>\n" +
-                        "<subfield code=\"a\">Pautrat</subfield>\n" +
-                        "<subfield code=\"b\">Bernard</subfield>\n" +
-                        "<subfield code=\"f\">1944-....</subfield>\n" +
-                        "<subfield code=\"4\">651</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"711\" ind1=\"0\" ind2=\"2\">\n" +
-                        "<subfield code=\"3\">030061180</subfield>\n" +
-                        "<subfield code=\"a\">Centre culturel international</subfield>\n" +
-                        "<subfield code=\"c\">Cerisy-la-Salle, Manche</subfield>\n" +
-                        "<subfield code=\"b\">Colloque</subfield>\n" +
-                        "<subfield code=\"f\">1972-07-10 / 1972-07-20</subfield>\n" +
-                        "<subfield code=\"4\">557</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"801\" ind1=\"#\" ind2=\"3\">\n" +
-                        "<subfield code=\"a\">FR</subfield>\n" +
-                        "<subfield code=\"b\">Abes</subfield>\n" +
-                        "<subfield code=\"c\">20221213</subfield>\n" +
-                        "<subfield code=\"g\">AFNOR</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"801\" ind1=\"#\" ind2=\"0\">\n" +
-                        "<subfield code=\"a\">FR</subfield>\n" +
-                        "<subfield code=\"b\">FR-751131015</subfield>\n" +
-                        "<subfield code=\"c\">20110914</subfield>\n" +
-                        "<subfield code=\"g\">AFNOR</subfield>\n" +
-                        "<subfield code=\"2\">intermrc</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"830\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"a\">Réforme Rameau Genre-Forme retro actes (ne pas supprimer)</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"930\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"5\">130012101:441709737</subfield>\n" +
-                        "<subfield code=\"b\">130012101</subfield>\n" +
-                        "<subfield code=\"j\">u</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"940\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">130012101:441709737</subfield>\n" +
-                        "<subfield code=\"a\">20120117</subfield>\n" +
-                        "<subfield code=\"b\">x</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"941\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">130012101:441709737</subfield>\n" +
-                        "<subfield code=\"a\">20120117</subfield>\n" +
-                        "<subfield code=\"b\">17:16:01.000</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"930\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"5\">335222103:530658283</subfield>\n" +
-                        "<subfield code=\"b\">335222103</subfield>\n" +
-                        "<subfield code=\"j\">u</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"940\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">335222103:530658283</subfield>\n" +
-                        "<subfield code=\"a\">20150519</subfield>\n" +
-                        "<subfield code=\"b\">x</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"941\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">335222103:530658283</subfield>\n" +
-                        "<subfield code=\"a\">20150519</subfield>\n" +
-                        "<subfield code=\"b\">13:24:02.000</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"915\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"5\">384212101:435426494</subfield>\n" +
-                        "<subfield code=\"a\">SA381653</subfield>\n" +
-                        "<subfield code=\"a\">SA381654</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"930\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"5\">384212101:435426494</subfield>\n" +
-                        "<subfield code=\"b\">384212101</subfield>\n" +
-                        "<subfield code=\"a\">193 NIET</subfield>\n" +
-                        "<subfield code=\"j\">u</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"940\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">384212101:435426494</subfield>\n" +
-                        "<subfield code=\"a\">20111027</subfield>\n" +
-                        "<subfield code=\"b\">x</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"941\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">384212101:435426494</subfield>\n" +
-                        "<subfield code=\"a\">20111027</subfield>\n" +
-                        "<subfield code=\"b\">11:34:49.000</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"930\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"5\">341722103:465729401</subfield>\n" +
-                        "<subfield code=\"b\">341722103</subfield>\n" +
-                        "<subfield code=\"a\">S 22271</subfield>\n" +
-                        "<subfield code=\"j\">u</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"940\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">341722103:465729401</subfield>\n" +
-                        "<subfield code=\"a\">20121026</subfield>\n" +
-                        "<subfield code=\"b\">x</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"941\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">341722103:465729401</subfield>\n" +
-                        "<subfield code=\"a\">20121026</subfield>\n" +
-                        "<subfield code=\"b\">15:10:16.000</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"930\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"5\">315552102:435844504</subfield>\n" +
-                        "<subfield code=\"b\">315552102</subfield>\n" +
-                        "<subfield code=\"j\">u</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"940\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">315552102:435844504</subfield>\n" +
-                        "<subfield code=\"a\">20111103</subfield>\n" +
-                        "<subfield code=\"b\">x</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"941\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">315552102:435844504</subfield>\n" +
-                        "<subfield code=\"a\">20111103</subfield>\n" +
-                        "<subfield code=\"b\">14:27:37.000</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"930\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"5\">920502102:436305135</subfield>\n" +
-                        "<subfield code=\"b\">920502102</subfield>\n" +
-                        "<subfield code=\"j\">u</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"940\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">920502102:436305135</subfield>\n" +
-                        "<subfield code=\"a\">20111109</subfield>\n" +
-                        "<subfield code=\"b\">x</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"941\" ind1=\" \" ind2=\" \">\n" +
-                        "<subfield code=\"5\">920502102:436305135</subfield>\n" +
-                        "<subfield code=\"a\">20111109</subfield>\n" +
-                        "<subfield code=\"b\">14:19:59.000</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"915\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"5\">751142102:437471454</subfield>\n" +
-                        "<subfield code=\"a\">79457</subfield>\n" +
-                        "<subfield code=\"b\">3310218856</subfield>\n" +
-                        "</datafield>\n" +
-                        "<datafield tag=\"930\" ind1=\"#\" ind2=\"#\">\n" +
-                        "<subfield code=\"5\">751142102:437471454</subfield>\n" +
-                        "<subfield code=\"b\">751142102</subfield>\n" +
-                        "<subfield code=\"c\">BCU</subfield>\n" +
-                        "<subfield code=\"d\">LAC</subfield>\n" +
-                        "<subfield code=\"e\">8000</subfield>\n" +
-                        "<subfield code=\"a\">1\"18\" NIE 2</subfield>\n" +
-                        "<subfield code=\"j\">u</subfield>\n" +
-                        "</datafield>\n" +
-                  "<datafield tag=\"940\" ind1=\" \" ind2=\" \">\n" +
-                  "<subfield code=\"5\">751142102:437471454</subfield>\n" +
-                  "<subfield code=\"a\">20111123</subfield>\n" +
-                  "<subfield code=\"b\">x</subfield>\n" +
-                  "</datafield>\n" +
-                  "<datafield tag=\"941\" ind1=\" \" ind2=\" \">\n" +
-                  "<subfield code=\"5\">751142102:437471454</subfield>\n" +
-                  "<subfield code=\"a\">20111123</subfield>\n" +
-                  "<subfield code=\"b\">10:32:50.000</subfield>\n" +
-                  "</datafield>\n" +
-                  "</record>";
-        NoticeConcrete notice = new NoticeConcrete(xml);
-        kbartAndImprimeDto.setNotice(notice);
+        Zone zone600 = new Zone("600", TYPE_NOTICE.BIBLIOGRAPHIQUE);
+        zone600.addSubLabel("$3", "086200038");
+        zone600.addSubLabel("$a", "Nietzsche");
+        zone600.addSubLabel("$b", "Friedrich");
+        zone600.addSubLabel("$f", "1844-1900");
+        zone600.addSubLabel("$2", "rameau");
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addZone(zone600);
 
         NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
         Biblio biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(26, biblio.getListeZones().size());
+        Assertions.assertEquals(17, biblio.getListeZones().size());
         Assertions.assertEquals("0-415-11262-8", biblio.findZone("010", 0).findSubLabel("$a"));
-        Assertions.assertEquals("600 #1$5086200038$aNietzsche$bFriedrich$f1844-1900$2rameau\r", biblio.findZone("600", 0).toString());
+        Assertions.assertEquals("600 $5086200038$aNietzsche$bFriedrich$f1844-1900$2rameau\r", biblio.findZone("600", 0).toString());
         Assertions.assertNull(biblio.findZone("600", 0).findSubLabel("$3"));
 
-        kbartAndImprimeDto.getKbart().setOnlineIdentifier(null);
-        noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
-        biblio = noticeResult.getNoticeBiblio();
-        Assertions.assertEquals(25, biblio.getListeZones().size());
     }
 
     @Test

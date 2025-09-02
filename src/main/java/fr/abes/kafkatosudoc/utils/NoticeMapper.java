@@ -1,10 +1,12 @@
 package fr.abes.kafkatosudoc.utils;
 
-import com.google.common.collect.Table;
 import fr.abes.LigneKbartConnect;
 import fr.abes.LigneKbartImprime;
 import fr.abes.cbs.exception.ZoneException;
-import fr.abes.cbs.notices.*;
+import fr.abes.cbs.notices.Biblio;
+import fr.abes.cbs.notices.NoticeConcrete;
+import fr.abes.cbs.notices.TYPE_NOTICE;
+import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.entity.LigneKbart;
 import lombok.SneakyThrows;
@@ -322,18 +324,7 @@ public class NoticeMapper {
 
     private void replaceSublabel3With5(Biblio noticeElec, Zone zone) throws ZoneException {
         if (zone.findSubLabel("$3") != null) {
-            Zone newZone = new Zone(zone.getLabel(), zone.getTypeNotice(), zone.getIndicateurs());
-            for (Map.Entry<String, String> entry : zone.getSubLabelList().entries().stream().filter(entry -> entry.getKey().equals("$3")).toList()) {
-                newZone.addSubLabel("$5", entry.getValue().substring(0, 9));
-            }
-            zone.deleteSubLabel("$3");
-            for (Map.Entry<String, String> entry : zone.getSubLabelTable().rowMap().values().stream().flatMap(map -> map.entrySet().stream()).toList()) {
-                try {
-                    newZone.addSubLabel(entry.getKey(), entry.getValue());
-                } catch (ZoneException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+            Zone newZone = zone.replaceSousZone("$3", "$5");
             noticeElec.addZone(newZone);
         } else {
             noticeElec.addZone(zone);
