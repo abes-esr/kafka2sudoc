@@ -9,7 +9,7 @@
     </parent>
     <groupId>fr.abes</groupId>
     <artifactId>kafka-to-sudoc</artifactId>
-    <version>1.0.13</version>
+    <version>1.0.14-SNAPSHOT</version>
     <name>kafka-to-sudoc</name>
     <description>lecture de topics bacon et écriture dans le sudoc</description>
     <properties>
@@ -166,7 +166,7 @@
         <dependency>
             <groupId>fr.abes.api-communes</groupId>
             <artifactId>AccesCbs</artifactId>
-            <version>2.5.127</version>
+            <version>2.5.128</version>
             <scope>compile</scope>
         </dependency>
 
