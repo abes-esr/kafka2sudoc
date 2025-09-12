@@ -643,4 +643,21 @@ public class NoticeMapperTest {
 
 
     }
+
+    @Test
+    void testMapperExpension() throws ZoneException {
+        KbartAndImprimeDto kbartAndImprimeDto = getKbartAndImprimeDto();
+        Zone zone606 = new Zone("606", TYPE_NOTICE.BIBLIOGRAPHIQUE);
+        zone606.addSubLabel("$3", "027794997" + Constants.STR_1B + "I@Littérature allemande");
+        zone606.addSubLabel("$3", "02726470X" + Constants.STR_1B + "I@Histoire");
+        zone606.addSubLabel("$2", "rameau");
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addZone(zone606);
+
+        NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+        Biblio biblio = noticeResult.getNoticeBiblio();
+        Assertions.assertEquals("027794997", biblio.findZone("606", 0).findSubLabel("$5"));
+        Assertions.assertEquals("rameau", biblio.findZone("606", 0).findSubLabel("$2"));
+        Assertions.assertEquals("606 $5027794997$502726470X$2rameau\r", biblio.findZone("606", 0).toString());
+
+    }
 }
