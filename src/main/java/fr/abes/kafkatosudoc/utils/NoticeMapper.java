@@ -197,7 +197,12 @@ public class NoticeMapper {
                 noticeElec.addSousZone("183", "$a", "ceb");
 
                 //titre
-                noticeElec.addZone(noticeImprimee.getNoticeBiblio().findZone("200", 0));
+                Zone firstZone200 = noticeImprimee.getNoticeBiblio().findZone("200", 0);
+                noticeElec.addZone(firstZone200);
+                if (firstZone200.findSubLabel("$6") != null) {
+                    //cas ou la 200 est doublée en raison de la présence d'une sous zone de translitération
+                    noticeElec.addZone(noticeImprimee.getNoticeBiblio().findZone("200", 1));
+                }
                 //Mention d'édition
                 Zone zone205 = noticeImprimee.getNoticeBiblio().findZone("205", 0);
                 if (zone205 != null) {
@@ -284,7 +289,7 @@ public class NoticeMapper {
                         noticeElec.addZone("454", "$t", zone454dollart, new char[]{'#', '#'});
                 }
                 //zone 5XX sauf 579, 512 et 516
-                List<Zone> zones5XX = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("5")).filter(zone -> (!zone.getLabel().equals("579") && !zone.getLabel().equals("512") && !zone.getLabel().equals("516"))).toList();
+                List<Zone> zones5XX = noticeImprimee.getNoticeBiblio().getListeZones().values().stream().filter(zone -> zone.getLabel().startsWith("5")).filter(zone -> (!zone.getLabel().equals("579") && !zone.getLabel().equals("512") && !zone.getLabel().equals("516") && !zone.getLabel().equals("530"))).toList();
                 for (Zone zone1 : zones5XX) {
                     replaceSublabel3With5(noticeElec, zone1);
                 }
