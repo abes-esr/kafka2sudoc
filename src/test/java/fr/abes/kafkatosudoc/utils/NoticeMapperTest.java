@@ -660,4 +660,20 @@ public class NoticeMapperTest {
         Assertions.assertEquals("606 $5027794997$502726470X$2rameau\r", biblio.findZone("606", 0).toString());
 
     }
+
+    @Test
+    void testMapperDoubleZoneTitre() throws ZoneException {
+        KbartAndImprimeDto kbartAndImprimeDto = getKbartAndImprimeDto();
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().findZone("200", 0).addSubLabel("$6", "fe");
+        Zone secondeZone200 = new Zone("200", TYPE_NOTICE.BIBLIOGRAPHIQUE);
+        secondeZone200.addSubLabel("$6", "ge");
+        secondeZone200.addSubLabel("$a", "titre caractère originaux");
+        kbartAndImprimeDto.getNotice().getNoticeBiblio().addZone(secondeZone200);
+
+        NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+        Biblio biblio = noticeResult.getNoticeBiblio();
+        Assertions.assertEquals(2, biblio.findZones("200").size());
+        Assertions.assertEquals("titre caractère originaux", biblio.findZone("200", 1).findSubLabel("$a"));
+        Assertions.assertEquals("Titre notice", biblio.findZone("200", 0).findSubLabel("$a"));
+    }
 }
