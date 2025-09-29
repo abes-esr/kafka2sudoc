@@ -9,7 +9,7 @@
     </parent>
     <groupId>fr.abes</groupId>
     <artifactId>kafka-to-sudoc</artifactId>
-    <version>1.0.17-SNAPSHOT</version>
+    <version>1.0.17</version>
     <name>kafka-to-sudoc</name>
     <description>lecture de topics bacon et écriture dans le sudoc</description>
     <properties>
