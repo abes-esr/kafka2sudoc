@@ -244,7 +244,7 @@ public class NoticeMapper {
                 Zone zone214 = new Zone("214", TYPE_NOTICE.BIBLIOGRAPHIQUE, new char[]{'#', '2'});
                 zone214.addSubLabel("$a", "[Lieu de diffusion inconnu]");
                 if (kbart.getDateMonographPublishedOnline() != null && !kbart.getDateMonographPublishedOnline().isEmpty()) {
-                    zone214.addSubLabel("$d", kbart.getDateMonographPublishedOnline().toString());
+                    zone214.addSubLabel("$d", Utils.getYearFromDate(kbart.getDateMonographPublishedOnline().toString()));
                 } else {
                     zone214.addSubLabel("$d", "[20..]");
                 }
