@@ -8,11 +8,7 @@ import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.ERROR_TYPE;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
-import fr.abes.kafkatosudoc.dto.PackageKbartDto;
-import fr.abes.kafkatosudoc.entity.LigneKbart;
-import fr.abes.kafkatosudoc.entity.ProviderPackage;
 import fr.abes.kafkatosudoc.exception.CommException;
-import fr.abes.kafkatosudoc.exception.IllegalDateException;
 import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.EmailService;
 import fr.abes.kafkatosudoc.service.SudocService;
@@ -113,83 +109,53 @@ public class KbartListener {
 
     }
 
-    private void traiterPackageDansSudoc(List<LigneKbartConnect> listeNotices, String filename) {
-        PackageKbartDto packageKbartDto;
+    private void traiterPackageDansSudoc(List<LigneKbartConnect> listeLigneKbart, String filename) {
         SudocService service = new SudocService();
         try {
-            Set<String> newBestPpn = new HashSet<>();
-            Set<String> deletedBestPpn = new HashSet<>();
-
             String provider = CheckFiles.getProviderFromFilename(filename);
             String packageName = CheckFiles.getPackageFromFilename(filename);
-            Date dateFromFile = CheckFiles.extractDate(filename);
-            packageKbartDto = new PackageKbartDto(packageName, dateFromFile, provider);
 
-            ProviderPackage lastPackage = baconService.findLastVersionOfPackage(packageKbartDto);
             String ppnNoticeBouquet = getNoticeBouquet(service, provider, packageName);
 
             // Construction d'une map PPN -> LigneKbartConnect pour accès O(1)
-            Map<String, LigneKbartConnect> noticeMap = listeNotices.stream()
+            Map<String, LigneKbartConnect> noticeMap = listeLigneKbart.stream()
                     .filter(l -> l.getBESTPPN() != null)
                     .collect(Collectors.toMap(
                             l -> l.getBESTPPN().toString(),
                             l -> l,
                             (a, b) -> a  // en cas de doublons, on garde la première
                     ));
-            Set<LigneKbart> ppnLastVersion = new HashSet<>();
-            //cas ou on a une version antérieure de package
-            if (lastPackage != null) {
-                ppnLastVersion = baconService.findAllPpnFromPackage(lastPackage);
 
-                Set<String> oldSetOfPpn = ppnLastVersion.stream()
-                        .map(LigneKbart::getBestPpn)
-                        .collect(Collectors.toCollection(HashSet::new));
+            Set<String> oldSetOfPpn = service.getListPpnSudoc(serveurSudoc, portSudoc, loginSudoc, passwordSudoc, provider, packageName);
 
-                // Nouveau set de PPN présents dans le fichier actuel
-                Set<String> newSetOfppn = noticeMap.keySet();
+            // Nouveau set de PPN présents dans le fichier actuel
+            Set<String> newSetOfppn = noticeMap.keySet();
 
-                // Calcul PPN à supprimés
-                deletedBestPpn.addAll(oldSetOfPpn);
-                deletedBestPpn.removeAll(newSetOfppn);
+            // Calcul PPN à supprimés
+            Set<String> deletedBestPpn = new HashSet<>(oldSetOfPpn);
+            deletedBestPpn.removeAll(newSetOfppn);
 
-                // Calcul PPN à ajouté
-                newBestPpn.addAll(newSetOfppn);
-                newBestPpn.removeAll(oldSetOfPpn);
-            } else {
-                //pas de version antérieure, tous les bestPpn sont nouveaux
-                newBestPpn.addAll(noticeMap.keySet());
-            }
+            // Calcul PPN à ajouté
+            Set<String> newBestPpn = new HashSet<>(newSetOfppn);
+            newBestPpn.removeAll(oldSetOfPpn);
 
             //traitement des notices dans le cbs : ajout ou suppression de 469 en fonction des cas
             for (String ppn : newBestPpn) {
                 List<LigneKbartConnect> listPpnsFromListeNotices = new ArrayList<>();
-                for (LigneKbartConnect ligneKbartConnect : listeNotices) {
+                for (LigneKbartConnect ligneKbartConnect : listeLigneKbart) {
                     if (ligneKbartConnect.getBESTPPN() != null && ligneKbartConnect.getBESTPPN().toString().equals(ppn)) {
                         listPpnsFromListeNotices.add(ligneKbartConnect);
                     }
                 }
-                if (!listPpnsFromListeNotices.isEmpty()) {
-                    ajout469(ppnNoticeBouquet, ppn, listPpnsFromListeNotices.get(0), filename, service);
-                }
+                ajout469(ppnNoticeBouquet, ppn, listPpnsFromListeNotices.isEmpty() ? new LigneKbartConnect() : listPpnsFromListeNotices.get(0), filename, service);
             }
             for (String ppn : deletedBestPpn) {
-                List<LigneKbart> listPpnsFromListeNotices = new ArrayList<>();
-                for (LigneKbart ligneKbart : ppnLastVersion) {
-                    if (ligneKbart.getBestPpn() != null && ligneKbart.getBestPpn().equals(ppn)) {
-                        listPpnsFromListeNotices.add(ligneKbart);
-                    }
-                }
-                if (!listPpnsFromListeNotices.isEmpty()) {
-                    suppression469(ppnNoticeBouquet, ppn, mapper.map(listPpnsFromListeNotices.get(0), LigneKbartConnect.class), filename, service);
-                }
+                suppression469(ppnNoticeBouquet, ppn, new LigneKbartConnect(), filename, service);
             }
         } catch (CBSException | IOException e) {
             //erreur à l'authentification
             log.error(e.getMessage(), e.getCause());
             this.workInProgressMap.get(filename).addErrorMessagesConnectionCbs("Erreur : " + e.getMessage());
-        } catch (IllegalDateException e) {
-            log.error("Erreur lors du traitement du package dans le Sudoc : format de date incorrect", e.getCause());
-            this.workInProgressMap.get(filename).addErrorMessagesDateFormat("Erreur : " + e.getMessage());
         } finally {
             try {
                 service.disconnect();
