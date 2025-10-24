@@ -263,8 +263,8 @@ public class SudocService {
             this.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             String ppnBouquet = this.getNoticeBouquet(provider, packageName);
             log.debug("ppn bouquet : {}", ppnBouquet);
-            this.getNoticesLiees();
-            ppns.addAll(this.cbs.getPpnsFromResultList());
+            int size = this.getNoticesLiees();
+            ppns.addAll(this.cbs.getPpnsFromResultList(size));
 
             ppns.remove(ppnBouquet);
         } catch (IOException | CBSException e) {
