@@ -12,6 +12,8 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 @Slf4j
 public class SudocService {
@@ -253,5 +255,22 @@ public class SudocService {
 		//on requalifie l'exception pour ne pas qu'elle soit confondue avec l'erreur d'envoi du mail
 		throw new CommException(ex);
 	}
+
+    public Set<String> getListPpnSudoc(String serveurSudoc, String portSudoc, String loginSudoc, String passwordSudoc, String provider, String packageName) {
+        Set<String> ppns = new HashSet<>();
+        log.debug("Entré dans getListPpnSudoc");
+        try {
+            this.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
+            String ppnBouquet = this.getNoticeBouquet(provider, packageName);
+            log.debug("ppn bouquet : {}", ppnBouquet);
+            int size = this.getNoticesLiees();
+            ppns.addAll(this.cbs.getPpnsFromResultList(size));
+
+            ppns.remove(ppnBouquet);
+        } catch (IOException | CBSException e) {
+            log.error(e.getMessage());
+        }
+        return ppns;
+    }
 }
 
