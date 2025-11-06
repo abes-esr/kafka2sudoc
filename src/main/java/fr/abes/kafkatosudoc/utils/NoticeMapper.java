@@ -206,7 +206,7 @@ public class NoticeMapper {
                 //Mention d'édition
                 Zone firstZone205 = noticeImprimee.getNoticeBiblio().findZone("205", 0);
                 noticeElec.addZone(firstZone205);
-                if (firstZone205.findSubLabel("$6") != null) {
+                if (firstZone205 != null && firstZone205.findSubLabel("$6") != null) {
                     noticeElec.addZone(noticeImprimee.getNoticeBiblio().findZone("205", 1));
                 }
 
