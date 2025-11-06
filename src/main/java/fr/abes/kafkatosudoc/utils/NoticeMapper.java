@@ -204,9 +204,10 @@ public class NoticeMapper {
                     noticeElec.addZone(noticeImprimee.getNoticeBiblio().findZone("200", 1));
                 }
                 //Mention d'édition
-                Zone zone205 = noticeImprimee.getNoticeBiblio().findZone("205", 0);
-                if (zone205 != null) {
-                    noticeElec.addZone(zone205);
+                Zone firstZone205 = noticeImprimee.getNoticeBiblio().findZone("205", 0);
+                noticeElec.addZone(firstZone205);
+                if (firstZone205 != null && firstZone205.findSubLabel("$6") != null) {
+                    noticeElec.addZone(noticeImprimee.getNoticeBiblio().findZone("205", 1));
                 }
 
                 //Mention  de publication
