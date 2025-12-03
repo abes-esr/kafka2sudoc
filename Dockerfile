@@ -1,6 +1,6 @@
 ###
 # Image pour la compilation
-FROM maven:3-eclipse-temurin-17 as build-image
+FROM maven:3-eclipse-temurin-21 as build-image
 WORKDIR /build/
 # Installation et configuration de la locale FR
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt -y install locales
@@ -31,7 +31,7 @@ RUN mvn --batch-mode \
 #FROM tomcat:9-jdk17 as api-image
 #COPY --from=build-image /build/web/target/*.war /usr/local/tomcat/webapps/ROOT.war
 #CMD [ "catalina.sh", "run" ]
-FROM eclipse-temurin:17-jdk as kafka2sudoc-image
+FROM eclipse-temurin:21-jdk as kafka2sudoc-image
 WORKDIR /app/
 COPY --from=build-image /build/target/*.jar /app/kafka2sudoc.jar
 ENV TZ=Europe/Paris

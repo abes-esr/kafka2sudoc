@@ -9,10 +9,10 @@ import fr.abes.cbs.notices.TYPE_NOTICE;
 import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
 import fr.abes.kafkatosudoc.entity.LigneKbart;
+import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import org.modelmapper.Converter;
 import org.modelmapper.spi.MappingContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.text.DateFormat;
@@ -31,7 +31,7 @@ public class NoticeMapper {
         this.mapper = mapper;
     }
 
-    @Bean
+    @PostConstruct
     public void converterKbartToNoticeConcrete() {
         Converter<LigneKbartConnect, NoticeConcrete> myConverter = new Converter<LigneKbartConnect, NoticeConcrete>() {
             @SneakyThrows
@@ -136,7 +136,7 @@ public class NoticeMapper {
         mapper.addConverter(myConverter);
     }
 
-    @Bean
+    @PostConstruct
     public void converterKbartAndImprimeToNoticeConcrete() {
         Converter<KbartAndImprimeDto, NoticeConcrete> myConverter = new Converter<KbartAndImprimeDto, NoticeConcrete>() {
             @SneakyThrows
@@ -337,7 +337,7 @@ public class NoticeMapper {
         }
     }
 
-    @Bean
+    @PostConstruct
     public void converterLigneKbartToLigneKbartConnect() {
         Converter<LigneKbart, LigneKbartConnect> myConverter = new Converter<LigneKbart, LigneKbartConnect>() {
             public LigneKbartConnect convert(MappingContext<LigneKbart, LigneKbartConnect> context) {
