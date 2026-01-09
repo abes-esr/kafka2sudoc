@@ -1,6 +1,6 @@
 ###
 # Image pour la compilation
-FROM maven:3-eclipse-temurin-21 as build-image
+FROM maven:3-eclipse-temurin-21 AS build-image
 WORKDIR /build/
 # On lance la compilation Java
 # On débute par une mise en cache docker des dépendances Java
@@ -17,7 +17,7 @@ RUN mvn --batch-mode \
         package -Passembly
 
 
-FROM ossyupiik/java:21.0.8 as kafka2sudoc-image
+FROM ossyupiik/java:21.0.8 AS kafka2sudoc-image
 WORKDIR /
 COPY --from=build-image /build/target/kafka2sudoc-distribution.tar.gz /
 RUN tar xvfz kafka2sudoc-distribution.tar.gz
@@ -26,4 +26,4 @@ RUN rm -f /kafka2sudoc-distribution.tar.gz
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-CMD ["java", "-cp", "/kafka2sudoc/lib/*", "fr.abes.kafkatosudoc.KafkaToSudocApplication"]
+CMD ["java", "-cp", "/kafkatosudoc/lib/*", "fr.abes.kafkatosudoc.KafkaToSudocApplication"]
