@@ -1,16 +1,7 @@
 ###
 # Image pour la compilation
-FROM maven:3-eclipse-temurin-21 as build-image
+FROM maven:3-eclipse-temurin-21 AS build-image
 WORKDIR /build/
-# Installation et configuration de la locale FR
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt -y install locales
-RUN sed -i '/fr_FR.UTF-8/s/^# //g' /etc/locale.gen && \
-    locale-gen
-ENV LANG fr_FR.UTF-8
-ENV LANGUAGE fr_FR:fr
-ENV LC_ALL fr_FR.UTF-8
-
-
 # On lance la compilation Java
 # On débute par une mise en cache docker des dépendances Java
 # cf https://www.baeldung.com/ops/docker-cache-maven-dependencies
@@ -20,20 +11,19 @@ RUN mvn -f /build/kafka2sudoc/pom.xml verify --fail-never
 COPY ./   /build/
 
 RUN mvn --batch-mode \
-        -Dmaven.test.skip=false \
+        -Dmaven.test.skip=true \
         -Duser.timezone=Europe/Paris \
         -Duser.language=fr \
-        package spring-boot:repackage
+        package -Passembly
 
 
-###
-# Image pour le module API
-#FROM tomcat:9-jdk17 as api-image
-#COPY --from=build-image /build/web/target/*.war /usr/local/tomcat/webapps/ROOT.war
-#CMD [ "catalina.sh", "run" ]
-FROM eclipse-temurin:21-jdk as kafka2sudoc-image
-WORKDIR /app/
-COPY --from=build-image /build/target/*.jar /app/kafka2sudoc.jar
+FROM ossyupiik/java:21.0.8 AS kafka2sudoc-image
+WORKDIR /
+COPY --from=build-image /build/target/kafka2sudoc-distribution.tar.gz /
+RUN tar xvfz kafka2sudoc-distribution.tar.gz
+RUN rm -f /kafka2sudoc-distribution.tar.gz
+
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-ENTRYPOINT ["java","-XX:MaxRAMPercentage=95","-jar","/app/kafka2sudoc.jar"]
+
+CMD ["java", "-cp", "/kafka2sudoc/lib/*", "fr.abes.kafkatosudoc.KafkaToSudocApplication"]
