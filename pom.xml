@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>fr.abes</groupId>
     <artifactId>kafka2sudoc</artifactId>
-    <version>1.0.20-SNAPSHOT</version>
+    <version>1.1.0</version>
     <name>kafka2sudoc</name>
     <description>lecture de topics bacon et écriture dans le sudoc</description>
     <properties>
