@@ -8,6 +8,7 @@ import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.notices.Zone;
 import fr.abes.kafkatosudoc.dto.ERROR_TYPE;
 import fr.abes.kafkatosudoc.dto.KbartAndImprimeDto;
+import fr.abes.kafkatosudoc.exception.BouquetNotFoundException;
 import fr.abes.kafkatosudoc.exception.CommException;
 import fr.abes.kafkatosudoc.service.BaconService;
 import fr.abes.kafkatosudoc.service.EmailService;
@@ -152,7 +153,7 @@ public class KbartListener {
             for (String ppn : deletedBestPpn) {
                 suppression469(ppnNoticeBouquet, ppn, new LigneKbartConnect(), filename, service);
             }
-        } catch (CBSException | IOException e) {
+        } catch (CBSException | IOException | BouquetNotFoundException e) {
             //erreur à l'authentification
             log.error(e.getMessage(), e.getCause());
             this.workInProgressMap.get(filename).addErrorMessagesConnectionCbs("Erreur : " + e.getMessage());
@@ -166,8 +167,8 @@ public class KbartListener {
     }
 
 
-    @Retryable(maxAttempts = 4, retryFor = IOException.class, noRetryFor = CBSException.class, backoff = @Backoff(delay = 1000, multiplier = 2))
-    private String getNoticeBouquet(SudocService service, String provider, String packageName) throws CBSException, IOException {
+    @Retryable(maxAttempts = 4, retryFor = IOException.class, noRetryFor = {CBSException.class, BouquetNotFoundException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private String getNoticeBouquet(SudocService service, String provider, String packageName) throws CBSException, IOException, BouquetNotFoundException {
         try {
             service.authenticate(serveurSudoc, portSudoc, loginSudoc, passwordSudoc);
             return service.getNoticeBouquet(provider, packageName);
@@ -259,10 +260,10 @@ public class KbartListener {
         try {
             traiterNoticesADelier(service, provider, packageName, listError);
             if (!listError.isEmpty()) {
-                listError.add(0, listError.size() + " erreur(s) lors de la suppression de lien(s) vers une notice bouquet : " + System.lineSeparator());
+                listError.addFirst(listError.size() + " erreur(s) lors de la suppression de lien(s) vers une notice bouquet : " + System.lineSeparator());
                 emailService.sendErrorMailProviderPackageDeleted(listError, provider + "_" + packageName);
             }
-        } catch (CBSException | CommException e) {
+        } catch (CBSException | CommException | BouquetNotFoundException e) {
             log.error(e.getMessage(), e.getCause());
             emailService.sendErrorMailSuppressionPackage(packageName, provider, e);
         } catch (IOException e) {
@@ -286,8 +287,8 @@ public class KbartListener {
      * @throws CBSException  erreur de validation du cbs
      * @throws CommException erreur de communication avec le cbs
      */
-    @Retryable(maxAttempts = 4, retryFor = CommException.class, noRetryFor = {CBSException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
-    private void traiterNoticesADelier(SudocService service, String provider, String packageName, List<String> listError) throws CBSException, CommException {
+    @Retryable(maxAttempts = 4, retryFor = CommException.class, noRetryFor = {CBSException.class, BouquetNotFoundException.class}, backoff = @Backoff(delay = 1000, multiplier = 2))
+    private void traiterNoticesADelier(SudocService service, String provider, String packageName, List<String> listError) throws CBSException, CommException, BouquetNotFoundException {
         try {
             String ppnNoticeBouquet = getNoticeBouquet(service, provider, packageName);
             log.debug("récupération notice bouquet ok");

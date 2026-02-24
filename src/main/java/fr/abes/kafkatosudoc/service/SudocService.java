@@ -5,6 +5,7 @@ import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.notices.NoticeConcrete;
 import fr.abes.cbs.process.ProcessCBS;
+import fr.abes.kafkatosudoc.exception.BouquetNotFoundException;
 import fr.abes.kafkatosudoc.exception.CommException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.Level;
@@ -89,14 +90,14 @@ public class SudocService {
 	 * @return le ppn de la notice récupérée
 	 * @throws CBSException erreur dans la recherche de la notice bouquet
 	 */
-	public String getNoticeBouquet(String provider, String packageKbart) throws CBSException, IOException {
+	public String getNoticeBouquet(String provider, String packageKbart) throws CBSException, IOException, BouquetNotFoundException {
 		String query = "che bou " + provider + "_" + packageKbart;
 		log.debug("Recherche notice bouquet : " + query);
 		this.cbs.search(query);
 		if (this.cbs.getNbNotices() == 1) {
 			return cbs.getPpnEncours();
 		} else {
-			throw new CBSException(Level.WARN, "Provider : " + provider + " / package : " + packageKbart + " : Recherche de la notice bouquet échouée");
+			throw new BouquetNotFoundException("Provider : " + provider + " / package : " + packageKbart + " : Recherche de la notice bouquet échouée");
 		}
 	}
 
@@ -267,7 +268,7 @@ public class SudocService {
             ppns.addAll(this.cbs.getPpnsFromResultList(size));
 
             ppns.remove(ppnBouquet);
-        } catch (IOException | CBSException e) {
+		} catch (IOException | CBSException | BouquetNotFoundException e) {
             log.error(e.getMessage());
         }
         return ppns;
