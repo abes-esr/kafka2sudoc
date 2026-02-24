@@ -17,7 +17,7 @@ RUN mvn --batch-mode \
         package -Passembly
 
 
-FROM ossyupiik/java:21.0.8 AS kafka2sudoc-image
+FROM ossyupiik/java-jdk:21.0.8 AS kafka2sudoc-image
 WORKDIR /
 COPY --from=build-image /build/target/kafka2sudoc-distribution.tar.gz /
 RUN tar xvfz kafka2sudoc-distribution.tar.gz
