@@ -4,6 +4,7 @@ import fr.abes.cbs.exception.CBSException;
 import fr.abes.cbs.exception.ZoneException;
 import fr.abes.cbs.notices.Biblio;
 import fr.abes.cbs.process.ProcessCBS;
+import fr.abes.kafkatosudoc.exception.BouquetNotFoundException;
 import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +33,7 @@ class SudocServiceTest {
     }
 
     @Test
-    void getNoticeBouquetUneNotice() throws CBSException, IOException {
+    void getNoticeBouquetUneNotice() throws CBSException, IOException, BouquetNotFoundException {
         Mockito.when(cbs.search(Mockito.anyString())).thenReturn("test");
         Mockito.when(cbs.getNbNotices()).thenReturn(1);
         Mockito.when(cbs.getPpnEncours()).thenReturn("111111111");

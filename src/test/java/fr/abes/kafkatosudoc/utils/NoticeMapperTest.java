@@ -676,4 +676,73 @@ public class NoticeMapperTest {
         Assertions.assertEquals("titre caractère originaux", biblio.findZone("200", 1).findSubLabel("$a"));
         Assertions.assertEquals("Titre notice", biblio.findZone("200", 0).findSubLabel("$a"));
     }
+
+    @Test
+    void test205translitereee() throws ZoneException {
+        String biblioStr = "000 $094\r" +
+                "002 $aFRBNF444871680000005$2FRBNF\r" +
+                "003 191123226\r" +
+                "004 4994:03-02-16\r" +
+                "005 1999:28-11-23 03:05:41.000\r" +
+                "006 4994:03-02-16\r" +
+                "008 $aAax3\r" +
+                "00A $00\r" +
+                "00U $0utf8\r" +
+                "010 ##$A978-2-343-07477-1$bvol. 1$bbr$d39 EUR\r" +
+                "010 ##$A978-2-343-07478-8$bvol. 2$bbr$d45 EUR\r" +
+                "021 ##$aFR$bDLE-20160113-2155\r" +
+                "021 ##$aFR$bDLE-20160113-2157\r" +
+                "033 ##$ahttp://catalogue.bnf.fr/ark:/12148/cb44487168z\r" +
+                "035 ##$aFRBNF444871680000005$zFRBNF44487168\r" +
+                "035 ##$afrBN44487171\r" +
+                "073 #0$a9782343074771$bvol. 1\r" +
+                "073 #0$a9782343074788$bvol. 2\r" +
+                "100 0#$a2016\r" +
+                "101 0#$aara$gara\r" +
+                "102 ##$aFR\r" +
+                "104 ##$am$by$ca$dfa$e1$ffre\r" +
+                "105 ##$aa$ba$c0$d0$e0$fy$gc\r" +
+                "106 ##$ar\r" +
+                "181 ##$P01$ctxt\r" +
+                "182 ##$P01$cn\r" +
+                "183 ##$P01$anga\r" +
+                "200 1#$601$7fa$a@بورقيبة ونويرة$eذكريات و مذاكرات$fمحمد الهاشمي عباس$gتقديم الطبعة العربية الأولى، الأستاذ الشاذلي القليبي والأستاذ عبد الوهاب بوزقرو$gتقديم الطبعة العربية الثانية، الأستاذ أحمد الحمروني$gتقديم الطبعة الفرنسية، الفقيد الأستاذ جون لاكوتور\r" +
+                "200 1#$601$7ba$a@@Būrqībaẗ wa Nwīraẗ$eḏikrayāt wa muḏākarāt$fMuḥammad al-Hāšimī ʿAbbās$gtaqdīm al-ṭabʿaẗ al-ʿarabiyyaẗ al-ūlá, al-ustāḏ al-Šaḏlī al-Qlībī wa al-ustāḏ ʿAbd al-Wahhāb Būzuqrū$gtaqdīm al-ṭabʿaẗ al-ʿarabiyyaẗ al-ṯāniyyaẗ, al-ustāḏ Aḥmad al-Ḥamrūnī$gtaqdīm al-ṭabʿaẗ al-faransiyyaẗ, al-faqīd al-ustāḏ Ǧūn Lākūtūr\r" +
+                "205 ##$602$7fa$aالطبعة الثانية مزيدة ومنقحة، مالم ينشر في عهد الرئيس إبن علي\r" +
+                "205 ##$602$7ba$aAl-ṭabʻaẗ al-t̲āniyyaẗ mazīdaẗ wa munaqqaḥaẗ, mālam yunšar fī ʻahd al-raʼīs Ibn ʻAlī\r" +
+                "214 #0$aParis$cÉditions l'Harmattan$d2016\r" +
+                "215 ##$a2 vol. (392, 477 p.)$cill.$d24 cm\r" +
+                "304 ##$aTrad. de : \"Bourguiba et Nouira : souvenirs et mémoires\"\r" +
+                "320 ##$aBibliogr. p. 467-468\r" +
+                "454 ##$0182430952\r" +
+                "579 $10499$3232681708\r" +
+                "600 #1$3027287912$2rameau\r" +
+                "600 #1$3027050289$2rameau\r" +
+                "606 ##$3029025850$2rameau\r" +
+                "607 ##$3027650359$2rameau\r" +
+                "608 ##$3027281558$2rameau\r" +
+                "676 ##$a961.105 10922$v22\r" +
+                "686 ##$a920$2Cadre de classement de la Bibliographie nationale française\r" +
+                "700 #1$3232667012$4070\r" +
+                "702 #1$3182433099$4730\r" +
+                "801 #0$aFR$bFR-751131015$c20160113$gAFNOR$2intermrc\r" +
+                "830 ##$aRéforme Rameau Genre-Forme retro biographies (ne pas supprimer)\r" +
+                "830 ##$aABES NE PAS SUPPRIMER Réforme Rameau Tg préconstruites avec subd. aux lieux 2019-06-14\r";
+        Biblio biblio = new Biblio(biblioStr);
+        NoticeConcrete notice = new NoticeConcrete(biblio, null, Lists.newArrayList());
+        KbartAndImprimeDto kbartAndImprimeDto = new KbartAndImprimeDto();
+        kbartAndImprimeDto.setNotice(notice);
+        LigneKbartImprime kbart = new LigneKbartImprime();
+        kbart.setOnlineIdentifier("0-415-11262-8");
+        kbart.setPublicationTitle("Test title");
+        kbart.setAccessType("P");
+        kbart.setTitleUrl("http://www.test.com/");
+        kbart.setPpn("123456789");
+        kbart.setDateMonographPublishedOnline("2026-02-05");
+        kbartAndImprimeDto.setKbart(kbart);
+
+        NoticeConcrete noticeResult = mapper.map(kbartAndImprimeDto, NoticeConcrete.class);
+        Assertions.assertEquals(2, noticeResult.getNoticeBiblio().findZones("205").size());
+        Assertions.assertEquals("2026",noticeResult.getNoticeBiblio().findZone("214", 1).findSubLabel("d"));
+    }
 }
