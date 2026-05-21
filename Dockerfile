@@ -26,4 +26,4 @@ RUN rm -f /kafka2sudoc-distribution.tar.gz
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-CMD ["opt/jre/bin/java", "-cp", "/kafka2sudoc/lib/*", "fr.abes.kafkatosudoc.KafkaToSudocApplication"]
+CMD ["/opt/jre/bin/java", "-cp", "/kafka2sudoc/lib/*", "fr.abes.kafkatosudoc.KafkaToSudocApplication"]
