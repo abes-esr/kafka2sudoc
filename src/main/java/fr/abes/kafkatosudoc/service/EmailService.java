@@ -175,14 +175,6 @@ public class EmailService {
         } catch (Exception e) {
             log.error("Erreur dans l'envoi du mail d'erreur Sudoc" + e);
         }
-        //  Création du l'adresse du ws d'envoi de mails
-        HttpPost mail = new HttpPost(this.url + "htmlMail/");
-
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            httpClient.execute(mail);
-        } catch (IOException e) {
-            log.error("Erreur lors de l'envoi du mail. " + e);
-        }
     }
 
     protected void sendMailWithFile(String requestJson, File f) {
