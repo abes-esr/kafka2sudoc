@@ -26,4 +26,17 @@ RUN rm -f /kafka2sudoc-distribution.tar.gz
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# ---- Add certificats HARICA (https://www.eduroam.fr/certificat-harica) ----
+RUN mkdir -p /tmp/certs
+COPY ./docker/certificats-harica/* /tmp/certs/
+RUN for cert in /tmp/certs/*; do \
+      alias=$(basename $cert | cut -d. -f1); \
+      keytool -importcert -noprompt \
+        -alias $alias \
+        -file $cert \
+        -keystore $JAVA_HOME/lib/security/cacerts \
+        -storepass changeit; \
+    done && \
+    rm -rf /tmp/certs
+
 CMD ["java", "-cp", "/kafka2sudoc/lib/*", "fr.abes.kafkatosudoc.KafkaToSudocApplication"]
