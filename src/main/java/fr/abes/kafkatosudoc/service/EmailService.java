@@ -30,8 +30,11 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -46,19 +49,30 @@ public class EmailService {
     @Value("${spring.profiles.active}")
     private String env;
 
+    @Value("${abes.pathToErrors:tempLog/}")
+    private String pathToErrors;
+
+    private static final String FILE_ERREURS_INSERTION_469 = "ErreursInsertion469.txt";
+    private static final String FILE_ERREURS_CREATIONS = "ErreursCreations.txt";
+    private static final String HEADER_TSV = "Bouquet\tRequête WinIBW\tPPN\tErreur";
+
     private final String SUBJECT_ERROR_EXNIHILO = "[KBART2SUDOC :  erreurs créations ex nihilo ]";
     private final String SUBJECT_ERROR_IMPRIME = "[KBART2SUDOC :  erreurs créations par dérivations]";
     private final String SUBJECT_ERROR_LIEN_BOUQUET = "[KBART2SUDOC :  erreurs liens 469]";
 
     public void sendErrorsMessageCreateFromKafka(String filename, WorkInProgress<LigneKbartConnect> workInProgress) throws IOException {
-        JsonObject listErrors = Json.createObjectBuilder()
-                .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).count() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets)", formatErrorMessageListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).toList()))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).count() + " erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets)", formatErrorMessageListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).toList()))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).count() + " erreur(s) d'ajout de 469", formatErrorMessageListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).toList()))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).count() + " erreur(s) de suppression de 469", formatErrorMessageListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).toList()))
-                .build();
-        sendErrorsMessage(filename, listErrors, SUBJECT_ERROR_LIEN_BOUQUET);
+        List<ErrorMessage> errors = workInProgress.getErrorMessages().stream()
+                .filter(m -> m.getType().equals(ERROR_TYPE.ADD469) || m.getType().equals(ERROR_TYPE.SUPP469)
+                        || m.getType().equals(ERROR_TYPE.CONNEXION) || m.getType().equals(ERROR_TYPE.DATE_FORMAT))
+                .toList();
+        StringBuilder lines = new StringBuilder();
+        for (ErrorMessage error : errors) {
+            String ppn = extractPpn(error.getMessage());
+            String erreur = extractErreur(error.getMessage());
+            lines.append(formatErrorLine(filename, ppn, erreur));
+        }
+        appendErrorsToFile(lines.toString(), FILE_ERREURS_INSERTION_469);
+        sendErrorsEmailWithAttachment(filename, FILE_ERREURS_INSERTION_469, SUBJECT_ERROR_LIEN_BOUQUET, errors.size());
     }
 
     private JsonObjectBuilder formatErrorMessageListToJson(List<ErrorMessage> list) {
@@ -72,19 +86,31 @@ public class EmailService {
     }
 
     public void sendErrorMessagesExNihilo(String filename, WorkInProgress<LigneKbartConnect> workInProgress) throws IOException {
-        JsonObject listErrors = Json.createObjectBuilder()
-                .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO)).count() + " erreur(s) lors de la création de notice(s) ExNihilo", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO)).toList().toString())
-                .build();
-        sendErrorsMessage(filename, listErrors, SUBJECT_ERROR_EXNIHILO);
+        List<ErrorMessage> errors = workInProgress.getErrorMessages().stream()
+                .filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO))
+                .toList();
+        StringBuilder lines = new StringBuilder();
+        for (ErrorMessage error : errors) {
+            String ppn = extractPpn(error.getMessage());
+            String erreur = extractErreur(error.getMessage());
+            lines.append(formatErrorLine(filename, ppn, erreur));
+        }
+        appendErrorsToFile(lines.toString(), FILE_ERREURS_CREATIONS);
+        sendErrorsEmailWithAttachment(filename, FILE_ERREURS_CREATIONS, SUBJECT_ERROR_EXNIHILO, errors.size());
     }
 
     public void sendErrorMessagesImprime(String filename, WorkInProgress<LigneKbartImprime> workInProgress) throws IOException {
-        JsonObject listErrors = Json.createObjectBuilder()
-                .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME)).count() + " erreur(s) lors de la création de notice(s) électronique(s) à partir d'un imprimé",workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME)).toList().toString())
-                .build();
-        sendErrorsMessage(filename, listErrors, SUBJECT_ERROR_IMPRIME);
+        List<ErrorMessage> errors = workInProgress.getErrorMessages().stream()
+                .filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME))
+                .toList();
+        StringBuilder lines = new StringBuilder();
+        for (ErrorMessage error : errors) {
+            String ppn = extractPpn(error.getMessage());
+            String erreur = extractErreur(error.getMessage());
+            lines.append(formatErrorLine(filename, ppn, erreur));
+        }
+        appendErrorsToFile(lines.toString(), FILE_ERREURS_CREATIONS);
+        sendErrorsEmailWithAttachment(filename, FILE_ERREURS_CREATIONS, SUBJECT_ERROR_IMPRIME, errors.size());
     }
 
     private void sendErrorsMessage(String filename, JsonObject listErrors, String subject) throws IOException {
@@ -234,6 +260,124 @@ public class EmailService {
                 .add("Package", packageName)
                 .add("Date", CheckFiles.extractDateString(filename))
                 .build();
+    }
+
+    /**
+     * Formate une ligne d'erreur au format TSV attendu par les fonctionnels
+     *
+     * @param filename nom du fichier kbart
+     * @param ppn      le ppn concerné (peut être vide)
+     * @param erreur   le message d'erreur
+     * @return la ligne formatée en TSV
+     */
+    protected String formatErrorLine(String filename, String ppn, String erreur) {
+        String provider = CheckFiles.getProviderFromFilename(filename);
+        String packageName = CheckFiles.getPackageFromFilename(filename);
+        String date = CheckFiles.extractDateString(filename);
+        String bouquet = provider + "_" + packageName + "_" + date;
+        String requeteWinIBW = (!ppn.isEmpty()) ? "che ppn " + ppn : "";
+        return bouquet + "\t" + requeteWinIBW + "\t" + ppn + "\t" + erreur + System.lineSeparator();
+    }
+
+    /**
+     * Ajoute des lignes d'erreurs à un fichier accumulé (avec en-tête si création)
+     *
+     * @param lines         les lignes à ajouter
+     * @param outputFileName le nom du fichier de sortie
+     * @throws IOException erreur d'accès au fichier
+     */
+    protected void appendErrorsToFile(String lines, String outputFileName) throws IOException {
+        if (lines.isEmpty()) {
+            return;
+        }
+        Path outputDir = Path.of(pathToErrors);
+        if (!Files.exists(outputDir)) {
+            Files.createDirectories(outputDir);
+        }
+        Path filePath = outputDir.resolve(outputFileName);
+        if (!Files.exists(filePath)) {
+            // Création du fichier avec en-tête
+            Files.write(filePath, (HEADER_TSV + System.lineSeparator() + lines).getBytes());
+        } else {
+            Files.write(filePath, lines.getBytes(), StandardOpenOption.APPEND);
+        }
+        log.info("Erreurs ajoutées au fichier {}", filePath);
+    }
+
+    /**
+     * Extrait le PPN d'un message d'erreur
+     * Gère les formats : {Ppn : xxx, ...} (ExNihilo/Imprime) et {PPN:xxx,...} (469)
+     *
+     * @param message le message d'erreur
+     * @return le PPN extrait ou chaîne vide si non trouvé
+     */
+    protected String extractPpn(String message) {
+        // Format ExNihilo/Imprime : {Ppn : xxx, ...}
+        Matcher m1 = Pattern.compile("Ppn : ([^,}]+)").matcher(message);
+        if (m1.find()) {
+            return m1.group(1).trim();
+        }
+        // Format 469 : {PPN:xxx,...}
+        Matcher m2 = Pattern.compile("PPN:([^,}]+)").matcher(message);
+        if (m2.find()) {
+            return m2.group(1).trim();
+        }
+        return "";
+    }
+
+    /**
+     * Extrait le message d'erreur d'un message formaté
+     * Gère les formats : {Ppn : xxx, Erreur : xxx[, Notice : xxx]}
+     * et {PPN:xxx,Erreur:xxx,Ligne Kbart:xxx,Notice:xxx}
+     *
+     * @param message le message d'erreur
+     * @return l'erreur extraite ou le message brut si non trouvée
+     */
+    protected String extractErreur(String message) {
+        // Format ExNihilo/Imprime : Erreur : xxx, Notice : yyy} ou Erreur : xxx}
+        Matcher m1 = Pattern.compile("Erreur : (.+?)(?:, Notice|\\})").matcher(message);
+        if (m1.find()) {
+            return m1.group(1).trim();
+        }
+        // Format 469 : Erreur:xxx,Ligne Kbart:
+        Matcher m2 = Pattern.compile("Erreur:(.+),Ligne Kbart:").matcher(message);
+        if (m2.find()) {
+            return m2.group(1).trim();
+        }
+        // Format 469 sans Ligne Kbart : Erreur:xxx}
+        Matcher m3 = Pattern.compile("Erreur:(.+)\\}").matcher(message);
+        if (m3.find()) {
+            return m3.group(1).trim();
+        }
+        // Plain text (CONNEXION, DATE_FORMAT) : Erreur : xxx
+        Matcher m4 = Pattern.compile("Erreur : (.+)").matcher(message);
+        if (m4.find()) {
+            return m4.group(1).trim();
+        }
+        return message;
+    }
+
+    /**
+     * Envoie un mail avec le fichier d'erreurs accumulé en pièce jointe
+     *
+     * @param filename       nom du fichier kbart traité
+     * @param outputFileName  nom du fichier d'erreurs
+     * @param subject        sujet du mail
+     * @param nbErrors       nombre d'erreurs pour ce package
+     * @throws IOException erreur d'accès au fichier
+     */
+    private void sendErrorsEmailWithAttachment(String filename, String outputFileName, String subject, int nbErrors) throws IOException {
+        Path filePath = Path.of(pathToErrors, outputFileName);
+        if (!Files.exists(filePath)) {
+            log.warn("Fichier d'erreurs non trouvé : {}", filePath);
+            return;
+        }
+        //  Création du mail
+        String requestJson = mailToJSON(this.recipient, subject + getTag() + " " + filename,
+                nbErrors + " erreur(s) lors du traitement sur le fichier " + filename + ". Fichier complet des erreurs accumulées en pièce jointe.");
+        //  Envoi du message par mail avec pièce jointe
+        sendMailWithFile(requestJson, filePath.toFile());
+        log.info("L'email a été correctement envoyé avec le fichier {} en pièce jointe.", outputFileName);
     }
 
     protected void createAttachment(JsonObject dataLines, Path path) {
