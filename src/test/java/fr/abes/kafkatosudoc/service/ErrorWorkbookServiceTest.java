@@ -148,6 +148,44 @@ class ErrorWorkbookServiceTest {
     }
 
     @Test
+    void leavesConnectKbartFieldsEmptyWhenErrorHasNoPpn() throws IOException {
+        ErrorWorkbookService service = new ErrorWorkbookService(tempDir.toString());
+        LigneKbartConnect notice = connectNotice(
+                "", "Titre indû", "1111-2222", "3333-4444");
+        ErrorMessage error = new ErrorMessage(
+                ERROR_TYPE.CONNEXION, "Erreur : Connexion CBS impossible");
+
+        service.appendInsertionErrors(
+                "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02.tsv",
+                List.of(error),
+                List.of(notice));
+
+        assertEquals(List.of(
+                        "", "", "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02",
+                        "Connexion CBS impossible", "", "", ""),
+                workbookRow(service.insertionWorkbookPath(), 1));
+    }
+
+    @Test
+    void leavesPrintedKbartFieldsEmptyWhenErrorHasNoPpn() throws IOException {
+        ErrorWorkbookService service = new ErrorWorkbookService(tempDir.toString());
+        LigneKbartImprime notice = printedNotice(
+                "", "Titre indu", "5555-6666", "7777-8888");
+        ErrorMessage error = new ErrorMessage(
+                ERROR_TYPE.FROMIMPRIME, "Erreur : Dérivation impossible");
+
+        service.appendCreationErrorsFromPrint(
+                "CAIRN_GLOBAL_ALLEBOOKS_2025-11-02.tsv",
+                List.of(error),
+                List.of(notice));
+
+        assertEquals(List.of(
+                        "", "", "CAIRN_GLOBAL_ALLEBOOKS_2025-11-02",
+                        "Dérivation impossible", "", "", ""),
+                workbookRow(service.creationWorkbookPath(), 1));
+    }
+
+    @Test
     void formatsWorkbookForSafeTextReading() throws IOException {
         ErrorWorkbookService service = new ErrorWorkbookService(tempDir.toString());
 

@@ -96,11 +96,13 @@ public class ErrorWorkbookService {
             List<LigneKbartConnect> notices) {
         String ppn = extractPpn(error.getMessage());
         String errorText = extractError(error.getMessage());
-        LigneKbartConnect notice = notices.stream()
-                .filter(candidate -> candidate.getBESTPPN() != null)
-                .filter(candidate -> ppn.contentEquals(candidate.getBESTPPN()))
-                .findFirst()
-                .orElse(null);
+        LigneKbartConnect notice = ppn.isEmpty()
+                ? null
+                : notices.stream()
+                        .filter(candidate -> candidate.getBESTPPN() != null)
+                        .filter(candidate -> ppn.contentEquals(candidate.getBESTPPN()))
+                        .findFirst()
+                        .orElse(null);
 
         return new ErrorWorkbookRow(
                 ppn,
@@ -117,11 +119,13 @@ public class ErrorWorkbookService {
             ErrorMessage error,
             List<LigneKbartImprime> notices) {
         String ppn = extractPpn(error.getMessage());
-        LigneKbartImprime notice = notices.stream()
-                .filter(candidate -> candidate.getPpn() != null)
-                .filter(candidate -> ppn.contentEquals(candidate.getPpn()))
-                .findFirst()
-                .orElse(null);
+        LigneKbartImprime notice = ppn.isEmpty()
+                ? null
+                : notices.stream()
+                        .filter(candidate -> candidate.getPpn() != null)
+                        .filter(candidate -> ppn.contentEquals(candidate.getPpn()))
+                        .findFirst()
+                        .orElse(null);
 
         return new ErrorWorkbookRow(
                 ppn,
