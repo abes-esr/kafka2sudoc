@@ -210,6 +210,13 @@
             <version>4.5.14</version>
         </dependency>
 
+        <!-- Génération des rapports XLSX -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+
         <!--Lombok-->
         <dependency>
             <groupId>org.projectlombok</groupId>

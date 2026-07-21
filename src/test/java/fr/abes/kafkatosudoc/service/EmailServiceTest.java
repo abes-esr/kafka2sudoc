@@ -1,201 +1,151 @@
 package fr.abes.kafkatosudoc.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.abes.LigneKbartConnect;
+import fr.abes.LigneKbartImprime;
+import fr.abes.kafkatosudoc.dto.ERROR_TYPE;
+import fr.abes.kafkatosudoc.kafka.WorkInProgress;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EmailServiceTest {
 
-    private EmailService emailService;
+    private static final String FILENAME =
+            "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02.tsv";
+    private static final String EMAIL_BODY =
+            "1 erreur(s) lors du traitement sur le fichier " + FILENAME
+                    + ". Fichier complet des erreurs accumulées en pièce jointe.";
+
+    private CapturingEmailService emailService;
 
     @TempDir
     Path tempDir;
 
     @BeforeEach
-    void setUp() throws Exception {
-        emailService = new EmailService();
-        // Injection de la valeur pathToErrors via reflection
-        Field pathToErrorsField = EmailService.class.getDeclaredField("pathToErrors");
-        pathToErrorsField.setAccessible(true);
-        pathToErrorsField.set(emailService, tempDir.toString() + "/");
+    void setUp() throws ReflectiveOperationException {
+        emailService = new CapturingEmailService(
+                new ErrorWorkbookService(tempDir.toString()));
+        setField("recipient", "recipient@abes.fr");
+        setField("env", "test");
     }
 
     @Test
-    @DisplayName("Test formatErrorLine avec un filename valide")
-    void testFormatErrorLine() {
-        String filename = "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02.tsv";
-        String ppn = "115575375";
-        String erreur = "Les sous-zones $5/$a dans 606 s'excluent mutuellement";
+    void attachesInsertionWorkbookFor469Errors() throws IOException {
+        WorkInProgress<LigneKbartConnect> work = connectWorkInProgress();
+        work.addErrorMessages469(
+                "262071878", work.getListeNotices().get(0), "",
+                "Zone 469 invalide", ERROR_TYPE.ADD469);
 
-        String result = emailService.formatErrorLine(filename, ppn, erreur);
+        emailService.sendErrorsMessageCreateFromKafka(FILENAME, work);
 
-        String expected = "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02\tche ppn 115575375\t115575375\tLes sous-zones $5/$a dans 606 s'excluent mutuellement" + System.lineSeparator();
-        assertEquals(expected, result);
+        assertEquals("ErreursInsertion469.xlsx",
+                emailService.attachment.getName());
+        assertTrue(emailService.attachment.exists());
+        assertEmail(
+                "[KBART2SUDOC :  erreurs liens 469][TEST] " + FILENAME);
     }
 
     @Test
-    @DisplayName("Test formatErrorLine avec PPN vide")
-    void testFormatErrorLineWithEmptyPpn() {
-        String filename = "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02.tsv";
-        String ppn = "";
-        String erreur = "Erreur de connexion CBS";
+    void attachesCreationWorkbookForExNihiloErrors() throws IOException {
+        WorkInProgress<LigneKbartConnect> work = connectWorkInProgress();
+        work.addErrorMessageExNihilo("262071878", "Création impossible");
 
-        String result = emailService.formatErrorLine(filename, ppn, erreur);
+        emailService.sendErrorMessagesExNihilo(FILENAME, work);
 
-        String expected = "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02\t\t\tErreur de connexion CBS" + System.lineSeparator();
-        assertEquals(expected, result);
+        assertEquals("ErreursCreations.xlsx",
+                emailService.attachment.getName());
+        assertTrue(emailService.attachment.exists());
+        assertEmail(
+                "[KBART2SUDOC :  erreurs créations ex nihilo ][TEST] "
+                        + FILENAME);
     }
 
     @Test
-    @DisplayName("Test formatErrorLine avec suffixe _FORCE")
-    void testFormatErrorLineWithForceSuffix() {
-        String filename = "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02_FORCE.tsv";
-        String ppn = "262071878";
-        String erreur = "Mot attendu après '@' dans 200$a";
+    void attachesCreationWorkbookForPrintedErrors() throws IOException {
+        WorkInProgress<LigneKbartImprime> work = printedWorkInProgress();
+        work.addErrorMessagesImprime("262071878", "Dérivation impossible");
 
-        String result = emailService.formatErrorLine(filename, ppn, erreur);
+        emailService.sendErrorMessagesImprime(FILENAME, work);
 
-        // Le bouquet contient toujours _FORCE car on extrait provider/package/date depuis le filename
-        assertNotNull(result);
-        assertTrue(result.contains("che ppn 262071878"));
-        assertTrue(result.contains("Mot attendu après '@' dans 200$a"));
+        assertEquals("ErreursCreations.xlsx",
+                emailService.attachment.getName());
+        assertTrue(emailService.attachment.exists());
+        assertEmail(
+                "[KBART2SUDOC :  erreurs créations par dérivations][TEST] "
+                        + FILENAME);
     }
 
     @Test
-    @DisplayName("Test extractPpn avec format ExNihilo {Ppn : xxx, Erreur : xxx}")
-    void testExtractPpnExNihiloFormat() {
-        String message = "{Ppn : 115575375, Erreur : Les sous-zones $5/$a dans 606 s'excluent mutuellement}";
+    void doesNotSendEmailWhenNoRowIsAdded() throws IOException {
+        emailService.sendErrorsMessageCreateFromKafka(
+                FILENAME, connectWorkInProgress());
 
-        String ppn = emailService.extractPpn(message);
-
-        assertEquals("115575375", ppn);
+        assertNull(emailService.attachment);
+        assertNull(emailService.requestJson);
+        assertFalse(Files.exists(tempDir.resolve(
+                "ErreursInsertion469.xlsx")));
     }
 
-    @Test
-    @DisplayName("Test extractPpn avec format Imprime {Ppn : xxx, Erreur : xxx, Notice : xxx}")
-    void testExtractPpnImprimeFormat() {
-        String message = "{Ppn : 262071878, Erreur : Mot attendu après '@' dans 200$a, Notice : 008 $aOax3}";
-
-        String ppn = emailService.extractPpn(message);
-
-        assertEquals("262071878", ppn);
+    private WorkInProgress<LigneKbartConnect> connectWorkInProgress() {
+        LigneKbartConnect notice = new LigneKbartConnect();
+        notice.setBESTPPN("262071878");
+        notice.setPUBLICATIONTITLE("Titre électronique");
+        notice.setPRINTIDENTIFIER("1234-5678");
+        notice.setONLINEIDENTIFIER("8765-4321");
+        WorkInProgress<LigneKbartConnect> work = new WorkInProgress<>(1);
+        work.addNotice(notice);
+        return work;
     }
 
-    @Test
-    @DisplayName("Test extractPpn avec format 469 {PPN:xxx,Erreur:xxx,...}")
-    void testExtractPpn469Format() {
-        String message = "{PPN:262071878,Erreur:Mot attendu après '@' dans 200$a,Ligne Kbart:...,Notice:...}";
-
-        String ppn = emailService.extractPpn(message);
-
-        assertEquals("262071878", ppn);
+    private WorkInProgress<LigneKbartImprime> printedWorkInProgress() {
+        LigneKbartImprime notice = new LigneKbartImprime();
+        notice.setPpn("262071878");
+        notice.setPublicationTitle("Titre imprimé");
+        notice.setPrintIdentifier("1234-5678");
+        notice.setOnlineIdentifier("8765-4321");
+        WorkInProgress<LigneKbartImprime> work = new WorkInProgress<>(1);
+        work.addNotice(notice);
+        return work;
     }
 
-    @Test
-    @DisplayName("Test extractPpn avec message sans PPN")
-    void testExtractPpnNoPpn() {
-        String message = "Erreur : CBS connection failed";
-
-        String ppn = emailService.extractPpn(message);
-
-        assertEquals("", ppn);
+    private void assertEmail(String expectedSubject) throws IOException {
+        JsonNode mail = new ObjectMapper().readTree(emailService.requestJson);
+        assertEquals(expectedSubject, mail.get("subject").asText());
+        assertEquals(EMAIL_BODY, mail.get("text").asText());
     }
 
-    @Test
-    @DisplayName("Test extractErreur avec format ExNihilo {Ppn : xxx, Erreur : xxx}")
-    void testExtractErreurExNihiloFormat() {
-        String message = "{Ppn : 115575375, Erreur : Les sous-zones $5/$a dans 606 s'excluent mutuellement}";
-
-        String erreur = emailService.extractErreur(message);
-
-        assertEquals("Les sous-zones $5/$a dans 606 s'excluent mutuellement", erreur);
+    private void setField(String fieldName, String value)
+            throws ReflectiveOperationException {
+        Field field = EmailService.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(emailService, value);
     }
 
-    @Test
-    @DisplayName("Test extractErreur avec format Imprime {Ppn : xxx, Erreur : xxx, Notice : xxx}")
-    void testExtractErreurImprimeFormat() {
-        String message = "{Ppn : 262071878, Erreur : Mot attendu après '@' dans 200$a, Notice : 008 $aOax3}";
+    private static class CapturingEmailService extends EmailService {
+        private File attachment;
+        private String requestJson;
 
-        String erreur = emailService.extractErreur(message);
+        CapturingEmailService(ErrorWorkbookService workbookService) {
+            super(workbookService);
+        }
 
-        assertEquals("Mot attendu après '@' dans 200$a", erreur);
-    }
-
-    @Test
-    @DisplayName("Test extractErreur avec format 469 {PPN:xxx,Erreur:xxx,Ligne Kbart:xxx,Notice:xxx}")
-    void testExtractErreur469Format() {
-        String message = "{PPN:262071878,Erreur:Mot attendu après '@' dans 200$a,Ligne Kbart:...,Notice:...}";
-
-        String erreur = emailService.extractErreur(message);
-
-        assertEquals("Mot attendu après '@' dans 200$a", erreur);
-    }
-
-    @Test
-    @DisplayName("Test extractErreur avec plain text (CONNEXION)")
-    void testExtractErreurPlainText() {
-        String message = "Erreur : CBS connection failed";
-
-        String erreur = emailService.extractErreur(message);
-
-        assertEquals("CBS connection failed", erreur);
-    }
-
-    @Test
-    @DisplayName("Test appendErrorsToFile : création du fichier avec en-tête")
-    void testAppendErrorsToFileCreation() throws IOException {
-        String lines = "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02\tche ppn 115575375\t115575375\tErreur test" + System.lineSeparator();
-
-        emailService.appendErrorsToFile(lines, "ErreursInsertion469.txt");
-
-        Path filePath = tempDir.resolve("ErreursInsertion469.txt");
-        assertTrue(Files.exists(filePath));
-
-        List<String> fileLines = Files.readAllLines(filePath);
-        assertEquals(2, fileLines.size());
-        assertEquals("Bouquet\tRequête WinIBW\tPPN\tErreur", fileLines.get(0));
-        assertTrue(fileLines.get(1).contains("JSTOR_GLOBAL_ALLEBOOKS_2025-11-02"));
-        assertTrue(fileLines.get(1).contains("che ppn 115575375"));
-        assertTrue(fileLines.get(1).contains("Erreur test"));
-    }
-
-    @Test
-    @DisplayName("Test appendErrorsToFile : ajout de lignes à un fichier existant")
-    void testAppendErrorsToFileAppend() throws IOException {
-        // Premier ajout (création)
-        String lines1 = "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02\tche ppn 115575375\t115575375\tErreur 1" + System.lineSeparator();
-        emailService.appendErrorsToFile(lines1, "ErreursCreations.txt");
-
-        // Deuxième ajout (append)
-        String lines2 = "CAIRN_GLOBAL_ALLEBOOKS_2025-11-03\tche ppn 241855942\t241855942\tErreur 2" + System.lineSeparator();
-        emailService.appendErrorsToFile(lines2, "ErreursCreations.txt");
-
-        Path filePath = tempDir.resolve("ErreursCreations.txt");
-        assertTrue(Files.exists(filePath));
-
-        List<String> fileLines = Files.readAllLines(filePath);
-        // 1 en-tête + 2 lignes de données
-        assertEquals(3, fileLines.size());
-        assertEquals("Bouquet\tRequête WinIBW\tPPN\tErreur", fileLines.get(0));
-        assertTrue(fileLines.get(1).contains("JSTOR"));
-        assertTrue(fileLines.get(2).contains("CAIRN"));
-    }
-
-    @Test
-    @DisplayName("Test appendErrorsToFile avec lignes vides (ne fait rien)")
-    void testAppendErrorsToFileEmptyLines() throws IOException {
-        emailService.appendErrorsToFile("", "ErreursInsertion469.txt");
-
-        Path filePath = tempDir.resolve("ErreursInsertion469.txt");
-        assertFalse(Files.exists(filePath));
+        @Override
+        protected void sendMailWithFile(String requestJson, File file) {
+            this.requestJson = requestJson;
+            this.attachment = file;
+        }
     }
 }
