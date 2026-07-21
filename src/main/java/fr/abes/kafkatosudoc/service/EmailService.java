@@ -46,19 +46,29 @@ public class EmailService {
     @Value("${spring.profiles.active}")
     private String env;
 
+    private final ErrorWorkbookService errorWorkbookService;
+
     private final String SUBJECT_ERROR_EXNIHILO = "[KBART2SUDOC :  erreurs créations ex nihilo ]";
     private final String SUBJECT_ERROR_IMPRIME = "[KBART2SUDOC :  erreurs créations par dérivations]";
     private final String SUBJECT_ERROR_LIEN_BOUQUET = "[KBART2SUDOC :  erreurs liens 469]";
 
+    public EmailService(ErrorWorkbookService errorWorkbookService) {
+        this.errorWorkbookService = errorWorkbookService;
+    }
+
     public void sendErrorsMessageCreateFromKafka(String filename, WorkInProgress<LigneKbartConnect> workInProgress) throws IOException {
-        JsonObject listErrors = Json.createObjectBuilder()
-                .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).count() + " erreur(s) de connection CBS lors d'une mise à jour des zones 469 de liens vers les notices bouquets)", formatErrorMessageListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.CONNEXION)).toList()))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).count() + " erreur(s) de format de date lors d'une mise à jour des zones 469 ou de liens vers les notices bouquets)", formatErrorMessageListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.DATE_FORMAT)).toList()))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).count() + " erreur(s) d'ajout de 469", formatErrorMessageListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.ADD469)).toList()))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).count() + " erreur(s) de suppression de 469", formatErrorMessageListToJson(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.SUPP469)).toList()))
-                .build();
-        sendErrorsMessage(filename, listErrors, SUBJECT_ERROR_LIEN_BOUQUET);
+        List<ErrorMessage> errors = workInProgress.getErrorMessages().stream()
+                .filter(m -> m.getType().equals(ERROR_TYPE.ADD469) || m.getType().equals(ERROR_TYPE.SUPP469)
+                        || m.getType().equals(ERROR_TYPE.CONNEXION) || m.getType().equals(ERROR_TYPE.DATE_FORMAT))
+                .toList();
+        if (errorWorkbookService.appendInsertionErrors(
+                filename, errors, workInProgress.getListeNotices())) {
+            sendErrorsEmailWithAttachment(
+                    filename,
+                    errorWorkbookService.insertionWorkbookPath(),
+                    SUBJECT_ERROR_LIEN_BOUQUET,
+                    errors.size());
+        }
     }
 
     private JsonObjectBuilder formatErrorMessageListToJson(List<ErrorMessage> list) {
@@ -72,19 +82,31 @@ public class EmailService {
     }
 
     public void sendErrorMessagesExNihilo(String filename, WorkInProgress<LigneKbartConnect> workInProgress) throws IOException {
-        JsonObject listErrors = Json.createObjectBuilder()
-                .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO)).count() + " erreur(s) lors de la création de notice(s) ExNihilo", workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO)).toList().toString())
-                .build();
-        sendErrorsMessage(filename, listErrors, SUBJECT_ERROR_EXNIHILO);
+        List<ErrorMessage> errors = workInProgress.getErrorMessages().stream()
+                .filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO))
+                .toList();
+        if (errorWorkbookService.appendCreationErrors(
+                filename, errors, workInProgress.getListeNotices())) {
+            sendErrorsEmailWithAttachment(
+                    filename,
+                    errorWorkbookService.creationWorkbookPath(),
+                    SUBJECT_ERROR_EXNIHILO,
+                    errors.size());
+        }
     }
 
     public void sendErrorMessagesImprime(String filename, WorkInProgress<LigneKbartImprime> workInProgress) throws IOException {
-        JsonObject listErrors = Json.createObjectBuilder()
-                .add("kbart info : ", getKbartInfo(filename))
-                .add(workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME)).count() + " erreur(s) lors de la création de notice(s) électronique(s) à partir d'un imprimé",workInProgress.getErrorMessages().stream().filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME)).toList().toString())
-                .build();
-        sendErrorsMessage(filename, listErrors, SUBJECT_ERROR_IMPRIME);
+        List<ErrorMessage> errors = workInProgress.getErrorMessages().stream()
+                .filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME))
+                .toList();
+        if (errorWorkbookService.appendCreationErrorsFromPrint(
+                filename, errors, workInProgress.getListeNotices())) {
+            sendErrorsEmailWithAttachment(
+                    filename,
+                    errorWorkbookService.creationWorkbookPath(),
+                    SUBJECT_ERROR_IMPRIME,
+                    errors.size());
+        }
     }
 
     private void sendErrorsMessage(String filename, JsonObject listErrors, String subject) throws IOException {
@@ -234,6 +256,31 @@ public class EmailService {
                 .add("Package", packageName)
                 .add("Date", CheckFiles.extractDateString(filename))
                 .build();
+    }
+
+    /**
+     * Envoie un mail avec le fichier d'erreurs accumulé en pièce jointe
+     *
+     * @param filename       nom du fichier kbart traité
+     * @param filePath       chemin du fichier d'erreurs
+     * @param subject        sujet du mail
+     * @param nbErrors       nombre d'erreurs pour ce package
+     * @throws IOException erreur d'accès au fichier
+     */
+    private void sendErrorsEmailWithAttachment(
+            String filename, Path filePath, String subject, int nbErrors)
+            throws IOException {
+        if (!Files.exists(filePath)) {
+            log.warn("Fichier d'erreurs non trouvé : {}", filePath);
+            return;
+        }
+        //  Création du mail
+        String requestJson = mailToJSON(this.recipient, subject + getTag() + " " + filename,
+                nbErrors + " erreur(s) lors du traitement sur le fichier " + filename + ". Fichier complet des erreurs accumulées en pièce jointe.");
+        //  Envoi du message par mail avec pièce jointe
+        sendMailWithFile(requestJson, filePath.toFile());
+        log.info("L'email a été correctement envoyé avec le fichier {} en pièce jointe.",
+                filePath.getFileName());
     }
 
     protected void createAttachment(JsonObject dataLines, Path path) {
