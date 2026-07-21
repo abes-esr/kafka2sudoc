@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -149,9 +150,7 @@ public class ErrorWorkbookService {
         Files.createDirectories(workbookPath.getParent());
         Path temporaryPath = workbookPath.resolveSibling(
                 workbookPath.getFileName() + ".tmp");
-        try (Workbook workbook = Files.exists(workbookPath)
-                ? WorkbookFactory.create(workbookPath.toFile())
-                : new XSSFWorkbook()) {
+        try (Workbook workbook = openWorkbook(workbookPath)) {
             Sheet sheet = workbook.getSheet(sheetName);
             if (sheet == null) {
                 sheet = createSheet(workbook, sheetName);
@@ -163,15 +162,32 @@ public class ErrorWorkbookService {
                 writeRow(sheet.createRow(rowIndex++), row.values(), textStyle);
             }
             updateAutoFilter(sheet);
-            try (OutputStream output = Files.newOutputStream(temporaryPath)) {
-                workbook.write(output);
-            }
+            writeWorkbook(workbook, temporaryPath);
         } catch (IOException exception) {
             Files.deleteIfExists(temporaryPath);
             throw exception;
         }
-        replaceAtomically(temporaryPath, workbookPath);
+        try {
+            replaceAtomically(temporaryPath, workbookPath);
+        } finally {
+            Files.deleteIfExists(temporaryPath);
+        }
         return true;
+    }
+
+    void writeWorkbook(Workbook workbook, Path temporaryPath) throws IOException {
+        try (OutputStream output = Files.newOutputStream(temporaryPath)) {
+            workbook.write(output);
+        }
+    }
+
+    private Workbook openWorkbook(Path workbookPath) throws IOException {
+        if (!Files.exists(workbookPath)) {
+            return new XSSFWorkbook();
+        }
+        try (InputStream input = Files.newInputStream(workbookPath)) {
+            return WorkbookFactory.create(input);
+        }
     }
 
     private Sheet createSheet(Workbook workbook, String sheetName) {
@@ -219,19 +235,69 @@ public class ErrorWorkbookService {
                 HEADERS.size() - 1));
     }
 
-    private void replaceAtomically(Path temporaryPath, Path workbookPath) throws IOException {
+    void replaceAtomically(Path temporaryPath, Path workbookPath) throws IOException {
         try {
-            Files.move(
-                    temporaryPath,
-                    workbookPath,
-                    StandardCopyOption.ATOMIC_MOVE,
-                    StandardCopyOption.REPLACE_EXISTING);
+            moveAtomically(temporaryPath, workbookPath);
         } catch (AtomicMoveNotSupportedException exception) {
-            Files.move(
-                    temporaryPath,
-                    workbookPath,
-                    StandardCopyOption.REPLACE_EXISTING);
+            replaceWithBackup(temporaryPath, workbookPath);
         }
+    }
+
+    private void replaceWithBackup(Path temporaryPath, Path workbookPath) throws IOException {
+        Path backupPath = Files.exists(workbookPath)
+                ? createBackup(workbookPath)
+                : null;
+        try {
+            moveReplacing(temporaryPath, workbookPath);
+        } catch (IOException replacementFailure) {
+            if (backupPath != null) {
+                try {
+                    restoreBackup(backupPath, workbookPath);
+                } catch (IOException restorationFailure) {
+                    replacementFailure.addSuppressed(restorationFailure);
+                    throw replacementFailure;
+                }
+                try {
+                    Files.deleteIfExists(backupPath);
+                } catch (IOException cleanupFailure) {
+                    replacementFailure.addSuppressed(cleanupFailure);
+                }
+            }
+            throw replacementFailure;
+        }
+        if (backupPath != null) {
+            Files.deleteIfExists(backupPath);
+        }
+    }
+
+    private Path createBackup(Path workbookPath) throws IOException {
+        Path backupPath = Files.createTempFile(
+                workbookPath.getParent(),
+                workbookPath.getFileName() + ".",
+                ".bak");
+        try {
+            Files.copy(workbookPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
+            return backupPath;
+        } catch (IOException exception) {
+            Files.deleteIfExists(backupPath);
+            throw exception;
+        }
+    }
+
+    void moveAtomically(Path source, Path target) throws IOException {
+        Files.move(
+                source,
+                target,
+                StandardCopyOption.ATOMIC_MOVE,
+                StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    void moveReplacing(Path source, Path target) throws IOException {
+        Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    void restoreBackup(Path backup, Path target) throws IOException {
+        Files.copy(backup, target, StandardCopyOption.REPLACE_EXISTING);
     }
 
     private String bouquet(String filename) {
