@@ -219,6 +219,33 @@ class ErrorWorkbookServiceTest {
         assertFalse(Files.exists(tempDir.resolve("ErreursInsertion469.xlsx.tmp")));
     }
 
+    @Test
+    void configuresSameReadableColumnWidthsOnBothReports() throws IOException {
+        ErrorWorkbookService service = new ErrorWorkbookService(tempDir.toString());
+        int[] expectedWidths = {12, 20, 38, 50, 50, 16, 16};
+
+        service.appendInsertionErrors(
+                "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02.tsv",
+                List.of(error469("000000001", "Erreur d'insertion")),
+                List.of(connectNotice("000000001", "Titre", "0012-3456", "0098-7654")));
+        service.appendCreationErrors(
+                "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02.tsv",
+                List.of(new ErrorMessage(
+                        ERROR_TYPE.EXNIHILO,
+                        "{Ppn : 000000002, Erreur : Création impossible}")),
+                List.of(connectNotice("000000002", "Titre", "0012-3456", "0098-7654")));
+
+        for (Path workbookPath : List.of(
+                service.insertionWorkbookPath(), service.creationWorkbookPath())) {
+            try (Workbook workbook = WorkbookFactory.create(workbookPath.toFile())) {
+                Sheet sheet = workbook.getSheetAt(0);
+                for (int column = 0; column < expectedWidths.length; column++) {
+                    assertEquals(expectedWidths[column] * 256, sheet.getColumnWidth(column));
+                }
+            }
+        }
+    }
+
     @ParameterizedTest
     @MethodSource("supportedErrorFormats")
     void extractsPpnAndErrorFromEverySupportedFormat(

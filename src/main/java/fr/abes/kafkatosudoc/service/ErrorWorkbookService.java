@@ -36,6 +36,8 @@ public class ErrorWorkbookService {
     private static final List<String> HEADERS = List.of(
             "PPN", "Commande WinIBW", "Bouquet", "Erreur",
             "Titre", "ISSN imprimé", "ISSN en ligne");
+    private static final List<Integer> COLUMN_WIDTHS = List.of(
+            12, 20, 38, 50, 50, 16, 16);
     private static final Pattern CREATION_PPN_PATTERN = Pattern.compile("Ppn\\s*:\\s*([^,}]+)");
     private static final Pattern INSERTION_PPN_PATTERN = Pattern.compile("PPN:([^,}]+)");
     private static final Pattern CREATION_ERROR_PATTERN =
@@ -154,6 +156,7 @@ public class ErrorWorkbookService {
             if (sheet == null) {
                 sheet = createSheet(workbook, sheetName);
             }
+            configureColumnWidths(sheet);
             CellStyle textStyle = textStyle(workbook);
             int rowIndex = sheet.getLastRowNum() + 1;
             for (ErrorWorkbookRow row : rows) {
@@ -182,6 +185,12 @@ public class ErrorWorkbookService {
         for (int index = 0; index < values.size(); index++) {
             row.createCell(index).setCellValue(values.get(index));
             row.getCell(index).setCellStyle(style);
+        }
+    }
+
+    private void configureColumnWidths(Sheet sheet) {
+        for (int column = 0; column < COLUMN_WIDTHS.size(); column++) {
+            sheet.setColumnWidth(column, COLUMN_WIDTHS.get(column) * 256);
         }
     }
 
