@@ -12,20 +12,19 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,42 +54,39 @@ public class ErrorWorkbookService {
         this.outputDirectory = Path.of(pathToErrors);
     }
 
-    public synchronized boolean appendInsertionErrors(
+    public Optional<Path> createInsertionReport(
             String filename,
             List<ErrorMessage> errors,
             List<LigneKbartConnect> notices) throws IOException {
         List<ErrorWorkbookRow> rows = errors.stream()
                 .map(error -> connectRow(filename, error, notices))
                 .toList();
-        return append(rows, insertionWorkbookPath(), "ErreursInsertion469");
+        return create(rows, INSERTION_FILENAME, "ErreursInsertion469");
     }
 
-    public synchronized boolean appendCreationErrors(
+    public Optional<Path> createCreationReport(
             String filename,
             List<ErrorMessage> errors,
             List<LigneKbartConnect> notices) throws IOException {
-        return append(
+        return create(
                 errors.stream().map(error -> connectRow(filename, error, notices)).toList(),
-                creationWorkbookPath(),
+                CREATION_FILENAME,
                 "ErreursCreations");
     }
 
-    public synchronized boolean appendCreationErrorsFromPrint(
+    public Optional<Path> createCreationReportFromPrint(
             String filename,
             List<ErrorMessage> errors,
             List<LigneKbartImprime> notices) throws IOException {
-        return append(
+        return create(
                 errors.stream().map(error -> printedRow(filename, error, notices)).toList(),
-                creationWorkbookPath(),
+                CREATION_FILENAME,
                 "ErreursCreations");
     }
 
-    public Path insertionWorkbookPath() {
-        return outputDirectory.resolve(INSERTION_FILENAME);
-    }
-
-    public Path creationWorkbookPath() {
-        return outputDirectory.resolve(CREATION_FILENAME);
+    public void deleteReport(Path reportPath) throws IOException {
+        Files.deleteIfExists(reportPath);
+        Files.deleteIfExists(reportPath.getParent());
     }
 
     private ErrorWorkbookRow connectRow(
@@ -140,17 +136,20 @@ public class ErrorWorkbookService {
                 value(notice == null ? null : notice.getOnlineIdentifier()));
     }
 
-    private boolean append(
+    private Optional<Path> create(
             List<ErrorWorkbookRow> rows,
-            Path workbookPath,
+            String workbookFilename,
             String sheetName) throws IOException {
         if (rows.isEmpty()) {
-            return false;
+            return Optional.empty();
         }
-        Files.createDirectories(workbookPath.getParent());
+        Files.createDirectories(outputDirectory);
+        Path reportDirectory = Files.createTempDirectory(
+                outputDirectory, ".kafka2sudoc-");
+        Path workbookPath = reportDirectory.resolve(workbookFilename);
         Path temporaryPath = workbookPath.resolveSibling(
                 workbookPath.getFileName() + ".tmp");
-        try (Workbook workbook = openWorkbook(workbookPath)) {
+        try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.getSheet(sheetName);
             if (sheet == null) {
                 sheet = createSheet(workbook, sheetName);
@@ -165,6 +164,8 @@ public class ErrorWorkbookService {
             writeWorkbook(workbook, temporaryPath);
         } catch (IOException exception) {
             Files.deleteIfExists(temporaryPath);
+            Files.deleteIfExists(workbookPath);
+            Files.deleteIfExists(reportDirectory);
             throw exception;
         }
         try {
@@ -172,21 +173,12 @@ public class ErrorWorkbookService {
         } finally {
             Files.deleteIfExists(temporaryPath);
         }
-        return true;
+        return Optional.of(workbookPath);
     }
 
     void writeWorkbook(Workbook workbook, Path temporaryPath) throws IOException {
         try (OutputStream output = Files.newOutputStream(temporaryPath)) {
             workbook.write(output);
-        }
-    }
-
-    private Workbook openWorkbook(Path workbookPath) throws IOException {
-        if (!Files.exists(workbookPath)) {
-            return new XSSFWorkbook();
-        }
-        try (InputStream input = Files.newInputStream(workbookPath)) {
-            return WorkbookFactory.create(input);
         }
     }
 
