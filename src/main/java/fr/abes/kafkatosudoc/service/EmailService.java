@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
@@ -61,14 +62,10 @@ public class EmailService {
                 .filter(m -> m.getType().equals(ERROR_TYPE.ADD469) || m.getType().equals(ERROR_TYPE.SUPP469)
                         || m.getType().equals(ERROR_TYPE.CONNEXION) || m.getType().equals(ERROR_TYPE.DATE_FORMAT))
                 .toList();
-        if (errorWorkbookService.appendInsertionErrors(
-                filename, errors, workInProgress.getListeNotices())) {
-            sendErrorsEmailWithAttachment(
-                    filename,
-                    errorWorkbookService.insertionWorkbookPath(),
-                    SUBJECT_ERROR_LIEN_BOUQUET,
-                    errors.size());
-        }
+        sendGeneratedReport(filename,
+                errorWorkbookService.createInsertionReport(
+                        filename, errors, workInProgress.getListeNotices()),
+                SUBJECT_ERROR_LIEN_BOUQUET, errors.size());
     }
 
     private JsonObjectBuilder formatErrorMessageListToJson(List<ErrorMessage> list) {
@@ -85,28 +82,20 @@ public class EmailService {
         List<ErrorMessage> errors = workInProgress.getErrorMessages().stream()
                 .filter(m -> m.getType().equals(ERROR_TYPE.EXNIHILO))
                 .toList();
-        if (errorWorkbookService.appendCreationErrors(
-                filename, errors, workInProgress.getListeNotices())) {
-            sendErrorsEmailWithAttachment(
-                    filename,
-                    errorWorkbookService.creationWorkbookPath(),
-                    SUBJECT_ERROR_EXNIHILO,
-                    errors.size());
-        }
+        sendGeneratedReport(filename,
+                errorWorkbookService.createCreationReport(
+                        filename, errors, workInProgress.getListeNotices()),
+                SUBJECT_ERROR_EXNIHILO, errors.size());
     }
 
     public void sendErrorMessagesImprime(String filename, WorkInProgress<LigneKbartImprime> workInProgress) throws IOException {
         List<ErrorMessage> errors = workInProgress.getErrorMessages().stream()
                 .filter(m -> m.getType().equals(ERROR_TYPE.FROMIMPRIME))
                 .toList();
-        if (errorWorkbookService.appendCreationErrorsFromPrint(
-                filename, errors, workInProgress.getListeNotices())) {
-            sendErrorsEmailWithAttachment(
-                    filename,
-                    errorWorkbookService.creationWorkbookPath(),
-                    SUBJECT_ERROR_IMPRIME,
-                    errors.size());
-        }
+        sendGeneratedReport(filename,
+                errorWorkbookService.createCreationReportFromPrint(
+                        filename, errors, workInProgress.getListeNotices()),
+                SUBJECT_ERROR_IMPRIME, errors.size());
     }
 
     private void sendErrorsMessage(String filename, JsonObject listErrors, String subject) throws IOException {
@@ -267,6 +256,20 @@ public class EmailService {
      * @param nbErrors       nombre d'erreurs pour ce package
      * @throws IOException erreur d'accès au fichier
      */
+    private void sendGeneratedReport(
+            String filename, Optional<Path> reportPath, String subject,
+            int nbErrors) throws IOException {
+        if (reportPath.isEmpty()) {
+            return;
+        }
+        try {
+            sendErrorsEmailWithAttachment(
+                    filename, reportPath.get(), subject, nbErrors);
+        } finally {
+            errorWorkbookService.deleteReport(reportPath.get());
+        }
+    }
+
     private void sendErrorsEmailWithAttachment(
             String filename, Path filePath, String subject, int nbErrors)
             throws IOException {
@@ -276,8 +279,8 @@ public class EmailService {
         }
         //  Création du mail
         String requestJson = mailToJSON(this.recipient, subject + getTag() + " " + filename,
-                nbErrors + " erreur(s) lors du traitement sur le fichier " + filename + ". Fichier complet des erreurs accumulées en pièce jointe.");
-        //  Envoi du message par mail avec pièce jointe
+                nbErrors + " erreur(s) lors du traitement sur le fichier " + filename
+                        + ". Rapport des erreurs de ce chargement en pièce jointe.");
         sendMailWithFile(requestJson, filePath.toFile());
         log.info("L'email a été correctement envoyé avec le fichier {} en pièce jointe.",
                 filePath.getFileName());

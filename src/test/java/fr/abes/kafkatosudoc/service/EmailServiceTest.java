@@ -27,7 +27,7 @@ class EmailServiceTest {
             "JSTOR_GLOBAL_ALLEBOOKS_2025-11-02.tsv";
     private static final String EMAIL_BODY =
             "1 erreur(s) lors du traitement sur le fichier " + FILENAME
-                    + ". Fichier complet des erreurs accumulées en pièce jointe.";
+                    + ". Rapport des erreurs de ce chargement en pièce jointe.";
 
     private CapturingEmailService emailService;
 
@@ -53,7 +53,7 @@ class EmailServiceTest {
 
         assertEquals("ErreursInsertion469.xlsx",
                 emailService.attachment.getName());
-        assertTrue(emailService.attachment.exists());
+        assertFalse(emailService.attachment.exists());
         assertEmail(
                 "[KBART2SUDOC :  erreurs liens 469][TEST] " + FILENAME);
     }
@@ -67,7 +67,7 @@ class EmailServiceTest {
 
         assertEquals("ErreursCreations.xlsx",
                 emailService.attachment.getName());
-        assertTrue(emailService.attachment.exists());
+        assertFalse(emailService.attachment.exists());
         assertEmail(
                 "[KBART2SUDOC :  erreurs créations ex nihilo ][TEST] "
                         + FILENAME);
@@ -82,7 +82,7 @@ class EmailServiceTest {
 
         assertEquals("ErreursCreations.xlsx",
                 emailService.attachment.getName());
-        assertTrue(emailService.attachment.exists());
+        assertFalse(emailService.attachment.exists());
         assertEmail(
                 "[KBART2SUDOC :  erreurs créations par dérivations][TEST] "
                         + FILENAME);
